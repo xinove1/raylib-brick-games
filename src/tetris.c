@@ -1,7 +1,5 @@
 #include "raylib.h"
 #include "raymath.h"
-#define RAYGUI_IMPLEMENTATION
-#define XI_INPUT_ACTIONS_IMPLEMENTATION
 #include "input.h"
 #include "raygui.h"
 #include "style_candy.h"
@@ -70,7 +68,7 @@ void	draw_config_window();
 void	clean_board();
 void	pause_game();
 
-int	main()
+static int	update()
 {
 	pieces[0] = "..X."
 				"..X."

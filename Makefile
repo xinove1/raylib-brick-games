@@ -1,4 +1,4 @@
-NAME= tetris
+NAME= game
 
 MY_LIB= /home/xinove/stuff/projects/mylibc
 
