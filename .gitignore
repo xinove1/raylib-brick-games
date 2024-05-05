@@ -7,4 +7,7 @@
 *.so
 
 game
-game.*
+game.js
+game.data
+game.exe
+game.wasm

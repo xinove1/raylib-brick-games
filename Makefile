@@ -72,6 +72,7 @@ fclean: clean
 	$(RM) $(NAME).js
 	$(RM) $(NAME).wasm
 	$(RM) $(NAME).exe
+	$(RM) $(NAME).data
 
 re: fclean all
 
