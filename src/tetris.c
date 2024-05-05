@@ -1,10 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "input.h"
 #include "raygui.h"
 #include "style_candy.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 typedef struct {
 	float	effects_volume;

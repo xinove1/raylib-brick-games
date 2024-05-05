@@ -9,8 +9,8 @@
 <body>
 
     <!-- Create the canvas that the C++ code will draw into -->
-    <div id="div_tetris">
-    <canvas id="canvas_tetris" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="div_game">
+    <canvas id="canvas_game" oncontextmenu="event.preventDefault()"></canvas>
     </div>
 
     <!-- Allow the C++ to access the canvas element --> 
@@ -18,13 +18,13 @@
         <!-- var Tetris = require('./tetris.data') -->
     <script type='text/javascript'>
         var Module = {
-            canvas: (function() { return document.getElementById('canvas_tetris'); })()
+            canvas: (function() { return document.getElementById('canvas_game'); })()
         };
 
         window.addEventListener("blur", function a() { console.log("blurrrr"); _pause_game()});
         window.addEventListener("focus", function a() { console.log("focus")});
     </script>
-    <script src="tetris.js">
+    <script src="game.js">
 
     <p> OI neeeeeeeeeeee </p>
     <p>  safoda </p>

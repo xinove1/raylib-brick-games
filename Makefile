@@ -1,8 +1,6 @@
 NAME= game
 
-MY_LIB= /home/xinove/stuff/projects/mylibc
-
-RAYLIB= /home/xinove/stuff/raylib/src
+RAYLIB= ./raylib-5.0/src
 
 CC= gcc
 CC_WINDOWS= x86_64-w64-mingw32-gcc
@@ -24,40 +22,35 @@ WEBFLAGS = $(WEB_EXPORTED_FUNCTIONS) $(WEB_HTML_TEMPLATE) $(WEB_DATA_DIR) -s ALL
 
 RM= rm -f
 
-SRC= $(wildcard src/*.c) # $(wildcard src/modules/*.c)
+SRC= $(wildcard src/*.c)
 
 OBJ=$(notdir $(SRC:.c=.o))
 
 DEPENDACIES= $(SRC) $(wildcard src/*.h)
 
 $(NAME): $(DEPENDACIES)
-	@make -C $(MY_LIB)
 	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -c $(SRC)
-	$(CC) $(OBJ) $(MY_LIB)/mylib.a  $(CFLAGS) $(DEBUG_FLAGS) -lraylib $(RFLAGS) -o $(NAME)
+	$(CC) $(OBJ) $(CFLAGS) $(DEBUG_FLAGS) -lraylib $(RFLAGS) -o $(NAME)
 
 static: $(DEPENDACIES)
-	@make -C $(MY_LIB)
 	@make -C $(RAYLIB)
 	$(CC) $(CFLAGS) -c $(SRC)
-	$(CC) $(OBJ) $(MY_LIB)/mylib.a $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) -o $(NAME)
+	$(CC) $(OBJ) $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) -o $(NAME)
 
 cosmos: $(DEPENDACIES)
-	@make -C $(MY_LIB) CC=cosmocc
 	@make -C $(RAYLIB) CC=cosmocc
 	cosmocc $(CFLAGS) -c $(SRC)
-	cosmocc $(OBJ) $(MY_LIB)/mylib.a $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) -o $(NAME)
+	cosmocc $(OBJ) $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) -o $(NAME)
 
 windows: $(DEPENDACIES)
-	@make -C $(MY_LIB) windows
 	@make -C $(RAYLIB) OS=Windows_NT CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar
 	$(CC_WINDOWS) $(CFLAGS) -c $(SRC)
-	$(CC_WINDOWS) $(OBJ) $(MY_LIB)/mylib.a $(RAYLIB)/libraylib.a $(RFLAGS_WINDOWS) -o $(NAME).exe
+	$(CC_WINDOWS) $(OBJ) $(RAYLIB)/libraylib.a $(RFLAGS_WINDOWS) -o $(NAME).exe
 
 web: $(DEPENDACIES)
 	make -C $(RAYLIB) PLATFORM=PLATFORM_WEB -B EMSDK_PATH=/home/xinove/stuff/emsdk  PYTHON_PATH=/usr/bin/python NODE_PATH=/home/xinove/stuff/emsdk/node/16.20.0_64bit/bin
-	make -C $(MY_LIB) web
 	emcc $(CFLAGS) -c $(SRC)
-	emcc $(OBJ) $(MY_LIB)/mylib.a $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) $(WEBFLAGS) -o $(NAME).js
+	emcc $(OBJ) $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) $(WEBFLAGS) -o $(NAME).js
 #emcc -o game.html game.c -Os -Wall ./path-to/libraylib.a -I. -Ipath-to-raylib-h -L. -Lpath-to-libraylib-a  --shell-file path-to/shell.html
 
 ew: $(web)
@@ -69,12 +62,10 @@ e: $(NAME)
 all: $(NAME)
 
 clean:
-	@make -C $(MY_LIB) clean
 	@make -C $(RAYLIB) clean
 	@$(RM) $(OBJ)
 
 fclean: clean
-	@make -C $(MY_LIB) fclean
 	@make -C $(RAYLIB) clean
 	$(RM) $(NAME)
 	$(RM) $(NAME).html
