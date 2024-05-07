@@ -11,12 +11,29 @@
 
 
 typedef Vector2 V2 ;
+typedef Rectangle Rect;
+
+typedef enum {MAIN_MENU, PLAY_MENU, OPTIONS_MENU, GAME} States;
+
+typedef struct ColorPalette {
+	Color	black;
+	Color	white;
+	Color	red;
+	Color	blue;
+	Color	yellow;
+	Color	green;
+	Color	orange;
+	Color	purple;
+} ColorPalette;
 
 typedef struct {
 	Vector2	window_size;
 	float	effects_vol;
 	float	music_vol;
 	bool	quit;
+	States	state; // State 
+	States	previous_state; // State 
+	ColorPalette	palette;
 } GameData;
 
 typedef struct GameFunctions GameFunctions ;
