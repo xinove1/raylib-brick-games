@@ -53,10 +53,10 @@ web: $(DEPENDACIES)
 	emcc $(OBJ) $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) $(WEBFLAGS) -o $(NAME).js
 #emcc -o game.html game.c -Os -Wall ./path-to/libraylib.a -I. -Ipath-to-raylib-h -L. -Lpath-to-libraylib-a  --shell-file path-to/shell.html
 
-ew: $(web)
+web_run: $(web)
 	emrun ./$(NAME).html
 
-e: $(NAME)
+run: $(NAME)
 	./$(NAME)
 
 all: $(NAME)
