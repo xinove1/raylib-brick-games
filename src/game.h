@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "raygui.h"
@@ -47,5 +48,7 @@ struct GameFunctions
 };
 
 GameFunctions	snake_game_init(GameData *data);
+void	draw_options_menu(GameData *data);
+int	game_over_screen(GameData *data); // Return 1 if play clicks to play again
 
 #endif // GAME_H_

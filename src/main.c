@@ -8,7 +8,6 @@
 
 void	draw_main_menu(GameData *data);
 void	draw_play_menu(GameData *data);
-void	draw_options_menu(GameData *data);
 
 typedef enum {TETRIS, SNAKE_GAME, GAME_COUNT} Games_e;
 
@@ -59,7 +58,6 @@ int	main()
 	register_input_action("open_menu", KEY_E);
 
 	game = games_lst[SNAKE_GAME];
-	game.start();
 
 	while (!WindowShouldClose() && !data.quit) {
 		switch (data.state) {
@@ -169,6 +167,7 @@ void	draw_play_menu(GameData *data)
 				data->state = GAME;
 				data->previous_state = PLAY_MENU;
 				game = games_lst[SNAKE_GAME];
+				game.start();
 			}
 		}
 		DrawRectangleRec(rect, BLUE);
@@ -234,4 +233,59 @@ void	draw_options_menu(GameData *data)
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
 	}
 	EndDrawing();
+}
+
+int	game_over_screen(GameData *data) 
+{
+	V2	window = data->window_size;
+	Font	font = GetFontDefault();
+	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+
+	// Draw Title
+	{
+		char	*text = "Game Over";
+		V2	text_size = MeasureTextEx(font, text, 50, 5);
+		V2	offset = {center.x -  0.5f * text_size.x, center.y};
+		DrawTextEx(GetFontDefault(), text, offset, 50, 5, RED);
+		center.y += text_size.y;
+		center.y += 15; // Add padding
+	}
+	{
+		char	*text = "Play Again";
+		V2	text_size = MeasureTextEx(font, text, 35, 3);
+		Color	text_color = RED;
+		V2	offset = {center.x -  0.5f * text_size.x, center.y};
+		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+
+		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+			text_color = PURPLE;
+			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+				return 1;
+			}
+		}
+		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
+
+		center.y += text_size.y;
+		center.y += 10; // Add padding
+	}
+	{
+		char	*text = "Go back to menu";
+		V2	text_size = MeasureTextEx(font, text, 35, 3);
+		Color	text_color = RED;
+		V2	offset = {center.x -  0.5f * text_size.x, center.y};
+		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+
+		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+			text_color = PURPLE;
+			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+				data->state = MAIN_MENU;
+				data->previous_state = MAIN_MENU;
+			}
+		}
+		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
+
+		center.y += text_size.y;
+		center.y += 5; // Add padding
+	}
+	return 0;
 }
