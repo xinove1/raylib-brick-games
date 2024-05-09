@@ -4,7 +4,7 @@
 # define MAX_APPLES 10
 # define MAX_SNAKE_SIZE ((board_size.x - 1) * (board_size.y - 1))
 
-static V2	board_size = {5, 5};
+static V2	board_size = {15, 15};
 static void	draw_game();
 static int	check_collision(Vector2	pos);
 static void	move_snake_body(Vector2 new_head_pos, int add_body);
@@ -17,6 +17,7 @@ static Vector2	apples[MAX_APPLES] = {0};
 static float	frame_count = 0;
 static float	tick_rate = 15; // How many frames until a game tick
 static bool	game_over = false;
+static bool	easy_mode = false;
 
 GameData *data = 0;
 void	draw();
@@ -109,7 +110,8 @@ GameFunctions	snake_game_init(GameData *game_data)
 	snake = calloc(MAX_SNAKE_SIZE, sizeof(Vector2));
 	board_offset =  (V2) {
 		.x = data->window_size.x * 0.5f - (board_size.x * TILE_SIZE) * 0.5f,
-		.y = data->window_size.y * 0.5f - (board_size.y * TILE_SIZE) * 0.5f };
+		.y = data->window_size.y * 0.5f - (board_size.y * TILE_SIZE) * 0.5f
+	};
 
 	return (GameFunctions) { 
 		.name = "Snake Game",
@@ -157,7 +159,7 @@ static void	spawn_apple()
 static int	check_collision(Vector2	pos)
 {
 	// Check collision with game board
-	if (pos.x == 0 || pos.x == board_size.x || pos.y == 0 || pos.y == board_size.y) {
+	if (!easy_mode && pos.x == 0 || pos.x == board_size.x || pos.y == 0 || pos.y == board_size.y) {
 		return (1);
 	}
 
