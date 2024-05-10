@@ -151,7 +151,11 @@ static void	update()
 	}
 
 	if (paused) {
-		draw_options_menu();
+		printf("please call draw options :( \n");
+		if (IsActionPressed("action_1")) {
+			paused = false;
+		}
+		//draw_options_menu();
 	} else if (game_over) {
 		// TODO Display score & high_score
 		if (score > high_score) {

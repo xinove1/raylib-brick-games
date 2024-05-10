@@ -61,6 +61,9 @@ run: $(NAME)
 
 all: $(NAME)
 
+bear: 
+	bear -- make
+
 clean:
 	@make -C $(RAYLIB) clean
 	@$(RM) $(OBJ)

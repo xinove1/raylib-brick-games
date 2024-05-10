@@ -15,6 +15,19 @@ typedef Vector2 V2 ;
 typedef Rectangle Rect;
 
 typedef enum {MAIN_MENU, TETRIS, SNAKE_GAME, GAME_COUNT} Games_e;
+typedef enum {
+	TITLE_SCREEN, 
+	PLAY_MENU, // Game Selection
+	OPTIONS_MENU,
+	KEYBIND_MENU,
+	PAUSED_MENU,
+	COLORS_MENU,
+	GAME_OVER_MENU,
+	TUTORIAL_MENU,
+	// Option state returned by menus funcs
+	NONE,
+	BACK,
+} UiState;
 
 typedef struct ColorPalette {
 	Color	black;
@@ -35,13 +48,13 @@ typedef struct {
 	bool	quit;
 	ColorPalette	palette;
 	Games_e	current_game;
+	UiState	current_ui;
 } GameData;
 
 typedef struct GameFunctions GameFunctions ;
 struct GameFunctions
 {
 	char	*name;
-	//GameInterface	(*init)(GameData *data);
 	void	(*start)(void);
 	void	(*update)(void);
 	void	(*de_init)(void);
@@ -50,10 +63,6 @@ struct GameFunctions
 GameFunctions	snake_game_init(GameData *data);
 GameFunctions	tetris_init(GameData *data);
 GameFunctions	main_menu_init(GameData *data);
-int	game_over_screen(GameData *data); // Return 1 if play clicks to play again
-void	draw_options_menu();
-void	ui_init(GameData *data);
-void	ui_deinit();
 
 void	pause_game();
 #endif // GAME_H_

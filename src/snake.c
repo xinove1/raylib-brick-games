@@ -10,10 +10,11 @@ static int	check_collision(Vector2	pos);
 static void	move_snake_body(Vector2 new_head_pos, int add_body);
 static void	spawn_apple();
 
-static Vector2	board_offset;
-static Vector2	*snake;
-static Vector2	dir = {1, 0};
-static Vector2	apples[MAX_APPLES] = {0};
+static V2	board_offset;
+static V2	*snake;
+static V2	dir = {1, 0};
+static V2	new_dir = {0, 0};
+static V2	apples[MAX_APPLES] = {0};
 static float	frame_count = 0;
 static float	tick_rate = 15; // How many frames until a game tick
 static bool	game_over = false;
@@ -38,11 +39,11 @@ static void update()
 	frame_count++;
 
 	if (game_over) {
-		draw();
+		data->current_ui = GAME_OVER_MENU;
+		game_over = false;
 		return ;
 	}
 
-	V2	new_dir = dir;
 	if (IsActionPressed("right")) {
 		new_dir.x = 1;
 		new_dir.y = 0;
@@ -80,6 +81,7 @@ static void update()
 			game_over = true;
 			// TODO draw win screen
 		}
+		new_dir = (V2){0, 0};
 	}
 
 	draw();
@@ -91,10 +93,14 @@ void	draw()
 	ClearBackground(RAYWHITE);
 	draw_game();
 	if (game_over) {
-		if (game_over_screen(data)) {
+		if (IsActionPressed("action_1")) {
 			game_over = false;
 			start();
 		}
+		// if (game_over_screen(data)) {
+		// 	game_over = false;
+		// 	start();
+		// }
 	}
 	EndDrawing();
 }

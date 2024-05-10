@@ -1,0 +1,86 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./raylib-5.0/src",
+      "-g3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wdouble-promotion",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-trap",
+      "-DRAYGUI_DEBUG_RECS_BOUNDS",
+      "-DRAYGUI_DEBUG_TEXT_BOUNDS",
+      "-c",
+      "src/main.c"
+    ],
+    "directory": "/home/xinove/stuff/raylib-brick-games",
+    "file": "/home/xinove/stuff/raylib-brick-games/src/main.c"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./raylib-5.0/src",
+      "-g3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wdouble-promotion",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-trap",
+      "-DRAYGUI_DEBUG_RECS_BOUNDS",
+      "-DRAYGUI_DEBUG_TEXT_BOUNDS",
+      "-c",
+      "src/main_menu.c"
+    ],
+    "directory": "/home/xinove/stuff/raylib-brick-games",
+    "file": "/home/xinove/stuff/raylib-brick-games/src/main_menu.c"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./raylib-5.0/src",
+      "-g3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wdouble-promotion",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-trap",
+      "-DRAYGUI_DEBUG_RECS_BOUNDS",
+      "-DRAYGUI_DEBUG_TEXT_BOUNDS",
+      "-c",
+      "src/snake.c"
+    ],
+    "directory": "/home/xinove/stuff/raylib-brick-games",
+    "file": "/home/xinove/stuff/raylib-brick-games/src/snake.c"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./raylib-5.0/src",
+      "-g3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wdouble-promotion",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-trap",
+      "-DRAYGUI_DEBUG_RECS_BOUNDS",
+      "-DRAYGUI_DEBUG_TEXT_BOUNDS",
+      "-c",
+      "src/tetris.c"
+    ],
+    "directory": "/home/xinove/stuff/raylib-brick-games",
+    "file": "/home/xinove/stuff/raylib-brick-games/src/tetris.c"
+  }
+]

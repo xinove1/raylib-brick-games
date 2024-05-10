@@ -1,44 +1,77 @@
 #include "game.h"
+#include <raylib.h>
+#include <raymath.h>
 #include <stdio.h>
 
-typedef enum {TITLE_SCREEN, PLAY_MENU, OPTIONS_MENU} States;
+static GameData	*game_data;
+RenderTexture2D	target_texture;
 
-static States	state;
-static States	previous_state;
-static GameData	*data;
-
-static void	draw_main_menu();
-static void	draw_play_menu();
-static void	draw_ui();
-
+static void	main_menu(GameData *data);
+static void	play_menu(GameData *data);
+static void	options_menu(GameData *data);
+static void	keybind_menu(GameData *data); // TODO
+static void	paused_menu(GameData *data);
+static void	colors_menu(GameData *data);
+static void	game_over_menu(GameData *data);
+static void	tutorial_menu(GameData *data);
 
 static void	start() 
 {
-	state = TITLE_SCREEN; // State 
-	previous_state = TITLE_SCREEN; // State 
 }
 
-static void	de_init() {}
+static void	de_init()
+{
+	UnloadRenderTexture(target_texture);
+}
 
 static void	update()
 {
-	switch (state) {
-		printf("main_menu state: %d\n", state);
-		case(TITLE_SCREEN):
-			draw_main_menu();
+	// V2	target_pos = {0, 0};
+	// {
+	// 	V2	from = {0, game_data->window_size.y};
+	// 	V2	to = {0, 0};
+	// 	target_pos = Vector2Lerp(from, to, 5);
+	// }
+	
+	BeginTextureMode(target_texture);
+	ClearBackground(RAYWHITE);
+
+	switch (game_data->current_ui) {
+		case (TITLE_SCREEN):
+			main_menu(game_data);
 			break;
-		case(PLAY_MENU):
-			draw_play_menu();
+		case (PLAY_MENU):
+			play_menu(game_data);
 			break;
-		case(OPTIONS_MENU):
-			draw_options_menu();
+		case (OPTIONS_MENU):
+			options_menu(game_data);
+			break;
+		case (GAME_OVER_MENU):
+			game_over_menu(game_data);
+			break;
+		// case(PAUSED_MENU):
+		// 	paused_menu(game_data);
+		// 	break;
+		default:
+			TraceLog(LOG_INFO, "Main_menu.c: MenuScreen not implementd. state id: %d \n", game_data->current_ui);
 			break;
 	}
+	if (IsActionPressed("action_1")) {
+		printf("main menu state: %d \n", game_data->current_ui);
+	}
+
+	EndTextureMode();
+
+	BeginDrawing();
+	Rect	rect = {0, 0, game_data->window_size.x, -game_data->window_size.y};
+	DrawTextureRec(target_texture.texture, rect, (V2){0, 0}, WHITE);
+	EndDrawing();
 }
 
-GameFunctions	main_menu_init(GameData *game_data)
+GameFunctions	main_menu_init(GameData *data)
 {
-	data = game_data;
+	game_data = data;
+	target_texture = LoadRenderTexture(data->window_size.x, data->window_size.y);
 	return (GameFunctions) { 
 		.name = "Main menu",
 		.update = &update,
@@ -47,10 +80,8 @@ GameFunctions	main_menu_init(GameData *game_data)
 	};
 }
 
-static void	draw_main_menu()
+void	main_menu(GameData *data)
 {
-	BeginDrawing();
-	ClearBackground(RAYWHITE);
 	V2	window = data->window_size;
 	Font	font = GetFontDefault();
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
@@ -74,9 +105,9 @@ static void	draw_main_menu()
 
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = PURPLE;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				printf("mouse button released\n");
-				state = PLAY_MENU;
+			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { // TODO test pressed
+				printf("mouse button released play\n");
+				data->current_ui = PLAY_MENU;
 			}
 		}
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
@@ -95,7 +126,7 @@ static void	draw_main_menu()
 			text_color = PURPLE;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
 				printf("mouse button released\n");
-				state = OPTIONS_MENU;
+				data->current_ui = OPTIONS_MENU;
 			}
 		}
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
@@ -121,16 +152,10 @@ static void	draw_main_menu()
 		center.y += text_size.y;
 		center.y += 5; // Add padding
 	}
-
-	EndDrawing();
 }
 
-static void	draw_play_menu() 
+void	play_menu(GameData *data)
 {
-
-	BeginDrawing();
-	ClearBackground(RAYWHITE);
-
 	V2	window = data->window_size;
 	ColorPalette	palette = data->palette;
 	Font	font = GetFontDefault();
@@ -151,8 +176,8 @@ static void	draw_play_menu()
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = palette.yellow;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				previous_state = PLAY_MENU;
 				data->current_game = SNAKE_GAME;
+				data->current_ui = NONE;
 			}
 		}
 		DrawRectangleRec(rect, BLUE);
@@ -172,8 +197,8 @@ static void	draw_play_menu()
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = palette.purple;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				previous_state = PLAY_MENU;
 				data->current_game = TETRIS;
+				data->current_ui = NONE;
 			}
 		}
 		DrawRectangleRec(rect, palette.yellow);
@@ -190,20 +215,17 @@ static void	draw_play_menu()
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = palette.purple;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				state = TITLE_SCREEN;
+				data->current_ui = BACK;
 			}
 		}
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
 		center.y += text_size.y;
 		center.y += 5; // Add padding
 	}
-	EndDrawing();
 }
 
-void	draw_options_menu()
+void	options_menu(GameData *data)
 {
-	BeginDrawing();
-	ClearBackground(RAYWHITE);
 	Font	font = GetFontDefault();
 
 	V2	window = data->window_size;
@@ -233,15 +255,14 @@ void	draw_options_menu()
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = palette.purple;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				state = previous_state;
+				data->current_ui = BACK;
 			}
 		}
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
 	}
-	EndDrawing();
 }
 
-int	game_over_screen(GameData *data) 
+void	game_over_menu(GameData *data)
 {
 	V2	window = data->window_size;
 	Font	font = GetFontDefault();
@@ -266,7 +287,7 @@ int	game_over_screen(GameData *data)
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = PURPLE;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				return 1;
+				data->current_ui = NONE;
 			}
 		}
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
@@ -275,7 +296,7 @@ int	game_over_screen(GameData *data)
 		center.y += 10; // Add padding
 	}
 	{
-		char	*text = "Go back to menu";
+		char	*text = "Quit to main menu";
 		V2	text_size = MeasureTextEx(font, text, 35, 3);
 		Color	text_color = RED;
 		V2	offset = {center.x -  0.5f * text_size.x, center.y};
@@ -284,8 +305,7 @@ int	game_over_screen(GameData *data)
 		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 			text_color = PURPLE;
 			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_game = MAIN_MENU;
-				//previous_state = TITLE_SCREEN;
+				data->current_ui = TITLE_SCREEN;
 			}
 		}
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
@@ -293,5 +313,4 @@ int	game_over_screen(GameData *data)
 		center.y += text_size.y;
 		center.y += 5; // Add padding
 	}
-	return 0;
 }

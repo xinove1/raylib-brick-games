@@ -15,6 +15,8 @@ void	_Testfunc(char *str, GameData data)
 
 static GameFunctions	games[GAME_COUNT] = {0};
 static Games_e	game;
+static UiState	ui;
+static UiState	prev_ui;
 
 int	main()
 {
@@ -36,6 +38,9 @@ int	main()
 	};
 	data.current_game = MAIN_MENU;
 	game = -1;
+	data.current_ui = TITLE_SCREEN;
+	ui = TITLE_SCREEN;
+	prev_ui = NONE;
 
 	// Enable config flags for resizable window and vertical synchro
 	//SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
@@ -73,7 +78,23 @@ int	main()
 			game = data.current_game;
 			games[game].start();
 		}
-		games[game].update();
+
+		if (data.current_ui != ui && data.current_ui != BACK) {
+			prev_ui = ui;
+			ui = data.current_ui;
+		} else if (data.current_ui == BACK) {
+			ui = prev_ui;
+			data.current_ui = prev_ui;
+			prev_ui = NONE;
+		}
+
+		if (ui == NONE) { // Only call update if none of the ui is active
+			games[game].update();
+		} else {
+			games[MAIN_MENU].update();
+		}
+
+		// TODO Separeta games update from draw and call here
 	}
 
 	games[SNAKE_GAME].de_init();
