@@ -3,6 +3,14 @@
 #include <raymath.h>
 #include <stdio.h>
 
+typedef struct {
+	Font	font;
+	int	size;
+	int	spacing;
+	Color	tint;
+	Color	tint_hover;
+} FontConfig;
+
 static GameData	*game_data;
 RenderTexture2D	target_texture;
 
@@ -80,77 +88,64 @@ GameFunctions	main_menu_init(GameData *data)
 	};
 }
 
+// Draw Text button centralized and add text height to pos
+bool	text_button(char *text, V2 *pos, FontConfig config)
+{
+	bool	r = false;
+	V2	text_size = MeasureTextEx(config.font, text, config.size, config.spacing);
+	V2	offset = {pos->x -  0.5f * text_size.x, pos->y};
+	Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+	Color	color = config.tint;
+
+	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+		color = config.tint_hover;
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			r = true;
+		}
+	}
+
+	DrawTextEx(config.font, text, offset, config.size, config.spacing, color);
+
+	pos->y += text_size.y;
+
+	return (r);
+}
+
 void	main_menu(GameData *data)
 {
 	V2	window = data->window_size;
 	Font	font = GetFontDefault();
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+	FontConfig	text_config = {
+		.font = GetFontDefault(),
+		.size = 35,
+		.spacing = 3,
+		.tint = data->palette.red,
+		.tint_hover = data->palette.purple,
+	};
 
 	// Draw Title
 	{
 		char	*text = "Raylib Brick Games";
 		V2	text_size = MeasureTextEx(font, text, 50, 5);
 		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		DrawTextEx(GetFontDefault(), text, offset, 50, 5, RED);
+		DrawTextEx(text_config.font, text, offset, 50, 5, text_config.tint);
 		center.y += text_size.y;
 		center.y += 15; // Add padding
 	}
 
-	{
-		char	*text = "Play";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = RED;
-		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
-
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = PURPLE;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { // TODO test pressed
-				printf("mouse button released play\n");
-				data->current_ui = PLAY_MENU;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		center.y += text_size.y;
-		center.y += 10; // Add padding
+	if (text_button("Play", &center, text_config)) {
+		data->current_ui = PLAY_MENU;
 	}
-	{
-		char	*text = "Options";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = RED;
-		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+	center.y += 10; // padding
 
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = PURPLE;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				printf("mouse button released\n");
-				data->current_ui = OPTIONS_MENU;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		center.y += text_size.y;
-		center.y += 5; // Add padding
+	if (text_button("Options", &center, text_config)) {
+		data->current_ui = OPTIONS_MENU;
 	}
-	{
-		char	*text = "Quit";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = RED;
-		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+	center.y += 10; // padding
 
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = PURPLE;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->quit = true;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		center.y += text_size.y;
-		center.y += 5; // Add padding
+	if (text_button("Quit", &center, text_config)) {
+		data->quit = true;
 	}
 }
 
@@ -226,91 +221,64 @@ void	play_menu(GameData *data)
 
 void	options_menu(GameData *data)
 {
-	Font	font = GetFontDefault();
-
 	V2	window = data->window_size;
-	ColorPalette	palette = data->palette;
+	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+	FontConfig	text_config = {
+		.font = GetFontDefault(),
+		.size = 35,
+		.spacing = 3,
+		.tint = data->palette.red,
+		.tint_hover = data->palette.purple,
+	};
 
 	DrawRectangleV((V2){0,0}, window, (Color){ 100, 100, 100, 100}); 
-	char	*str = "Options";
-	V2	str_size = MeasureTextEx(font, str, 30, 4);
-	V2	offset = {window.x / 2 - str_size.x / 2, window.y / 2 - str_size.y / 2};
-	Rect	rect = {offset.x , offset.y + 50, str_size.x, str_size.y};
 
-	DrawRectangleV(offset, str_size, (Color){ 100, 200, 100, 255}); 
-	DrawTextEx(font, str, offset, 30, 4, RED);
-
-	GuiSliderBar(rect, NULL, NULL, &data->music_vol, 0.0, 1.0);
-
-	rect = (Rect){rect.x, rect.y + 25, rect.width, rect.height};
-	GuiSliderBar(rect, NULL, NULL, &data->effects_vol, 0.0, 1.0);
-
+	// Draw Title
 	{
-		char	*text = "Back";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = palette.red;
-		V2	offset = {rect.x -  0.5f * text_size.x, rect.y + 30};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+		char	*text = "Options";
+		V2	text_size = MeasureTextEx(text_config.font, text, 50, 5);
+		V2	offset = {center.x -  0.5f * text_size.x, center.y};
+		DrawTextEx(text_config.font, text, offset, 50, 5, text_config.tint);
+		center.y += text_size.y;
+		center.y += 15; // Add padding
+	}
 
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = palette.purple;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_ui = BACK;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
+
+	// TODO add options
+
+	if (text_button("Back", &center, text_config)){
+		data->current_ui = BACK;
 	}
 }
 
 void	game_over_menu(GameData *data)
 {
 	V2	window = data->window_size;
-	Font	font = GetFontDefault();
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-
+	FontConfig	text_config = {
+		.font = GetFontDefault(),
+		.size = 35,
+		.spacing = 3,
+		.tint = data->palette.red,
+		.tint_hover = data->palette.purple,
+	};
 	// Draw Title
 	{
 		char	*text = "Game Over";
-		V2	text_size = MeasureTextEx(font, text, 50, 5);
+		V2	text_size = MeasureTextEx(text_config.font, text, 50, 5);
 		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		DrawTextEx(GetFontDefault(), text, offset, 50, 5, RED);
+		DrawTextEx(text_config.font, text, offset, 50, 5, text_config.tint);
 		center.y += text_size.y;
 		center.y += 15; // Add padding
 	}
-	{
-		char	*text = "Play Again";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = RED;
-		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
 
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = PURPLE;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_ui = NONE;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		center.y += text_size.y;
-		center.y += 10; // Add padding
+	if (text_button("Play Again", &center, text_config)) {
+		data->current_ui = NONE;
 	}
-	{
-		char	*text = "Quit to main menu";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = RED;
-		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+	
+	center.y += 30;
 
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = PURPLE;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_ui = TITLE_SCREEN;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		center.y += text_size.y;
-		center.y += 5; // Add padding
+	if (text_button("Quit to main menu", &center, text_config)) {
+		data->current_ui = TITLE_SCREEN;
 	}
 }
