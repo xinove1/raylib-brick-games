@@ -34,6 +34,7 @@ typedef struct ColorPalette {
 	Color	black;
 	Color	white;
 	Color	red;
+	Color	pink;
 	Color	blue;
 	Color	yellow;
 	Color	green;

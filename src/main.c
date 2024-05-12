@@ -26,15 +26,16 @@ int	main()
 	data.effects_vol = 1.0f;
 	data.assets = (Assets) {0};
 	data.palette = (ColorPalette) {
-		.black = BLACK,
-		.white = RAYWHITE,
-		.red = RED,
-		.blue = BLUE,
-		.yellow = YELLOW,
-		.green = GREEN,
-		.orange = ORANGE,
-		.purple = PURPLE,
-		.background = BEIGE,
+		.black = (Color){43, 5, 4, 255},
+		.white = (Color){233, 228, 205, 255},
+		.red = (Color){249, 39, 0, 255},
+		.pink = (Color){211, 0, 92, 255},
+		.blue = (Color){49, 21, 172, 255},
+		.yellow = (Color){224, 245, 0, 255},
+		.green = (Color){249, 111, 0, 255},
+		.orange = (Color){244, 93, 1, 255},
+		.purple = (Color){130, 5, 165, 255},
+		.background = (Color){237, 191, 198, 255},
 	};
 	data.current_game = MAIN_MENU;
 	game = -1;
@@ -118,10 +119,10 @@ static void	load_assets(GameData *data) {
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
 	data->assets.fonts[0] = LoadFont("./assets/kenney_blocks.ttf");
-	data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
-	data->assets.fonts[2] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 42, NULL, 0);
-	// data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
-	// data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
+	// data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
+	// data->assets.fonts[2] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 42, NULL, 0);
+	data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
+	data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
 }
 
 static void	unload_assets(GameData *data) {

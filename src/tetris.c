@@ -21,7 +21,7 @@ static TetrisSounds	game_sounds = {0, 0, 0};
 // Drawing related
 static Vector2	board_offset = {0, 0};
 static int	tile_size = 16;
-static Color	piece_colors[9] = {BLUE, YELLOW, RED, GREEN, ORANGE, PINK, PURPLE, BLACK, DARKPURPLE};
+static Color	piece_colors[9];
 static Font	font;
 static Vector2	stored_piece_offset;
 
@@ -149,7 +149,7 @@ static void	update()
 	}
 
 	if (paused) {
-		ui_trasition_from((V2){-1, 0});
+		ui_trasition_from((V2){1, 0});
 		data->current_ui = OPTIONS_MENU;
 		paused = false;
 	} else if (game_over) {
@@ -219,6 +219,15 @@ GameFunctions	tetris_init(GameData *game_data)
 	board_offset = (Vector2){window_size.x/2 - (board_size.x * tile_size)/2, window_size.y/2 - (board_size.y * tile_size)/2};
 	stored_piece_offset = (Vector2){board_offset.x - 100, board_offset.y};
 	font = data->assets.fonts[0];
+	piece_colors[0] = data->palette.blue;
+	piece_colors[1] = data->palette.yellow;
+	piece_colors[2] = data->palette.red;
+	piece_colors[3] = data->palette.green;
+	piece_colors[4] = data->palette.orange;
+	piece_colors[5] = data->palette.pink;
+	piece_colors[6] = data->palette.purple;
+	piece_colors[7] = data->palette.black;
+	piece_colors[8] = data->palette.white;
 
 	game_sounds.music = data->assets.music[0];
 	game_sounds.game_over = data->assets.sounds[0];

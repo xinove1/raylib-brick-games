@@ -1,6 +1,7 @@
 #include "game.h"
 #include <raylib.h>
 #include <raymath.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 typedef struct {
@@ -12,8 +13,10 @@ typedef struct {
 } FontConfig;
 
 static GameData		*Data;
-static RenderTexture2D	TargetTexture;
-static V2		TargetPos;
+static RenderTexture2D	TextTexture;
+static RenderTexture2D	BackgroundTexture;
+static V2		TextTexturePos;
+static V2		BackgroundPos;
 static FontConfig	TextConfig;
 static FontConfig	TextConfigHeading;
 static void	main_menu(GameData *data);
@@ -25,6 +28,8 @@ static void	colors_menu(GameData *data);
 static void	game_over_menu(GameData *data);
 static void	tutorial_menu(GameData *data);
 
+void	draw_blocks(GameData *data);
+
 static void	start() 
 {
 	//target_pos = (V2) {game_data->window_size.x, 0}; // right
@@ -32,19 +37,13 @@ static void	start()
 
 static void	de_init()
 {
-	UnloadRenderTexture(TargetTexture);
+	UnloadRenderTexture(TextTexture);
+	UnloadRenderTexture(BackgroundTexture);
 }
 
 static void	update()
 {
-	// V2	target_pos = {0, 0};
-	// {
-	// 	V2	from = {0, game_data->window_size.y};
-	// 	V2	to = {0, 0};
-	// 	target_pos = Vector2Lerp(from, to, 5);
-	// }
-	
-	BeginTextureMode(TargetTexture);
+	BeginTextureMode(TextTexture);
 	ClearBackground((Color){0, 0, 0, 0});
 
 	switch (Data->current_ui) {
@@ -67,25 +66,37 @@ static void	update()
 			TraceLog(LOG_INFO, "Main_menu.c: MenuScreen not implementd. state id: %d \n", Data->current_ui);
 			break;
 	}
-	if (IsActionPressed("action_1")) {
-		printf("main menu state: %d \n", Data->current_ui);
-	}
-
 	EndTextureMode();
 
+	static bool flag = false;
+
+	if (flag == false || IsKeyPressed(KEY_R)) {
+		printf("drawing blocks\n");
+		BeginTextureMode(BackgroundTexture);
+		ClearBackground(Data->palette.white);
+		draw_blocks(Data);
+		EndTextureMode();
+		flag = true;
+	}
+
 	BeginDrawing();
-	ClearBackground(RAYWHITE);
 	//printf("target_pos: %f,%f \n", target_pos.x, target_pos.y);
-	TargetPos = Vector2Lerp(TargetPos, (V2) {0, 0}, 0.08);
+
+	TextTexturePos = Vector2Lerp(TextTexturePos, (V2) {0, 0}, 0.08);
+	BackgroundPos = Vector2Lerp(BackgroundPos, (V2) {0, 0}, 0.11);
 	Rect	rect = {0, 0, Data->window_size.x, -Data->window_size.y};
-	DrawTextureRec(TargetTexture.texture, rect, TargetPos, WHITE);
+	Rect	rect_back = {0, 0, Data->window_size.x, Data->window_size.y};
+	DrawTextureRec(BackgroundTexture.texture, rect_back, BackgroundPos, WHITE);
+	DrawTextureRec(TextTexture.texture, rect, TextTexturePos, WHITE);
+
 	EndDrawing();
 }
 
 GameFunctions	main_menu_init(GameData *data)
 {
 	Data = data;
-	TargetTexture = LoadRenderTexture(data->window_size.x, data->window_size.y);
+	TextTexture = LoadRenderTexture(data->window_size.x, data->window_size.y);
+	BackgroundTexture = LoadRenderTexture(data->window_size.x, data->window_size.y);
 	TextConfig = (FontConfig) {
 		.font = data->assets.fonts[1],
 		.size = 22,
@@ -113,11 +124,53 @@ GameFunctions	main_menu_init(GameData *data)
 void	ui_trasition_from(V2 dir)
 {
 	if (dir.x == 0 && dir.y == -1) { // Bottom
-		TargetPos = (V2) {0, Data->window_size.y};
+		TextTexturePos = (V2) {0, Data->window_size.y};
+		BackgroundPos = (V2) {0, Data->window_size.y};
 	} else if (dir.x == 1 && dir.y == 0) { // Right
-		TargetPos = (V2) {Data->window_size.x, 0};
+		TextTexturePos = (V2) {Data->window_size.x, 0};
+		BackgroundPos = (V2) {Data->window_size.x,0};
 	} else {
 		TraceLog(LOG_INFO, "ui_transition_from: dir (%f,%f) not supported \n", dir.x, dir.y);
+	}
+}
+
+void	draw_blocks(GameData *data) {
+	V2	block_size = {60, 30};
+	V2	qty = {(data->window_size.x / block_size.x) + 2, (data->window_size.y / block_size.y) + 2};
+	ColorPalette	palette = data->palette;
+	Color	colors[9] = {
+		palette.red,
+		palette.blue,
+		palette.yellow,
+		palette.green,
+		palette.orange,
+		palette.purple,
+		palette.background,
+		palette.black,
+		palette.white,
+	};
+
+	for (int y = 0; y < qty.y; y++) {
+		for (int x = 0; x < qty.x; x++) {
+			Rect	rect = {x * block_size.x, y * block_size.y, block_size.x, block_size.y};
+			Color	color; // = colors[GetRandomValue(0, 7)];
+			if (y % 2 == 0) {
+				rect.x -= block_size.x * 0.5f;
+				if (x % 2 == 0) {
+					color = palette.green;
+				} else {
+					color = palette.background;
+				}
+			} else {
+				if (x % 2 == 0) {
+					color = palette.purple;
+				} else {
+					color = palette.pink;
+				}
+			}
+			DrawRectangleRec(rect, color);
+			DrawRectangleLinesEx(rect, 1, palette.black);
+		}
 	}
 }
 
@@ -154,6 +207,7 @@ void	main_menu(GameData *data)
 		char	*text = "Raylib Brick Games";
 		V2	text_size = MeasureTextEx(TextConfigHeading.font, text, TextConfigHeading.size, TextConfigHeading.spacing);
 		V2	offset = {center.x -  0.5f * text_size.x, center.y};
+		DrawRectangle(offset.x - 5, offset.y - 5, text_size.x + 5, text_size.y + 5, data->palette.white);
 		DrawTextEx(TextConfigHeading.font, text, offset, TextConfigHeading.size, TextConfigHeading.spacing, TextConfigHeading.tint);
 		center.y += text_size.y;
 		center.y += 15; // Add padding
