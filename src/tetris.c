@@ -2,12 +2,10 @@
 #include "style_candy.h"
 
 typedef struct {
-	float	effects_volume;
-	float	music_volume;
 	Music	music;
 	Sound	made_line;
 	Sound	game_over;
-} GameSounds;
+} TetrisSounds;
 
 static GameData	*data = 0;
 static Vector2	window_size;
@@ -18,7 +16,7 @@ static int	made_lines[18] = {0}; // NOTE hard coded
 static bool	is_made_lines = false;
 static bool	paused = false;
 static bool	game_over = false;
-static GameSounds	game_sounds = {1, 1, 0, 0, 0};
+static TetrisSounds	game_sounds = {0, 0, 0};
 
 // Drawing related
 static Vector2	board_offset = {0, 0};
@@ -72,9 +70,9 @@ static void start()
 static void	update()
 {
 	PlayMusicStream(game_sounds.music);
-	SetMusicVolume(game_sounds.music, game_sounds.music_volume);
-	SetSoundVolume(game_sounds.made_line, game_sounds.effects_volume);
-	SetSoundVolume(game_sounds.game_over, game_sounds.effects_volume);
+	SetMusicVolume(game_sounds.music, data->music_vol);
+	SetSoundVolume(game_sounds.made_line, data->effects_vol);
+	SetSoundVolume(game_sounds.game_over, data->effects_vol);
 
 
 	UpdateMusicStream(game_sounds.music);
@@ -151,11 +149,9 @@ static void	update()
 	}
 
 	if (paused) {
-		printf("please call draw options :( \n");
-		if (IsActionPressed("action_1")) {
-			paused = false;
-		}
-		//draw_options_menu();
+		ui_trasition_from((V2){-1, 0});
+		data->current_ui = OPTIONS_MENU;
+		paused = false;
 	} else if (game_over) {
 		// TODO Display score & high_score
 		if (score > high_score) {
@@ -175,12 +171,7 @@ static void	update()
 
 static void	de_init() 
 {
-	UnloadMusicStream(game_sounds.music);
-	UnloadSound(game_sounds.game_over);
-	UnloadSound(game_sounds.made_line);
-
 	free(board);
-	UnloadFont(font);
 }
 
 GameFunctions	tetris_init(GameData *game_data)
@@ -227,11 +218,11 @@ GameFunctions	tetris_init(GameData *game_data)
 	window_size = data->window_size;
 	board_offset = (Vector2){window_size.x/2 - (board_size.x * tile_size)/2, window_size.y/2 - (board_size.y * tile_size)/2};
 	stored_piece_offset = (Vector2){board_offset.x - 100, board_offset.y};
-	font = LoadFont("./assets/kenney_blocks.ttf");
+	font = data->assets.fonts[0];
 
-	game_sounds.music = LoadMusicStream("./assets/retro_comedy.ogg");
-	game_sounds.game_over = LoadSound("./assets/gameover3.ogg");
-	game_sounds.made_line = LoadSound("./assets/upgrade4.ogg");
+	game_sounds.music = data->assets.music[0];
+	game_sounds.game_over = data->assets.sounds[0];
+	game_sounds.made_line = data->assets.sounds[1];
 	
 	GuiLoadStyleCandy();
 	return (GameFunctions) { 

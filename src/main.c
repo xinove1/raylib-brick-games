@@ -1,9 +1,5 @@
-#include <raylib.h>
-#include <raymath.h>
-#include <stdio.h>
 #define RAYGUI_IMPLEMENTATION
 #define XI_INPUT_ACTIONS_IMPLEMENTATION
-
 #include "game.h"
 #include "style_candy.h"
 
@@ -12,6 +8,9 @@ void	_Testfunc(char *str, GameData data)
 	printf("str: %s, data- quit: %d, music_vol: %f\n", str, data.quit, data.music_vol);
 }
 #define Testfunc(str, ...) _Testfunc((str), (GameData){.quit = false, __VA_ARGS__})
+
+static void	load_assets(GameData *data);
+static void	unload_assets(GameData *data);
 
 static GameFunctions	games[GAME_COUNT] = {0};
 static Games_e	game;
@@ -25,6 +24,7 @@ int	main()
 	data.window_size = (V2) {800, 600};
 	data.music_vol = 1.0f;
 	data.effects_vol = 1.0f;
+	data.assets = (Assets) {0};
 	data.palette = (ColorPalette) {
 		.black = BLACK,
 		.white = RAYWHITE,
@@ -39,7 +39,7 @@ int	main()
 	data.current_game = MAIN_MENU;
 	game = -1;
 	data.current_ui = TITLE_SCREEN;
-	ui = TITLE_SCREEN;
+	ui = NONE;
 	prev_ui = NONE;
 
 	// Enable config flags for resizable window and vertical synchro
@@ -65,6 +65,8 @@ int	main()
 	register_input_action("open_menu", KEY_ESCAPE);
 	register_input_action("open_menu", KEY_E);
 
+	load_assets(&data);
+
 	games[SNAKE_GAME] = snake_game_init(&data);
 	games[TETRIS] = tetris_init(&data);
 	games[MAIN_MENU] = main_menu_init(&data);
@@ -82,6 +84,9 @@ int	main()
 		if (data.current_ui != ui && data.current_ui != BACK) {
 			prev_ui = ui;
 			ui = data.current_ui;
+			if (ui == TITLE_SCREEN) {
+				ui_trasition_from((V2) {0, -1});
+			}
 		} else if (data.current_ui == BACK) {
 			ui = prev_ui;
 			data.current_ui = prev_ui;
@@ -101,9 +106,30 @@ int	main()
 	games[TETRIS].de_init();
 	games[MAIN_MENU].de_init();
 
+	unload_assets(&data);
+
 	CloseWindow();
 	CloseAudioDevice();
 	return (0);
+}
+
+static void	load_assets(GameData *data) {
+	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
+	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
+	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
+	data->assets.fonts[0] = LoadFont("./assets/kenney_blocks.ttf");
+	data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
+	data->assets.fonts[2] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 42, NULL, 0);
+	// data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
+	// data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
+}
+
+static void	unload_assets(GameData *data) {
+	for (int i = 0; i < MAX_ASSET; i++) {
+		UnloadSound(data->assets.sounds[i]);
+		UnloadMusicStream(data->assets.music[i]);
+		UnloadFont(data->assets.fonts[i]);
+	}
 }
 
 // TODO change raylib window flags to window unfocused

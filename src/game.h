@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <string.h>
 #include "raylib.h"
+//#include "stb_truetype.h"
 #include "raymath.h"
 #include "raygui.h"
 #include "input.h"
@@ -41,6 +42,14 @@ typedef struct ColorPalette {
 	Color	background;
 } ColorPalette;
 
+#define MAX_ASSET 5
+
+typedef struct Assets {
+	Font	fonts[MAX_ASSET];
+	Sound	sounds[MAX_ASSET];
+	Music	music[MAX_ASSET];
+} Assets;
+
 typedef struct {
 	Vector2	window_size;
 	float	effects_vol;
@@ -49,6 +58,7 @@ typedef struct {
 	ColorPalette	palette;
 	Games_e	current_game;
 	UiState	current_ui;
+	Assets	assets;
 } GameData;
 
 typedef struct GameFunctions GameFunctions ;
@@ -64,5 +74,6 @@ GameFunctions	snake_game_init(GameData *data);
 GameFunctions	tetris_init(GameData *data);
 GameFunctions	main_menu_init(GameData *data);
 
+void	ui_trasition_from(V2 dir);
 void	pause_game();
 #endif // GAME_H_
