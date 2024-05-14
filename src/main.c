@@ -26,16 +26,16 @@ int	main()
 	data.effects_vol = 1.0f;
 	data.assets = (Assets) {0};
 	data.palette = (ColorPalette) {
-		.black = (Color){43, 5, 4, 255},
-		.white = (Color){233, 228, 205, 255},
-		.red = (Color){249, 39, 0, 255},
-		.pink = (Color){211, 0, 92, 255},
-		.blue = (Color){49, 21, 172, 255},
-		.yellow = (Color){224, 245, 0, 255},
-		.green = (Color){249, 111, 0, 255},
-		.orange = (Color){244, 93, 1, 255},
-		.purple = (Color){130, 5, 165, 255},
-		.background = (Color){237, 191, 198, 255},
+		.black = {0, 0, 0, 255},
+		.white = {233, 228, 205, 255},
+		.red   = {249, 39, 0, 255},
+		.pink  = {211, 0, 92, 255},
+		.blue  = {49, 21, 172, 255},
+		.yellow= {224, 245, 0, 255},
+		.green = {249, 111, 0, 255},
+		.orange= {244, 93, 1, 255},
+		.purple= {130, 5, 165, 255},
+		.background = {237, 191, 198, 255},
 	};
 	data.current_game = MAIN_MENU;
 	game = -1;
@@ -44,7 +44,7 @@ int	main()
 	prev_ui = NONE;
 
 	// Enable config flags for resizable window and vertical synchro
-	//SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
 	InitWindow(data.window_size.x,data.window_size.y, "Raylib Bricks games");
 	InitAudioDevice();
 	SetTargetFPS(60);

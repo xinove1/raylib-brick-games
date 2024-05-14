@@ -101,7 +101,7 @@ GameFunctions	main_menu_init(GameData *data)
 		.font = data->assets.fonts[1],
 		.size = 22,
 		.spacing = 2,
-		.tint = data->palette.red,
+		.tint = data->palette.black,
 		.tint_hover = data->palette.purple,
 	};
 
@@ -109,7 +109,7 @@ GameFunctions	main_menu_init(GameData *data)
 		.font = data->assets.fonts[2],
 		.size = 42,
 		.spacing = 2,
-		.tint = data->palette.blue,
+		.tint = data->palette.black,
 		.tint_hover = data->palette.purple,
 	};
 

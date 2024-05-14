@@ -1,4 +1,5 @@
 #include "game.h"
+#include "raylib.h"
 #include "style_candy.h"
 
 typedef struct {
@@ -51,8 +52,7 @@ static int	tick_time = 5; // How many frames until a game tick
 
 static int	rotate(Vector2 pos, int r);
 static int	check_piece_collision(int piece, Vector2 pos, int rotation);
-static void	draw_piece(int piece, Vector2 pos, int rotation);
-static void	draw_piece_ex(int piece, Vector2 pos, int rotation, int scale, Vector2 offset);
+static void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset);
 static void	draw_board();
 static int	check_line_made(Vector2 pos);
 static void	cleanup_made_lines();
@@ -139,13 +139,13 @@ static void	update()
 	BeginDrawing();
 	ClearBackground(RAYWHITE);
 	draw_board();
-	draw_piece(piece, pos, rotation);
+	draw_piece(piece, pos, rotation, tile_size, board_offset);
 
 	const char	*score_text = TextFormat("Score: %d", score);
 	MeasureTextEx(font, score_text, 18, 3);
 	DrawTextEx(font, score_text, stored_piece_offset, 18, 3, GREEN);
 	if (stored_piece != -1)  {
-		draw_piece_ex(stored_piece, (Vector2){1,1}, 0, tile_size, stored_piece_offset);
+		draw_piece(stored_piece, (Vector2){1,1}, 0, tile_size, stored_piece_offset);
 	}
 
 	if (paused) {
@@ -219,6 +219,7 @@ GameFunctions	tetris_init(GameData *game_data)
 	board_offset = (Vector2){window_size.x/2 - (board_size.x * tile_size)/2, window_size.y/2 - (board_size.y * tile_size)/2};
 	stored_piece_offset = (Vector2){board_offset.x - 100, board_offset.y};
 	font = data->assets.fonts[0];
+
 	piece_colors[0] = data->palette.blue;
 	piece_colors[1] = data->palette.yellow;
 	piece_colors[2] = data->palette.red;
@@ -230,8 +231,8 @@ GameFunctions	tetris_init(GameData *game_data)
 	piece_colors[8] = data->palette.white;
 
 	game_sounds.music = data->assets.music[0];
-	game_sounds.game_over = data->assets.sounds[0];
-	game_sounds.made_line = data->assets.sounds[1];
+	game_sounds.made_line = data->assets.sounds[0];
+	game_sounds.game_over = data->assets.sounds[1];
 	
 	GuiLoadStyleCandy();
 	return (GameFunctions) { 
@@ -313,31 +314,12 @@ void	draw_board()
 	}
 }
 
-void	draw_piece(int piece, Vector2 pos, int rotation)
+void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset)
 {
-	draw_piece_ex(piece, pos, rotation, tile_size, board_offset);
-	return;
-	if (piece < 0 && piece > 6)
+	if (piece < 0 || piece > 6) {
+		TraceLog(LOG_INFO, "draw_piece_ex: invalid piece value: %d \n", piece);
 		return ;
-	for (int y = 0; y < 4; y++)
-	{
-		for (int x = 0; x < 4; x++)
-		{
-			if (pieces[piece][rotate((Vector2){x,y}, rotation)] != 'X')
-				continue;
-			Vector2	draw_pos = Vector2Add(pos,  (Vector2){x, y}); // Add Position in the board + position inside the 4x4 of the piece
-			draw_pos = Vector2Scale(draw_pos, tile_size);
-			draw_pos = Vector2Add(draw_pos, board_offset);
-			DrawRectangle(draw_pos.x, draw_pos.y, tile_size, tile_size, piece_colors[piece]);
-			//DrawRectangleLines(draw_pos.x, draw_pos.y, tile_size, tile_size, BLACK);
-		}
 	}
-}
-
-void	draw_piece_ex(int piece, Vector2 pos, int rotation, int scale, Vector2 offset)
-{
-	if (piece < 0 && piece > 6)
-		return ;
 	for (int y = 0; y < 4; y++)
 	{
 		for (int x = 0; x < 4; x++)
@@ -380,12 +362,10 @@ void	cleanup_made_lines()
 {
 	for (int line = 0; line < board_size.y; line++)
 	{
-		//printf("made_lines:%d\n", made_lines[line]);
 		if (made_lines[line] != 1)
 			continue;
 		for (int x = 1; x < board_size.x - 1; x++)
 		{
-		//	printf("line:%d, x:%d\n", line, x);
 			board[line * (int)board_size.x + x] = 0;
 			for (int y = line; y > 0; y--)
 				board[y * (int)board_size.x + x] = board[(y - 1) * (int)board_size.x + x];
@@ -397,7 +377,7 @@ void	cleanup_made_lines()
 
 int	check_piece_collision(int piece, Vector2 pos, int rotation)
 {
-	if (piece < 0 && piece > 6)
+	if (piece < 0 || piece > 6)
 		return (1);
 	for (int y = 0; y < 4; y++)
 	{
