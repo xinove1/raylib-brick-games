@@ -21,14 +21,13 @@ static TetrisSounds	game_sounds = {0, 0, 0};
 
 // Drawing related
 static Vector2	board_offset = {0, 0};
-static int	tile_size = 16;
+static int	tileSize = 16;
 static Color	piece_colors[9];
 static Font	font;
-static Vector2	stored_piece_offset;
 
 // Game
 static int	rotate_count = 0;
-static int	rotate_rate = 3; // Rate in ticks to rotate when holding down rotate button
+static int	rotate_rate = 2; // Rate in ticks to rotate when holding down rotate button
 
 static Vector2	pos = {board_size.x / 2 - 2, 0};
 static int	piece = 0;
@@ -52,7 +51,9 @@ static int	tick_time = 5; // How many frames until a game tick
 
 static int	rotate(Vector2 pos, int r);
 static int	check_piece_collision(int piece, Vector2 pos, int rotation);
+static void	draw();
 static void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset);
+static void	draw_grid(V2 grid_size, int tile_size, V2 offset) ;
 static void	draw_board();
 static int	check_line_made(Vector2 pos);
 static void	cleanup_made_lines();
@@ -74,7 +75,6 @@ static void	update()
 	SetSoundVolume(game_sounds.made_line, data->effects_vol);
 	SetSoundVolume(game_sounds.game_over, data->effects_vol);
 
-
 	UpdateMusicStream(game_sounds.music);
 
 	if (!paused && !IsWindowFocused()) {
@@ -83,14 +83,22 @@ static void	update()
 	if (IsActionPressed("open_menu")) {
 		paused = paused ? false : true;
 	}
+	if (IsActionPressed("space_bar")) {
+		V2	new_pos = pos;
+		while (!check_piece_collision(piece, new_pos, rotation)) {
+			new_pos.y += 1;
+		}
+		pos.y = new_pos.y - 1;
+		force_piece_down();
+		frame_count = 0;
+	}
 
 	if (frame_count < tick_time)
 		frame_count++;
-	else if (!paused && !game_over) { // Game Logic
+	else if (!paused && !game_over) {
 		frame_count = 0;
-
 		speed_count++;
-		//pos = (Vector2) {pos.x, pos.y + 1};
+
 		if (speed_count == speed || IsActionDown("down")) 
 			force_piece_down();
 
@@ -112,14 +120,22 @@ static void	update()
 				stored_piece = tmp;
 			}
 		}
-		if (IsActionDown("action_1")) {
+		if (IsActionDown("action_1") || IsActionDown("up")) {
 			if (rotate_count % rotate_rate == 0 && !check_piece_collision(piece, (Vector2){pos.x, pos.y}, rotation + 1)) {
-				rotation += 1;
+				if (IsActionDown("action_1")) {
+					rotation -= 1;
+				}
+				if (IsActionDown("up")) {
+					rotation += 1;
+				}
 				if (piece == 0 && rotation == 2) {
 					rotation = 0;
 				}
 				if (rotation == 4) {
 					rotation = 0;
+				}
+				if (rotation == -1) {
+					rotation = 3;
 				}
 			}
 			rotate_count++;
@@ -136,16 +152,43 @@ static void	update()
 		}
 	}
 
+	draw();
+}
+
+static void	draw() {
 	BeginDrawing();
 	ClearBackground(RAYWHITE);
-	draw_board();
-	draw_piece(piece, pos, rotation, tile_size, board_offset);
 
-	const char	*score_text = TextFormat("Score: %d", score);
-	MeasureTextEx(font, score_text, 18, 3);
-	DrawTextEx(font, score_text, stored_piece_offset, 18, 3, GREEN);
-	if (stored_piece != -1)  {
-		draw_piece(stored_piece, (Vector2){1,1}, 0, tile_size, stored_piece_offset);
+	draw_grid((V2){board_size.x -1, board_size.y -1}, tileSize, board_offset); 
+	draw_board();
+	draw_piece(piece, pos, rotation, tileSize, board_offset);
+
+	{
+		const char	*text = TextFormat("Score: %d", score);
+		V2	text_size = MeasureTextEx(font, text, 22, 3);
+		V2 offset = {board_offset.x - tileSize * 5, board_offset.y};
+		
+		
+		V2	text_pos = {offset.x, offset.y - text_size.y};
+		draw_grid((V2){4, 4}, tileSize, offset);
+		DrawTextEx(font, text, text_pos, 22, 3, data->palette.green);
+		if (stored_piece != -1)  {
+			draw_piece(stored_piece, (Vector2){1,1}, 0, tileSize, offset);
+		}
+	}
+
+	{
+		const char	*text = "Coming up:";
+		V2	text_size = MeasureTextEx(font, text, 22, 3);
+		V2 offset = {board_offset.x + board_size.x * tileSize, board_offset.y};
+		
+		
+		V2	text_pos = {offset.x, offset.y - text_size.y};
+		draw_grid((V2){4, 4}, tileSize, offset);
+		DrawTextEx(font, text, text_pos, 22, 3, data->palette.green);
+		if (next_piece != -1)  {
+			draw_piece(next_piece , (Vector2){1,1}, 0, tileSize, offset);
+		}
 	}
 
 	if (paused) {
@@ -153,17 +196,16 @@ static void	update()
 		data->current_ui = OPTIONS_MENU;
 		paused = false;
 	} else if (game_over) {
+		ui_trasition_from((V2){1, 0});
+		data->current_ui = GAME_OVER_MENU;
+		game_over = false;
+		start();
+		 
 		// TODO Display score & high_score
 		if (score > high_score) {
 			high_score = score;
 			//  TODO  Custom text for new highScore
 		}
-		DrawRectangleV((Vector2){0,0}, window_size, (Color){ 100, 100, 100, 100}); 
-		char	*str = "Game Over";
-		Vector2	str_size = MeasureTextEx(font, str, 30, 4);
-		Vector2	pos = (Vector2){window_size.x / 2 - str_size.x / 2, window_size.y / 2 - str_size.y / 2};
-		DrawRectangleV(pos, str_size, (Color){ 100, 200, 100, 255}); 
-		DrawTextEx(font, str, pos, 30, 4, RED);
 	}
 
 	EndDrawing();
@@ -216,8 +258,7 @@ GameFunctions	tetris_init(GameData *game_data)
 	board = malloc(board_size.x * board_size.y);
 
 	window_size = data->window_size;
-	board_offset = (Vector2){window_size.x/2 - (board_size.x * tile_size)/2, window_size.y/2 - (board_size.y * tile_size)/2};
-	stored_piece_offset = (Vector2){board_offset.x - 100, board_offset.y};
+	board_offset = (Vector2){window_size.x/2 - (board_size.x * tileSize)/2, window_size.y/2 - (board_size.y * tileSize)/2};
 	font = data->assets.fonts[0];
 
 	piece_colors[0] = data->palette.blue;
@@ -243,7 +284,7 @@ GameFunctions	tetris_init(GameData *game_data)
 	};
 }
 
-void	force_piece_down() {
+static void	force_piece_down() {
 	speed_count = 0;
 
 	if (!check_piece_collision(piece, (Vector2){pos.x, pos.y + 1}, rotation)) {
@@ -289,7 +330,7 @@ void	force_piece_down() {
 	}
 }
 
-void	clean_board()
+static void	clean_board()
 {
 	for (int y = 0; y < board_size.y; y++) {
 		for (int x = 0; x < board_size.x; x++) {
@@ -298,23 +339,37 @@ void	clean_board()
 	}
 }
 
-void	draw_board()
+static void	draw_board()
 {
-	for (int y = 0; y < board_size.y; y++)
-	{
-		for (int x = 0; x < board_size.x; x++)
-		{
-			Vector2	draw_pos = Vector2Scale((Vector2){x, y}, tile_size); // Add Position in the board + position inside the 4x4 of the piece
+	for (int y = 0; y < board_size.y; y++) {
+		for (int x = 0; x < board_size.x; x++) {
+			Vector2	draw_pos = Vector2Scale((Vector2){x, y}, tileSize); // Add Position in the board + position inside the 4x4 of the piece
 			draw_pos = Vector2Add(draw_pos, board_offset);
-
 			int	piece = board[y * (int)board_size.x + x];
-			if (piece != 0)
-				DrawRectangle(draw_pos.x, draw_pos.y, tile_size, tile_size, piece_colors[piece - 1]);
+			if (piece != 0) {
+				DrawRectangle(draw_pos.x, draw_pos.y, tileSize, tileSize, piece_colors[piece - 1]);
+			}
 		}
 	}
 }
 
-void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset)
+static void	draw_grid(V2 grid_size, int tile_size, V2 offset) 
+{
+	Color	light_grey = ColorAlpha(data->palette.black, 0.2);
+	for (int y = 0; y < grid_size.y + 1; y++) {
+		V2	pos = {offset.x, offset.y + y * tile_size};
+		V2	end_pos = {offset.x + grid_size.x * tile_size, offset.y + y * tile_size};
+		DrawLineEx(pos, end_pos, 1, light_grey);
+	}
+	for (int x = 0; x < grid_size.x + 1; x++) {
+		V2	pos = {offset.x + x * tile_size, offset.y};
+		V2	end_pos = {offset.x + x * tile_size, offset.y + grid_size.y * tile_size};
+		DrawLineEx(pos, end_pos, 1, light_grey);
+	}
+}
+
+
+static void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset)
 {
 	if (piece < 0 || piece > 6) {
 		TraceLog(LOG_INFO, "draw_piece_ex: invalid piece value: %d \n", piece);
@@ -329,13 +384,13 @@ void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset)
 			Vector2	draw_pos = Vector2Add(pos,  (Vector2){x, y}); // Add Position in the board + position inside the 4x4 of the piece
 			draw_pos = Vector2Scale(draw_pos, scale);
 			draw_pos = Vector2Add(draw_pos, offset);
-			DrawRectangle(draw_pos.x, draw_pos.y, tile_size, tile_size, piece_colors[piece]);
+			DrawRectangle(draw_pos.x, draw_pos.y, tileSize, tileSize, piece_colors[piece]);
 			//DrawRectangleLines(draw_pos.x, draw_pos.y, tile_size, tile_size, BLACK);
 		}
 	}
 }
 
-int	check_line_made(Vector2 pos)
+static int	check_line_made(Vector2 pos)
 {
 	int	lines_made = 0;
 	for (int y = 0; y < 4; y++)
@@ -358,7 +413,7 @@ int	check_line_made(Vector2 pos)
 	return (lines_made);
 }
 
-void	cleanup_made_lines()
+static void	cleanup_made_lines()
 {
 	for (int line = 0; line < board_size.y; line++)
 	{
@@ -375,7 +430,7 @@ void	cleanup_made_lines()
 	is_made_lines = false;
 }
 
-int	check_piece_collision(int piece, Vector2 pos, int rotation)
+static int	check_piece_collision(int piece, Vector2 pos, int rotation)
 {
 	if (piece < 0 || piece > 6)
 		return (1);
@@ -396,7 +451,7 @@ int	check_piece_collision(int piece, Vector2 pos, int rotation)
 	return (0);
 }
 
-int	rotate(Vector2 pos, int r)
+static int	rotate(Vector2 pos, int r)
 {
 	//r = r % 4;
 	if (r == 0)

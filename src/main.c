@@ -1,3 +1,4 @@
+#include "raylib.h"
 #define RAYGUI_IMPLEMENTATION
 #define XI_INPUT_ACTIONS_IMPLEMENTATION
 #include "game.h"
@@ -63,6 +64,7 @@ int	main()
 	register_input_action("action_1", KEY_X);
 	register_input_action("action_2", KEY_K);
 	register_input_action("action_2", KEY_Z);
+	register_input_action("space_bar", KEY_SPACE);
 	register_input_action("open_menu", KEY_ESCAPE);
 	register_input_action("open_menu", KEY_E);
 
