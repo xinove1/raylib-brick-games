@@ -6,6 +6,7 @@
 # define MAX_SNAKE_SIZE ((board_size.x - 1) * (board_size.y - 1))
 
 static V2	board_size = {15, 15};
+static void	draw();
 static void	draw_game();
 static int	check_collision(Vector2	pos);
 static void	move_snake_body(Vector2 new_head_pos, int add_body);
@@ -23,7 +24,6 @@ static bool	game_over = false;
 static bool	easy_mode = true;
 
 GameData *data = 0;
-void	draw();
 
 static void	start()
 {
@@ -104,16 +104,12 @@ static void update()
 			// TODO draw win screen
 		}
 	}
-
-	draw();
 }
 
-void	draw() 
+static void	draw() 
 {
-	BeginDrawing();
 	ClearBackground(RAYWHITE);
 	draw_game();
-	EndDrawing();
 }
 
 void	de_init() {
@@ -133,6 +129,7 @@ GameFunctions	snake_game_init(GameData *game_data)
 	return (GameFunctions) { 
 		.name = "Snake Game",
 		.update = &update,
+		.draw = &draw,
 		.start = &start,
 		.de_init = &de_init,
 	};
@@ -203,6 +200,7 @@ static void	draw_game()
 {
 	ColorPalette	palette = data->palette;
 	Color	light_grey = ColorAlpha(palette.black, 0.1);
+
 	// Grid
 	for (int x = 1; x < board_size.x; x++) {
 		V2	pos = {board_offset.x + x * TILE_SIZE, board_offset.y + TILE_SIZE};
@@ -215,6 +213,7 @@ static void	draw_game()
 		DrawLineEx(pos, end_pos, 1, light_grey);
 	}
 
+	// Snake
 	for (int i = 0; i < MAX_SNAKE_SIZE; i++) {
 		if (snake[i].x == 0)
 			break ;
@@ -251,6 +250,7 @@ static void	draw_game()
 		}
 	}
 
+	// Apples
 	for (int i = 0; i < MAX_APPLES; i++) {
 		if (apples[i].x == 0)
 			continue;
@@ -259,6 +259,7 @@ static void	draw_game()
 		DrawRectangle(pos.x, pos.y, TILE_SIZE - 0.5, TILE_SIZE - 0.5, palette.red);
 	}
 
+	// Board border
 	float	line_thickness = 5;
 	Rect	board = {
 		.x = board_offset.x + TILE_SIZE - line_thickness,

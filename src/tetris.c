@@ -151,27 +151,22 @@ static void	update()
 				piece = 0;
 		}
 	}
-
-	draw();
 }
 
 static void	draw() {
-	BeginDrawing();
-	ClearBackground(RAYWHITE);
-
 	draw_grid((V2){board_size.x -1, board_size.y -1}, tileSize, board_offset); 
 	draw_board();
 	draw_piece(piece, pos, rotation, tileSize, board_offset);
 
 	{
 		const char	*text = TextFormat("Score: %d", score);
-		V2	text_size = MeasureTextEx(font, text, 22, 3);
+		V2	text_size = MeasureTextEx(font, text, 20, 3);
 		V2 offset = {board_offset.x - tileSize * 5, board_offset.y};
 		
 		
 		V2	text_pos = {offset.x, offset.y - text_size.y};
 		draw_grid((V2){4, 4}, tileSize, offset);
-		DrawTextEx(font, text, text_pos, 22, 3, data->palette.green);
+		DrawTextEx(font, text, text_pos, 20, 3, data->palette.green);
 		if (stored_piece != -1)  {
 			draw_piece(stored_piece, (Vector2){1,1}, 0, tileSize, offset);
 		}
@@ -179,13 +174,13 @@ static void	draw() {
 
 	{
 		const char	*text = "Coming up:";
-		V2	text_size = MeasureTextEx(font, text, 22, 3);
+		V2	text_size = MeasureTextEx(font, text, 20, 3);
 		V2 offset = {board_offset.x + board_size.x * tileSize, board_offset.y};
 		
 		
 		V2	text_pos = {offset.x, offset.y - text_size.y};
 		draw_grid((V2){4, 4}, tileSize, offset);
-		DrawTextEx(font, text, text_pos, 22, 3, data->palette.green);
+		DrawTextEx(font, text, text_pos, 20, 3, data->palette.green);
 		if (next_piece != -1)  {
 			draw_piece(next_piece , (Vector2){1,1}, 0, tileSize, offset);
 		}
@@ -207,8 +202,6 @@ static void	draw() {
 			//  TODO  Custom text for new highScore
 		}
 	}
-
-	EndDrawing();
 }
 
 static void	de_init() 
@@ -279,6 +272,7 @@ GameFunctions	tetris_init(GameData *game_data)
 	return (GameFunctions) { 
 		.name = "Tetris",
 		.update = &update,
+		.draw = &draw,
 		.start = &start,
 		.de_init = &de_init,
 	};
@@ -355,7 +349,7 @@ static void	draw_board()
 
 static void	draw_grid(V2 grid_size, int tile_size, V2 offset) 
 {
-	Color	light_grey = ColorAlpha(data->palette.black, 0.2);
+	Color	light_grey = ColorAlpha(data->palette.black, 0.1);
 	for (int y = 0; y < grid_size.y + 1; y++) {
 		V2	pos = {offset.x, offset.y + y * tile_size};
 		V2	end_pos = {offset.x + grid_size.x * tile_size, offset.y + y * tile_size};

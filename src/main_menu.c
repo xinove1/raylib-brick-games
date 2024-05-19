@@ -78,18 +78,17 @@ static void	update()
 		EndTextureMode();
 		flag = true;
 	}
-
-	BeginDrawing();
 	//printf("target_pos: %f,%f \n", target_pos.x, target_pos.y);
+}
 
+static void draw() 
+{
 	TextTexturePos = Vector2Lerp(TextTexturePos, (V2) {0, 0}, 0.08);
 	BackgroundPos = Vector2Lerp(BackgroundPos, (V2) {0, 0}, 0.11);
 	Rect	rect = {0, 0, Data->window_size.x, -Data->window_size.y};
 	Rect	rect_back = {0, 0, Data->window_size.x, Data->window_size.y};
 	DrawTextureRec(BackgroundTexture.texture, rect_back, BackgroundPos, WHITE);
 	DrawTextureRec(TextTexture.texture, rect, TextTexturePos, WHITE);
-
-	EndDrawing();
 }
 
 GameFunctions	main_menu_init(GameData *data)
@@ -116,6 +115,7 @@ GameFunctions	main_menu_init(GameData *data)
 	return (GameFunctions) { 
 		.name = "Main menu",
 		.update = &update,
+		.draw = &draw,
 		.start = &start,
 		.de_init = &de_init,
 	};

@@ -1,16 +1,17 @@
 #ifndef GAME_H_
 # define GAME_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include "raylib.h"
-//#include "stb_truetype.h"
-#include "raymath.h"
-#include "raygui.h"
-#include "input.h"
+# include <stdio.h>
+# include <stdlib.h>
+# include <assert.h>
+# include <string.h>
+# include "raylib.h"
+# include "raymath.h"
+# include "raygui.h"
+# include "input.h"
 
+# define MAX(a, b) ((a)>(b)? (a) : (b))
+# define MIN(a, b) ((a)<(b)? (a) : (b))
 
 typedef Vector2 V2 ;
 typedef Rectangle Rect;
@@ -68,6 +69,7 @@ struct GameFunctions
 	char	*name;
 	void	(*start)(void);
 	void	(*update)(void);
+	void	(*draw)(void);
 	void	(*de_init)(void);
 };
 

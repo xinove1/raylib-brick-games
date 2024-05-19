@@ -17,12 +17,13 @@ static GameFunctions	games[GAME_COUNT] = {0};
 static Games_e	game;
 static UiState	ui;
 static UiState	prev_ui;
+static RenderTexture2D	screen;
 
 int	main()
 {
 	GameData	data = {0};
 
-	data.window_size = (V2) {800, 600};
+	data.window_size = (V2) {640, 360};
 	data.music_vol = 1.0f;
 	data.effects_vol = 1.0f;
 	data.assets = (Assets) {0};
@@ -38,7 +39,7 @@ int	main()
 		.purple= {130, 5, 165, 255},
 		.background = {237, 191, 198, 255},
 	};
-	data.current_game = MAIN_MENU;
+	data.current_game = TETRIS;
 	game = -1;
 	data.current_ui = TITLE_SCREEN;
 	ui = NONE;
@@ -46,11 +47,15 @@ int	main()
 
 	// Enable config flags for resizable window and vertical synchro
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
-	InitWindow(data.window_size.x,data.window_size.y, "Raylib Bricks games");
+	InitWindow(data.window_size.x, data.window_size.y, "Raylib Bricks games");
 	InitAudioDevice();
 	SetTargetFPS(60);
 	SetExitKey(0);
 
+	screen = LoadRenderTexture(data.window_size.x, data.window_size.y);
+	//SetTextureFilter(screen.texture, TEXTURE_FILTER_BILINEAR);  
+	SetTextureFilter(screen.texture, TEXTURE_FILTER_ANISOTROPIC_16X);  
+	
 	register_input_action("right", KEY_D);
 	register_input_action("right", KEY_RIGHT);
 	register_input_action("left", KEY_A);
@@ -75,6 +80,18 @@ int	main()
 	games[MAIN_MENU] = main_menu_init(&data);
 
 	while (!WindowShouldClose() && !data.quit) {
+
+		float screen_scale = MIN((float)GetScreenWidth()/data.window_size.x, (float)GetScreenHeight() / data.window_size.y);
+		// Update virtual mouse (clamped mouse value behind game screen)
+		Vector2 mouse = GetMousePosition();
+		Vector2 virtualMouse = { 0 };
+		virtualMouse.x = (mouse.x - (GetScreenWidth() - (data.window_size.x *screen_scale))*0.5f)/screen_scale;
+		virtualMouse.y = (mouse.y - (GetScreenHeight() - (data.window_size.y *screen_scale))*0.5f)/screen_scale;
+		virtualMouse = Vector2Clamp(virtualMouse, (Vector2){ 0, 0 }, (Vector2){ (float)data.window_size.x, (float)data.window_size.y});
+
+		//Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
+		SetMouseOffset(-(GetScreenWidth() - (data.window_size.x*screen_scale))*0.5f, -(GetScreenHeight() - (data.window_size.y*screen_scale))*0.5f);
+		SetMouseScale(1 / screen_scale, 1 / screen_scale);
 		if (data.current_game < 0 || data.current_game >= GAME_COUNT) {
 			TraceLog(LOG_INFO, "main.c: Invalid option for current_game, won't change.\n");
 		}
@@ -101,8 +118,27 @@ int	main()
 		} else {
 			games[MAIN_MENU].update();
 		}
+		BeginTextureMode(screen);
+		ClearBackground(RAYWHITE);
+		if (ui == NONE) { // Only call update if none of the ui is active
+			games[game].draw();
+		} else {
+			games[MAIN_MENU].draw();
+		}
+		EndTextureMode();
 
-		// TODO Separeta games update from draw and call here
+		BeginDrawing();
+		ClearBackground(BLACK);
+		// Draw render texture to screen, properly scaled
+		DrawTexturePro(screen.texture,
+		 (Rect){0.0f, 0.0f, (float) screen.texture.width, (float) -screen.texture.height},
+		 (Rect){(GetScreenWidth() - ((float) data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((float) data.window_size.y*screen_scale)) * 0.5f,
+			(float)data.window_size.x * screen_scale, (float)data.window_size.y * screen_scale },
+		 (Vector2){ 0, 0 },
+		 0.0f,
+		 WHITE);
+		EndDrawing();
+
 	}
 
 	games[SNAKE_GAME].de_init();
@@ -120,11 +156,11 @@ static void	load_assets(GameData *data) {
 	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
-	data->assets.fonts[0] = LoadFont("./assets/kenney_blocks.ttf");
-	// data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
-	// data->assets.fonts[2] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 42, NULL, 0);
-	data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
-	data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
+	data->assets.fonts[0] = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0);
+	data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
+	data->assets.fonts[2] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 42, NULL, 0);
+	// data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
+	// data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
 }
 
 static void	unload_assets(GameData *data) {
