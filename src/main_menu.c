@@ -277,6 +277,30 @@ void	play_menu(GameData *data)
 		}
 		DrawRectangleRec(rect, palette.yellow);
 		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
+
+		target_rect.x += 30 + text_size.x;
+		target_rect.y += 30;
+	}
+
+	{
+		char	*text = "Test";
+		V2	text_size = MeasureTextEx(font, text, 35, 3);
+		Color	text_color = palette.blue;
+		V2	offset = {target_rect.x + text_size.x, target_rect.y};
+		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+
+		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+			text_color = palette.purple;
+			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+				data->current_game = TEST;
+				data->current_ui = NONE;
+			}
+		}
+		DrawRectangleRec(rect, palette.yellow);
+		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
+
+		target_rect.x += 30 + text_size.x;
+		target_rect.y += 30;
 	}
 
 	{

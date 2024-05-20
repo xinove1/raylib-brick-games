@@ -21,7 +21,7 @@ static TetrisSounds	game_sounds = {0, 0, 0};
 
 // Drawing related
 static Vector2	board_offset = {0, 0};
-static int	tileSize = 16;
+static int	tileSize = TILE_SIZE;
 static Color	piece_colors[9];
 static Font	font;
 
@@ -53,7 +53,6 @@ static int	rotate(Vector2 pos, int r);
 static int	check_piece_collision(int piece, Vector2 pos, int rotation);
 static void	draw();
 static void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset);
-static void	draw_grid(V2 grid_size, int tile_size, V2 offset) ;
 static void	draw_board();
 static int	check_line_made(Vector2 pos);
 static void	cleanup_made_lines();
@@ -154,7 +153,7 @@ static void	update()
 }
 
 static void	draw() {
-	draw_grid((V2){board_size.x -1, board_size.y -1}, tileSize, board_offset); 
+	draw_grid(board_offset, (V2){board_size.x -1, board_size.y -1}, tileSize); 
 	draw_board();
 	draw_piece(piece, pos, rotation, tileSize, board_offset);
 
@@ -165,7 +164,8 @@ static void	draw() {
 		
 		
 		V2	text_pos = {offset.x, offset.y - text_size.y};
-		draw_grid((V2){4, 4}, tileSize, offset);
+		draw_grid(offset, (V2){4, 4}, tileSize);
+		DrawRectangle(offset.x, offset.y, tileSize, tileSize, ColorAlpha(RED, 0.2));
 		DrawTextEx(font, text, text_pos, 20, 3, data->palette.green);
 		if (stored_piece != -1)  {
 			draw_piece(stored_piece, (Vector2){1,1}, 0, tileSize, offset);
@@ -179,7 +179,7 @@ static void	draw() {
 		
 		
 		V2	text_pos = {offset.x, offset.y - text_size.y};
-		draw_grid((V2){4, 4}, tileSize, offset);
+		draw_grid(offset, (V2){4, 4}, tileSize);
 		DrawTextEx(font, text, text_pos, 20, 3, data->palette.green);
 		if (next_piece != -1)  {
 			draw_piece(next_piece , (Vector2){1,1}, 0, tileSize, offset);
@@ -346,22 +346,6 @@ static void	draw_board()
 		}
 	}
 }
-
-static void	draw_grid(V2 grid_size, int tile_size, V2 offset) 
-{
-	Color	light_grey = ColorAlpha(data->palette.black, 0.1);
-	for (int y = 0; y < grid_size.y + 1; y++) {
-		V2	pos = {offset.x, offset.y + y * tile_size};
-		V2	end_pos = {offset.x + grid_size.x * tile_size, offset.y + y * tile_size};
-		DrawLineEx(pos, end_pos, 1, light_grey);
-	}
-	for (int x = 0; x < grid_size.x + 1; x++) {
-		V2	pos = {offset.x + x * tile_size, offset.y};
-		V2	end_pos = {offset.x + x * tile_size, offset.y + grid_size.y * tile_size};
-		DrawLineEx(pos, end_pos, 1, light_grey);
-	}
-}
-
 
 static void	draw_piece(int piece, Vector2 pos, int rotation, int scale, Vector2 offset)
 {

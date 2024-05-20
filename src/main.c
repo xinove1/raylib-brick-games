@@ -78,6 +78,7 @@ int	main()
 	games[SNAKE_GAME] = snake_game_init(&data);
 	games[TETRIS] = tetris_init(&data);
 	games[MAIN_MENU] = main_menu_init(&data);
+	games[TEST] = test_game_init(&data);
 
 	while (!WindowShouldClose() && !data.quit) {
 
@@ -144,6 +145,7 @@ int	main()
 	games[SNAKE_GAME].de_init();
 	games[TETRIS].de_init();
 	games[MAIN_MENU].de_init();
+	games[TEST].de_init();
 
 	unload_assets(&data);
 
