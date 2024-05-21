@@ -4,14 +4,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-typedef struct {
-	Font	font;
-	int	size;
-	int	spacing;
-	Color	tint;
-	Color	tint_hover;
-} FontConfig;
-
 static GameData		*Data;
 static RenderTexture2D	TextTexture;
 static RenderTexture2D	BackgroundTexture;
@@ -121,6 +113,31 @@ GameFunctions	main_menu_init(GameData *data)
 	};
 }
 
+// Draw Text button centralized and add text height to pos
+bool	text_button(char *text, V2 *pos, char **active_ui, FontConfig config)
+{
+	bool	r = false;
+	V2	text_size = MeasureTextEx(config.font, text, config.size, config.spacing);
+	V2	offset = {pos->x -  0.5f * text_size.x, pos->y};
+	Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
+	Color	color = config.tint;
+
+	if (CheckCollisionPointRec(GetMousePosition(), rect) || text == *active_ui) {
+		*active_ui = text;
+		color = config.tint_hover;
+		DrawRectangle(offset.x - 10, offset.y, 5, 5, RED);
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsActionPressed("action_1")) {
+			r = true;
+		}
+	}
+
+	DrawTextEx(config.font, text, offset, config.size, config.spacing, color);
+
+	pos->y += text_size.y;
+
+	return (r);
+}
+
 void	ui_trasition_from(V2 dir)
 {
 	if (dir.x == 0 && dir.y == -1) { // Bottom
@@ -174,33 +191,38 @@ void	draw_blocks(GameData *data) {
 	}
 }
 
-// Draw Text button centralized and add text height to pos
-bool	text_button(char *text, V2 *pos, FontConfig config)
-{
-	bool	r = false;
-	V2	text_size = MeasureTextEx(config.font, text, config.size, config.spacing);
-	V2	offset = {pos->x -  0.5f * text_size.x, pos->y};
-	Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
-	Color	color = config.tint;
-
-	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-		color = config.tint_hover;
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-			r = true;
-		}
-	}
-
-	DrawTextEx(config.font, text, offset, config.size, config.spacing, color);
-
-	pos->y += text_size.y;
-
-	return (r);
-}
-
 void	main_menu(GameData *data)
 {
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+	
+	const int	max_ui = 3;
+	static char *uis[3] = {
+		"Play",
+		"Options",
+		"Quit",
+	};
+	static char	*active_ui = NULL;
+	static int	ui_index;
+	if (active_ui == NULL) {
+		active_ui = uis[0];
+		ui_index = 0;
+	}
+
+	if (IsActionPressed("up")) {
+		ui_index -= 1;
+		if (ui_index < 0) {
+			ui_index = max_ui -1;
+		}
+		active_ui = uis[ui_index];
+	}
+	if (IsActionPressed("down")) {
+		ui_index += 1;
+		if (ui_index >= max_ui) {
+			ui_index = 0;
+		}
+		active_ui = uis[ui_index];
+	}
 
 	// Draw Title
 	{
@@ -213,17 +235,19 @@ void	main_menu(GameData *data)
 		center.y += 15; // Add padding
 	}
 
-	if (text_button("Play", &center, TextConfig)) {
+	// Play
+	if (text_button(uis[0], &center, &active_ui, TextConfig)) {
 		data->current_ui = PLAY_MENU;
 	}
 	center.y += 10; // padding
 
-	if (text_button("Options", &center, TextConfig)) {
+	// Options
+	if (text_button(uis[1], &center, &active_ui, TextConfig)) {
 		data->current_ui = OPTIONS_MENU;
 	}
 	center.y += 10; // padding
 
-	if (text_button("Quit", &center, TextConfig)) {
+	if (text_button(uis[2], &center,  &active_ui, TextConfig)) {
 		data->quit = true;
 	}
 }
@@ -231,94 +255,72 @@ void	main_menu(GameData *data)
 void	play_menu(GameData *data)
 {
 	V2	window = data->window_size;
-	ColorPalette	palette = data->palette;
-	Font	font = GetFontDefault();
-
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-	Rect	target_rect = {window.x * 0.1f, window.y * 0.2f, window.x * 0.8f, window.y * 0.6f}; 
-	DrawRectangleLinesEx(target_rect, 5, palette.blue);
-	center.y += target_rect.height;
-	center.y += 10;
-
-	{
-		char	*text = "Snake Game";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = palette.green;
-		V2	offset = {target_rect.x + 30, target_rect.y + 30};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
-
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = palette.yellow;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_game = SNAKE_GAME;
-				data->current_ui = NONE;
-			}
-		}
-		DrawRectangleRec(rect, BLUE);
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		target_rect.x += 30 + text_size.x;
-		target_rect.y += 30;
+	
+	const int	max_ui = 4;
+	static char *uis[4] = {
+		"Tetris",
+		"Snake",
+		"Test",
+		"Back",
+	};
+	static char	*active_ui = NULL;
+	static int	ui_index;
+	if (active_ui == NULL) {
+		active_ui = uis[0];
+		ui_index = 0;
 	}
 
-	{
-		char	*text = "Tetris";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = palette.blue;
-		V2	offset = {target_rect.x + text_size.x, target_rect.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
-
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = palette.purple;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_game = TETRIS;
-				data->current_ui = NONE;
-			}
+	if (IsActionPressed("up")) {
+		ui_index -= 1;
+		if (ui_index < 0) {
+			ui_index = max_ui -1;
 		}
-		DrawRectangleRec(rect, palette.yellow);
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		target_rect.x += 30 + text_size.x;
-		target_rect.y += 30;
+		active_ui = uis[ui_index];
+	}
+	if (IsActionPressed("down")) {
+		ui_index += 1;
+		if (ui_index >= max_ui) {
+			ui_index = 0;
+		}
+		active_ui = uis[ui_index];
 	}
 
+	// Draw Title
 	{
-		char	*text = "Test";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = palette.blue;
-		V2	offset = {target_rect.x + text_size.x, target_rect.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
-
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = palette.purple;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_game = TEST;
-				data->current_ui = NONE;
-			}
-		}
-		DrawRectangleRec(rect, palette.yellow);
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
-
-		target_rect.x += 30 + text_size.x;
-		target_rect.y += 30;
-	}
-
-	{
-		char	*text = "Back";
-		V2	text_size = MeasureTextEx(font, text, 35, 3);
-		Color	text_color = palette.red;
+		char	*text = "Games:";
+		V2	text_size = MeasureTextEx(TextConfigHeading.font, text, TextConfigHeading.size, TextConfigHeading.spacing);
 		V2	offset = {center.x -  0.5f * text_size.x, center.y};
-		Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
-
-		if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-			text_color = palette.purple;
-			if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-				data->current_ui = BACK;
-			}
-		}
-		DrawTextEx(GetFontDefault(), text, offset, 35, 3, text_color);
+		DrawRectangle(offset.x - 5, offset.y - 5, text_size.x + 5, text_size.y + 5, data->palette.white);
+		DrawTextEx(TextConfigHeading.font, text, offset, TextConfigHeading.size, TextConfigHeading.spacing, TextConfigHeading.tint);
 		center.y += text_size.y;
-		center.y += 5; // Add padding
+		center.y += 15; // Add padding
+	}
+
+	// Tetris
+	if (text_button(uis[0], &center, &active_ui, TextConfig)) {
+		data->current_game = TETRIS;
+		data->current_ui = NONE;
+	}
+	center.y += 10; // padding
+
+	// Snake
+	if (text_button(uis[1], &center, &active_ui, TextConfig)) {
+		data->current_game = SNAKE_GAME;
+		data->current_ui = NONE;
+	}
+	center.y += 10; // padding
+
+	// Test
+	if (text_button(uis[2], &center,  &active_ui, TextConfig)) {
+		data->current_game = TEST;
+		data->current_ui = NONE;
+	}
+	center.y += 10; // padding
+	
+	// Back
+	if (text_button(uis[3], &center,  &active_ui, TextConfig)) {
+		data->current_ui = BACK;
 	}
 }
 
@@ -327,6 +329,32 @@ void	options_menu(GameData *data)
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
 
+	const int	max_ui = 2;
+	static char *uis[2] = {
+		"Nothing",
+		"Back",
+	};
+	static char	*active_ui = NULL;
+	static int	ui_index;
+	if (active_ui == NULL) {
+		active_ui = uis[0];
+		ui_index = 0;
+	}
+
+	if (IsActionPressed("up")) {
+		ui_index -= 1;
+		if (ui_index < 0) {
+			ui_index = max_ui -1;
+		}
+		active_ui = uis[ui_index];
+	}
+	if (IsActionPressed("down")) {
+		ui_index += 1;
+		if (ui_index >= max_ui) {
+			ui_index = 0;
+		}
+		active_ui = uis[ui_index];
+	}
 	//DrawRectangleV((V2){0,0}, window, (Color){ 100, 100, 100, 100}); 
 
 	// Draw Title
@@ -341,8 +369,14 @@ void	options_menu(GameData *data)
 
 
 	// TODO add options
+	
+	// Nothing
+	if (text_button(uis[0], &center, &active_ui,  TextConfig)){
+		printf("Nothing\n");
+	}
 
-	if (text_button("Back", &center, TextConfig)){
+	// BACK
+	if (text_button(uis[1], &center, &active_ui,  TextConfig)){
 		data->current_ui = BACK;
 	}
 }
@@ -351,6 +385,34 @@ void	game_over_menu(GameData *data)
 {
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+	
+	const int	max_ui = 2;
+	static char *uis[2] = {
+		"Play Again",
+		"Quit to main menu",
+	};
+	static char	*active_ui = NULL;
+	static int	ui_index;
+	if (active_ui == NULL) {
+		active_ui = uis[0];
+		ui_index = 0;
+	}
+
+	if (IsActionPressed("up")) {
+		ui_index -= 1;
+		if (ui_index < 0) {
+			ui_index = max_ui -1;
+		}
+		active_ui = uis[ui_index];
+	}
+	if (IsActionPressed("down")) {
+		ui_index += 1;
+		if (ui_index >= max_ui) {
+			ui_index = 0;
+		}
+		active_ui = uis[ui_index];
+	}
+
 	// Draw Title
 	{
 		char	*text = "Game Over";
@@ -361,13 +423,15 @@ void	game_over_menu(GameData *data)
 		center.y += 15; // Add padding
 	}
 
-	if (text_button("Play Again", &center, TextConfig)) {
+	// Play again
+	if (text_button(uis[0], &center, &active_ui, TextConfig)) {
 		data->current_ui = NONE;
 	}
 	
 	center.y += 30;
 
-	if (text_button("Quit to main menu", &center, TextConfig)) {
+	// Quit to main menu
+	if (text_button(uis[1], &center, &active_ui, TextConfig)) {
 		data->current_ui = TITLE_SCREEN;
 	}
 }

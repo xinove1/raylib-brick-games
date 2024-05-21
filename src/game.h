@@ -32,6 +32,14 @@ typedef enum {
 	BACK,
 } UiState;
 
+typedef struct {
+	Font	font;
+	int	size;
+	int	spacing;
+	Color	tint;
+	Color	tint_hover;
+} FontConfig;
+
 typedef struct ColorPalette {
 	Color	black;
 	Color	white;
@@ -54,7 +62,7 @@ typedef struct Assets {
 } Assets;
 
 typedef struct {
-	Vector2	window_size;
+	Vector2	window_size; // TODO  rename, canvas?
 	float	effects_vol;
 	float	music_vol;
 	bool	quit;
