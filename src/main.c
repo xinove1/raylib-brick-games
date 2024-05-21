@@ -39,15 +39,16 @@ int	main()
 		.purple= {130, 5, 165, 255},
 		.background = {237, 191, 198, 255},
 	};
-	data.current_game = TETRIS;
+	data.current_game = TEST;
 	game = -1;
-	data.current_ui = TITLE_SCREEN;
+	data.current_ui = NONE;
 	ui = NONE;
 	prev_ui = NONE;
 
 	// Enable config flags for resizable window and vertical synchro
-	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED | FLAG_VSYNC_HINT);
 	InitWindow(data.window_size.x, data.window_size.y, "Raylib Bricks games");
+	SetWindowState(FLAG_WINDOW_MAXIMIZED);
 	InitAudioDevice();
 	SetTargetFPS(60);
 	SetExitKey(0);

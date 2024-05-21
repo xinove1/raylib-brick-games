@@ -209,7 +209,8 @@ static void	draw_game()
 			break ;
 		Vector2	pos = Vector2Scale(snake[i], tile_size);
 		pos = Vector2Add(pos, board_offset);
-		DrawRectangle(pos.x, pos.y, tile_size - 1, tile_size - 1, palette.green);
+		DrawRectangle(pos.x, pos.y, tile_size, tile_size, palette.green);
+		// Head Eyes
 		if (i == 0) {
 			float	offset = tile_size * 0.35f;
 			float	size = 2.5;
@@ -246,7 +247,7 @@ static void	draw_game()
 			continue;
 		Vector2	pos = Vector2Scale(apples[i], tile_size);
 		pos = Vector2Add(pos, board_offset);
-		DrawRectangle(pos.x, pos.y, tile_size - 0.5, tile_size - 0.5, palette.red);
+		DrawRectangle(pos.x, pos.y, tile_size, tile_size, palette.red);
 	}
 
 	// Board border
