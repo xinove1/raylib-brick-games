@@ -39,9 +39,9 @@ int	main()
 		.purple= {130, 5, 165, 255},
 		.background = {237, 191, 198, 255},
 	};
-	data.current_game = TEST;
+	data.current_game = GAME_COUNT;
 	game = -1;
-	data.current_ui = NONE;
+	data.current_ui = TITLE_SCREEN;
 	ui = NONE;
 	prev_ui = NONE;
 
@@ -161,7 +161,7 @@ static void	load_assets(GameData *data) {
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
 	data->assets.fonts[0] = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0);
 	data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
-	data->assets.fonts[2] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 42, NULL, 0);
+	data->assets.fonts[2] = LoadFontEx("./assets/kenney_future_square.ttf", 40, NULL, 0);
 	// data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
 	// data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
 }

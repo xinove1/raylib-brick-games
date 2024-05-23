@@ -3,6 +3,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-I./raylib-5.0/src",
+      "-I./raylib-5.0/src/external",
+      "-std=c99",
       "-g3",
       "-Wall",
       "-Wextra",
@@ -24,6 +26,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-I./raylib-5.0/src",
+      "-I./raylib-5.0/src/external",
+      "-std=c99",
       "-g3",
       "-Wall",
       "-Wextra",
@@ -45,6 +49,31 @@
     "arguments": [
       "/usr/bin/gcc",
       "-I./raylib-5.0/src",
+      "-I./raylib-5.0/src/external",
+      "-std=c99",
+      "-g3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wdouble-promotion",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-trap",
+      "-DRAYGUI_DEBUG_RECS_BOUNDS",
+      "-DRAYGUI_DEBUG_TEXT_BOUNDS",
+      "-c",
+      "src/shared.c"
+    ],
+    "directory": "/home/xinove/stuff/raylib-brick-games",
+    "file": "/home/xinove/stuff/raylib-brick-games/src/shared.c"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./raylib-5.0/src",
+      "-I./raylib-5.0/src/external",
+      "-std=c99",
       "-g3",
       "-Wall",
       "-Wextra",
@@ -66,6 +95,31 @@
     "arguments": [
       "/usr/bin/gcc",
       "-I./raylib-5.0/src",
+      "-I./raylib-5.0/src/external",
+      "-std=c99",
+      "-g3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wdouble-promotion",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-trap",
+      "-DRAYGUI_DEBUG_RECS_BOUNDS",
+      "-DRAYGUI_DEBUG_TEXT_BOUNDS",
+      "-c",
+      "src/test_game.c"
+    ],
+    "directory": "/home/xinove/stuff/raylib-brick-games",
+    "file": "/home/xinove/stuff/raylib-brick-games/src/test_game.c"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./raylib-5.0/src",
+      "-I./raylib-5.0/src/external",
+      "-std=c99",
       "-g3",
       "-Wall",
       "-Wextra",

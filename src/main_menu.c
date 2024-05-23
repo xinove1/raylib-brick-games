@@ -93,12 +93,12 @@ GameFunctions	main_menu_init(GameData *data)
 		.size = 22,
 		.spacing = 2,
 		.tint = data->palette.black,
-		.tint_hover = data->palette.purple,
+		.tint_hover = data->palette.red,
 	};
 
 	TextConfigHeading = (FontConfig) {
 		.font = data->assets.fonts[2],
-		.size = 42,
+		.size = 40,
 		.spacing = 2,
 		.tint = data->palette.black,
 		.tint_hover = data->palette.purple,
@@ -113,20 +113,24 @@ GameFunctions	main_menu_init(GameData *data)
 	};
 }
 
-// Draw Text button centralized and add text height to pos
+// Draw Text button centralized and add text height to pos, return true if pressed (mouse or keyboard)
 bool	text_button(char *text, V2 *pos, char **active_ui, FontConfig config)
 {
 	bool	r = false;
+	bool	mouse_inside = false;
 	V2	text_size = MeasureTextEx(config.font, text, config.size, config.spacing);
 	V2	offset = {pos->x -  0.5f * text_size.x, pos->y};
 	Rect	rect = {offset.x, offset.y, text_size.x, text_size.y};
 	Color	color = config.tint;
 
-	if (CheckCollisionPointRec(GetMousePosition(), rect) || text == *active_ui) {
+	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 		*active_ui = text;
+		mouse_inside = true;
+	}
+	if (text == *active_ui) {
 		color = config.tint_hover;
-		DrawRectangle(offset.x - 10, offset.y, 5, 5, RED);
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsActionPressed("action_1")) {
+		DrawRectangle(offset.x - 10, offset.y + (text_size.y * 0.5f) - 2.5f, 5, 5, RED); // Temp
+		if ((mouse_inside && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) || IsActionPressed("action_1")) {
 			r = true;
 		}
 	}
@@ -134,7 +138,6 @@ bool	text_button(char *text, V2 *pos, char **active_ui, FontConfig config)
 	DrawTextEx(config.font, text, offset, config.size, config.spacing, color);
 
 	pos->y += text_size.y;
-
 	return (r);
 }
 
@@ -223,6 +226,9 @@ void	main_menu(GameData *data)
 		}
 		active_ui = uis[ui_index];
 	}
+	if (IsActionPressed("action_2")) {
+		data->current_ui = BACK;
+	}
 
 	// Draw Title
 	{
@@ -284,6 +290,9 @@ void	play_menu(GameData *data)
 			ui_index = 0;
 		}
 		active_ui = uis[ui_index];
+	}
+	if (IsActionPressed("action_2")) {
+		data->current_ui = BACK;
 	}
 
 	// Draw Title
@@ -355,6 +364,9 @@ void	options_menu(GameData *data)
 		}
 		active_ui = uis[ui_index];
 	}
+	if (IsActionPressed("action_2")) {
+		data->current_ui = BACK;
+	}
 	//DrawRectangleV((V2){0,0}, window, (Color){ 100, 100, 100, 100}); 
 
 	// Draw Title
@@ -411,6 +423,9 @@ void	game_over_menu(GameData *data)
 			ui_index = 0;
 		}
 		active_ui = uis[ui_index];
+	}
+	if (IsActionPressed("action_2")) {
+		data->current_ui = BACK;
 	}
 
 	// Draw Title
