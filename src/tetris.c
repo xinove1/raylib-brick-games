@@ -23,7 +23,7 @@ static TetrisSounds	game_sounds = {0, 0, 0};
 static Vector2	board_offset = {0, 0};
 static int	tileSize = TILE_SIZE;
 static Color	piece_colors[9];
-static Font	font;
+static FontConfig	font;
 
 // Game
 static int	rotate_count = 0;
@@ -159,14 +159,14 @@ static void	draw() {
 
 	{
 		const char	*text = TextFormat("Score: %d", score);
-		V2	text_size = MeasureTextEx(font, text, 20, 3);
+		V2	text_size = MeasureTextEx(font.font, text, font.size, font.spacing);
 		V2 offset = {board_offset.x - tileSize * 5, board_offset.y};
 		
 		
 		V2	text_pos = {offset.x, offset.y - text_size.y};
 		draw_grid(offset, (V2){4, 4}, tileSize);
 		DrawRectangle(offset.x, offset.y, tileSize, tileSize, ColorAlpha(RED, 0.2));
-		DrawTextEx(font, text, text_pos, 20, 3, data->palette.green);
+		DrawTextEx(font.font, text, text_pos, font.size, font.spacing, data->palette.green);
 		if (stored_piece != -1)  {
 			draw_piece(stored_piece, (Vector2){1,1}, 0, tileSize, offset);
 		}
@@ -174,13 +174,13 @@ static void	draw() {
 
 	{
 		const char	*text = "Coming up:";
-		V2	text_size = MeasureTextEx(font, text, 20, 3);
+		V2	text_size = MeasureTextEx(font.font, text, font.size, font.spacing);
 		V2 offset = {board_offset.x + board_size.x * tileSize, board_offset.y};
 		
 		
 		V2	text_pos = {offset.x, offset.y - text_size.y};
 		draw_grid(offset, (V2){4, 4}, tileSize);
-		DrawTextEx(font, text, text_pos, 20, 3, data->palette.green);
+		DrawTextEx(font.font, text, text_pos, font.size, font.spacing, data->palette.green);
 		if (next_piece != -1)  {
 			draw_piece(next_piece , (Vector2){1,1}, 0, tileSize, offset);
 		}

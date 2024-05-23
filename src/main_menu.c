@@ -88,21 +88,13 @@ GameFunctions	main_menu_init(GameData *data)
 	Data = data;
 	TextTexture = LoadRenderTexture(data->window_size.x, data->window_size.y);
 	BackgroundTexture = LoadRenderTexture(data->window_size.x, data->window_size.y);
-	TextConfig = (FontConfig) {
-		.font = data->assets.fonts[1],
-		.size = 22,
-		.spacing = 2,
-		.tint = data->palette.black,
-		.tint_hover = data->palette.red,
-	};
+	TextConfig = data->assets.fonts[1];
+	TextConfig.tint = data->palette.black;
+	TextConfig.tint_hover = data->palette.red;
 
-	TextConfigHeading = (FontConfig) {
-		.font = data->assets.fonts[2],
-		.size = 40,
-		.spacing = 2,
-		.tint = data->palette.black,
-		.tint_hover = data->palette.purple,
-	};
+	TextConfigHeading = data->assets.fonts[2];
+	TextConfigHeading.tint = data->palette.black;
+	TextConfigHeading.tint_hover = data->palette.purple;
 
 	return (GameFunctions) { 
 		.name = "Main menu",

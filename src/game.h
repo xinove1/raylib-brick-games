@@ -56,7 +56,7 @@ typedef struct ColorPalette {
 #define MAX_ASSET 5
 
 typedef struct Assets {
-	Font	fonts[MAX_ASSET];
+	FontConfig	fonts[MAX_ASSET];
 	Sound	sounds[MAX_ASSET];
 	Music	music[MAX_ASSET];
 } Assets;

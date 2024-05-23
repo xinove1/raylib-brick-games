@@ -159,18 +159,36 @@ static void	load_assets(GameData *data) {
 	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
-	data->assets.fonts[0] = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0);
-	data->assets.fonts[1] = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0);
-	data->assets.fonts[2] = LoadFontEx("./assets/kenney_future_square.ttf", 40, NULL, 0);
-	// data->assets.fonts[1] = LoadFontEx("./assets/Kaph-Regular.ttf", 22, NULL, 0);
-	// data->assets.fonts[2] = LoadFontEx("./assets/Kaph-Regular.ttf", 42, NULL, 0);
+
+	data->assets.fonts[0] = (FontConfig) {
+		.font = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0),
+		.size = 20,
+		.spacing = 2,
+		.tint = data->palette.black,
+		.tint_hover = data->palette.black,
+		};
+	data->assets.fonts[1] = (FontConfig) {
+		.font = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0),
+		.size = 22,
+		.spacing = 2,
+		.tint = data->palette.black,
+		.tint_hover = data->palette.black,
+		};
+	data->assets.fonts[2] = (FontConfig) {
+		.font = LoadFontEx("./assets/kenney_future_square.ttf", 40, NULL, 0),
+		.size = 40,
+		.spacing = 2,
+		.tint = data->palette.black,
+		.tint_hover = data->palette.black,
+	};
+
 }
 
 static void	unload_assets(GameData *data) {
 	for (int i = 0; i < MAX_ASSET; i++) {
 		UnloadSound(data->assets.sounds[i]);
 		UnloadMusicStream(data->assets.music[i]);
-		UnloadFont(data->assets.fonts[i]);
+		UnloadFont(data->assets.fonts[i].font);
 	}
 }
 
