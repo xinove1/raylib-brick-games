@@ -1,6 +1,5 @@
 #include "game.h"
 #include "raylib.h"
-#include "style_candy.h"
 
 typedef struct {
 	Music	music;
@@ -17,7 +16,7 @@ static int	made_lines[18] = {0}; // NOTE hard coded
 static bool	is_made_lines = false;
 static bool	paused = false;
 static bool	game_over = false;
-static TetrisSounds	game_sounds = {0, 0, 0};
+static TetrisSounds	game_sounds;
 
 // Drawing related
 static Vector2	board_offset = {0, 0};
@@ -26,8 +25,6 @@ static Color	piece_colors[9];
 static FontConfig	font;
 
 // Game
-static int	rotate_count = 0;
-static int	rotate_rate = 2; // Rate in ticks to rotate when holding down rotate button
 
 static Vector2	pos = {board_size.x / 2 - 2, 0};
 static int	piece = 0;
@@ -41,13 +38,15 @@ static int	score = 0;
 static int	high_score = 0; //  TODO  Save and restore highscore
 
 //  FIXME  Better name for speed variables
-static int	speed = 20; // How fast the pieces drop
-static int	speed_count = 0;
-static int	speed_limit = 5; // How low the speed can get
+static float	tick_time_count = 0; // counting time
+static float	tick_time = 0.100; // How much time until a game tick in seconds
+static int	speed = 10; // How many game ticks until force drowdown
+static int	speed_count = 0; // counting game ticks
+static int	speed_limit = 2; // How low the speed can get
 static int	speed_increase_rate = 5; // How many Pieces until a speed increase
+static int	rotate_count = 0;
+static int	rotate_rate = 2; // Rate in ticks to rotate when holding down rotate button
 static int	piece_count = 0; 
-static float	frame_count = 0; 
-static int	tick_time = 5; // How many frames until a game tick
 
 static int	rotate(Vector2 pos, int r);
 static int	check_piece_collision(int piece, Vector2 pos, int rotation);
@@ -89,13 +88,13 @@ static void	update()
 		}
 		pos.y = new_pos.y - 1;
 		force_piece_down();
-		frame_count = 0;
+		tick_time_count = 0;
 	}
 
-	if (frame_count < tick_time)
-		frame_count++;
-	else if (!paused && !game_over) {
-		frame_count = 0;
+	if (tick_time_count < tick_time) {
+		tick_time_count += GetFrameTime();
+	} else if (!paused && !game_over) {
+		tick_time_count = 0;
 		speed_count++;
 
 		if (speed_count == speed || IsActionDown("down")) 
@@ -120,22 +119,25 @@ static void	update()
 			}
 		}
 		if (IsActionDown("action_1") || IsActionDown("up")) {
-			if (rotate_count % rotate_rate == 0 && !check_piece_collision(piece, (Vector2){pos.x, pos.y}, rotation + 1)) {
-				if (IsActionDown("action_1")) {
-					rotation -= 1;
-				}
-				if (IsActionDown("up")) {
-					rotation += 1;
-				}
-				if (piece == 0 && rotation == 2) {
-					rotation = 0;
-				}
-				if (rotation == 4) {
-					rotation = 0;
-				}
-				if (rotation == -1) {
-					rotation = 3;
-				}
+			int	new_rotation = rotation;
+			if (IsActionDown("action_1")) {
+				new_rotation += -1;
+			}
+			if (IsActionDown("up")) {
+				new_rotation += 1;
+			}
+			if (piece == 0 && new_rotation == 2) {
+				new_rotation = 0;
+			}
+			if (new_rotation == 4) {
+				new_rotation = 0;
+			}
+			if (new_rotation == -1) {
+				new_rotation = 3;
+			}
+
+			if (rotate_count % rotate_rate == 0 && !check_piece_collision(piece, pos, new_rotation)) {
+				rotation = new_rotation;
 			}
 			rotate_count++;
 		} 
@@ -211,37 +213,37 @@ static void	de_init()
 
 GameFunctions	tetris_init(GameData *game_data)
 {
-	pieces[0] = "..X."
+	pieces[0] =		"..X."
 				"..X."
 				"..X."
 				"..X.";
 
-	pieces[1] = "...."
+	pieces[1] =		"...."
 				".XX."
 				".XX."
 				"....";
 
-	pieces[2] = "..X."
+	pieces[2] =		"..X."
 				".XX."
 				".X.."
 				"....";
 
-	pieces[3] = ".X.."
+	pieces[3] =		".X.."
 				".XX."
 				"..X."
 				"....";
 
-	pieces[4] = ".X.."
+	pieces[4] =		".X.."
 				".X.."
 				".XX."
 				"....";
 
-	pieces[5] = "..X."
+	pieces[5] =		"..X."
 				"..X."
 				".XX."
 				"....";
 
-	pieces[6] = "..X."
+	pieces[6] =		"..X."
 				"..XX"
 				"..X."
 				"....";
@@ -268,7 +270,6 @@ GameFunctions	tetris_init(GameData *game_data)
 	game_sounds.made_line = data->assets.sounds[0];
 	game_sounds.game_over = data->assets.sounds[1];
 	
-	GuiLoadStyleCandy();
 	return (GameFunctions) { 
 		.name = "Tetris",
 		.update = &update,
@@ -410,10 +411,11 @@ static void	cleanup_made_lines()
 
 static int	check_piece_collision(int piece, Vector2 pos, int rotation)
 {
-	if (piece < 0 || piece > 6)
+	if (piece < 0 || piece > 6) { 
+		TraceLog(LOG_WARNING, "piece id passed to check_piece_collision is not valid\n");
 		return (1);
-	for (int y = 0; y < 4; y++)
-	{
+	}
+	for (int y = 0; y < 4; y++) {
 		for (int x = 0; x < 4; x++)
 		{
 			if (pieces[piece][rotate((Vector2){x,y}, rotation)] != 'X')

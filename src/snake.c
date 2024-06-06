@@ -17,9 +17,9 @@ static V2	*snake;
 static V2	dir = {1, 0};
 static V2	new_dir = {1, 0};
 static V2	apples[MAX_APPLES] = {0};
-static float	frame_count = 0;
-static const float	tick_rate = 10; // How many frames until a game tick
-static float	apple_spawn_rate = tick_rate * 40;
+static float	tick_time_count = 0;
+static const float	tick_rate = 0.150; // How much time until a game tick in seconds
+static float	apple_spawn_rate = 5; // in seconds
 static bool	game_over = false;
 static bool	easy_mode = true;
 
@@ -31,7 +31,7 @@ static void	start()
 	memset(apples, 0, MAX_APPLES);
 	snake[0] = (V2) {(int) (board_size.x * 0.5f), (int) (board_size.y * 0.5f)}; // Set snake head to middle of the board
 	game_over = false;
-	frame_count = 0;
+	tick_time_count = 0;
 	dir = (V2) {1,0};
 	new_dir = (V2) {1,0};
 	spawn_apple();
@@ -39,12 +39,10 @@ static void	start()
 
 static void update()
 {
-	frame_count++;
-
 	if (game_over) {
 		data->current_ui = GAME_OVER_MENU;
 		game_over = false;
-		start();
+		start(); // Reset game state
 		return ;
 	}
 
@@ -68,7 +66,9 @@ static void update()
 	// TODO  Implement easy mode (not collide with walls)
 	
 	
-	if ((int) frame_count % (int) tick_rate == 0) {
+	tick_time_count += GetFrameTime();
+	if (tick_time_count >= tick_rate) {
+		tick_time_count = 0;
 		// Check to see if player is not tryng to 
 		if (snake[1].x == 0 || -new_dir.x != dir.x || -new_dir.y != dir.y ) {
 			dir = new_dir;
@@ -94,7 +94,7 @@ static void update()
 			game_over = true;
 			return ;
 		}
-		if (collision == 2 || (int)frame_count % (int)apple_spawn_rate == 0) {
+		if (collision == 2 || (int)tick_time_count % (int)apple_spawn_rate == 0) {
 			spawn_apple();
 		}
 		move_snake_body(new_pos, collision);

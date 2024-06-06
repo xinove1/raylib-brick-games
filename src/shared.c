@@ -1,5 +1,14 @@
 #include "game.h"
 #include "raylib.h"
+#include "raymath.h"
+#include <math.h>
+
+V2	ExpDecayV2(V2 a, V2 b, float decay) 
+{
+	V2	d = Vector2Subtract(a, b);
+	d = Vector2Scale(d, expf(-decay * GetFrameTime()));
+	return Vector2Add(b, d);
+}
 
 void	draw_grid(V2 position, V2 grid_size, int tile_size)
 {

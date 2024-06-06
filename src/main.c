@@ -1,8 +1,6 @@
 #include "raylib.h"
-#define RAYGUI_IMPLEMENTATION
 #define XI_INPUT_ACTIONS_IMPLEMENTATION
 #include "game.h"
-#include "style_candy.h"
 
 void	_Testfunc(char *str, GameData data) 
 {
@@ -45,8 +43,7 @@ int	main()
 	ui = NONE;
 	prev_ui = NONE;
 
-	// Enable config flags for resizable window and vertical synchro
-	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED | FLAG_VSYNC_HINT);
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED );
 	InitWindow(data.window_size.x, data.window_size.y, "Raylib Bricks games");
 	SetWindowState(FLAG_WINDOW_MAXIMIZED);
 	InitAudioDevice();
@@ -139,6 +136,8 @@ int	main()
 		 (Vector2){ 0, 0 },
 		 0.0f,
 		 WHITE);
+		FontConfig	font = data.assets.fonts[1];
+		DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
 		EndDrawing();
 
 	}

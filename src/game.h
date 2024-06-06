@@ -7,8 +7,8 @@
 # include <string.h>
 # include "raylib.h"
 # include "raymath.h"
-# include "raygui.h"
 # include "input.h"
+# include "ui.h"
 
 # define MAX(a, b) ((a)>(b)? (a) : (b))
 # define MIN(a, b) ((a)<(b)? (a) : (b))
@@ -31,14 +31,6 @@ typedef enum {
 	NONE,
 	BACK,
 } UiState;
-
-typedef struct {
-	Font	font;
-	int	size;
-	int	spacing;
-	Color	tint;
-	Color	tint_hover;
-} FontConfig;
 
 typedef struct ColorPalette {
 	Color	black;
@@ -91,4 +83,5 @@ void	ui_trasition_from(V2 dir);
 void	draw_grid_ex(V2 position, V2 grid_size, int tile_size, float line_thickness, Color color);
 void	draw_grid(V2 position, V2 grid_size, int tile_size);
 void	pause_game();
+V2	ExpDecayV2(V2 a, V2 b, float decay);
 #endif // GAME_H_
