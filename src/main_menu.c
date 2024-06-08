@@ -75,7 +75,14 @@ static void	update()
 
 	// TODO  Change to snap to 0, 0?
 	TextTexturePos = ExpDecayV2(TextTexturePos, (V2) {0, 0}, 2.5f);
-	BackgroundPos = ExpDecayV2(BackgroundPos, (V2) {0, -(BrickSize.y * 0.2f)}, 3.5);
+	//BackgroundPos = ExpDecayV2(BackgroundPos, (V2) {0, -(BrickSize.y * 0.2f)}, 3.5);
+	{
+		static V2	speed = {0,0};
+		V2	target_pos = {0, -(BrickSize.y * 0.2f)};
+		speed = ExpDecayV2(speed, Vector2Scale(Vector2Subtract(target_pos, BackgroundPos), 0.05f), 4.0f);
+
+		BackgroundPos = Vector2Add(BackgroundPos, speed);
+	}
 }
 
 static void draw() 
