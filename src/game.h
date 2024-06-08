@@ -51,6 +51,7 @@ typedef struct Assets {
 	FontConfig	fonts[MAX_ASSET];
 	Sound	sounds[MAX_ASSET];
 	Music	music[MAX_ASSET];
+	Texture2D	textures[MAX_ASSET];
 } Assets;
 
 typedef struct {
@@ -79,6 +80,7 @@ GameFunctions	tetris_init(GameData *data);
 GameFunctions	main_menu_init(GameData *data);
 GameFunctions	test_game_init(GameData *data);
 
+void	update_volume(GameData *data);
 void	ui_trasition_from(V2 dir);
 void	draw_grid_ex(V2 position, V2 grid_size, int tile_size, float line_thickness, Color color);
 void	draw_grid(V2 position, V2 grid_size, int tile_size);

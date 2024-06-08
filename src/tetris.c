@@ -64,15 +64,11 @@ static void start()
 	piece = rand() % 7;
 	next_piece = rand() % 7;
 	stored_piece = -1;
+	PlayMusicStream(game_sounds.music);
 }
 
 static void	update()
 {
-	PlayMusicStream(game_sounds.music);
-	SetMusicVolume(game_sounds.music, data->music_vol);
-	SetSoundVolume(game_sounds.made_line, data->effects_vol);
-	SetSoundVolume(game_sounds.game_over, data->effects_vol);
-
 	UpdateMusicStream(game_sounds.music);
 
 	if (!paused && !IsWindowFocused()) {

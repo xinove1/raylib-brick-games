@@ -1,5 +1,26 @@
 #include "ui.h"
 #include "input.h"
+#include "raylib.h"
+
+// IDK MAN AOETNHOANTEH
+static Texture2D	*SelectorTexture = NULL; 
+static Color		SelectorTint = RAYWHITE;
+static Sound		*ClickedSound = NULL;
+
+void	set_selector_texture(Texture2D *texture)
+{
+	SelectorTexture = texture;
+}
+
+void	set_selector_texture_tint(Color tint)
+{
+	SelectorTint = tint;
+}
+
+void	set_clicked_sound(Sound *sound)
+{
+	ClickedSound = sound;
+}
 
 void	panel_begin(UiPanel *panel) 
 {
@@ -77,8 +98,24 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 	if (panel->id_current == id) {
 		color = config.tint_hover;
 		DrawRectangle(offset.x - 10, offset.y + (text_size.y * 0.5f) - 2.5f, 5, 5, RED); // Temp
+//		draw_selector_cursor((V2){panel->at_x, panel->at_y + text_size.y * 0.5f});
+		//DrawTexture(SelectorTexture, offset.x - SelectorTexture.width - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture.height * 0.5f), SelectorTint);
+		// TODO  Refactor into function that draws texture scaled
+		if (SelectorTexture) { 
+			DrawTexturePro(
+				*SelectorTexture,
+				(Rect){0, 0, SelectorTexture->width, SelectorTexture->height},
+				(Rect){offset.x - (SelectorTexture->width * 0.50f) - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture->height * 0.25f), SelectorTexture->width * 0.5f, SelectorTexture->height * 0.5f},
+				(V2){0,0},
+				0,
+			SelectorTint);
+		}
+
 		if ((mouse_inside && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) || IsActionPressed("action_1")) {
 			r = true;
+			if (ClickedSound) {
+				PlaySound(*ClickedSound);
+			}
 		}
 	}
 
@@ -90,4 +127,9 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 		panel->width  = text_size.x;
 	}
 	return (r);
+}
+
+void	panel_slider(Rect bounds, float min, float max)
+{
+
 }

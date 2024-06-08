@@ -27,6 +27,10 @@ typedef struct UiPanel
 } UiPanel;
 
 
+void	set_clicked_sound(Sound *sound);
+void	set_selector_texture(Texture2D *texture);
+void	set_selector_texture_tint(Color tint);
+
 void	panel_begin(UiPanel *panel);
 void	panel_end(UiPanel *panel);
 void	panel_take_key_input(UiPanel *panel);

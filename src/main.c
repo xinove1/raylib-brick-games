@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "ui.h"
 #define XI_INPUT_ACTIONS_IMPLEMENTATION
 #include "game.h"
 
@@ -72,6 +73,10 @@ int	main()
 	register_input_action("open_menu", KEY_E);
 
 	load_assets(&data);
+	update_volume(&data);
+
+	set_selector_texture(&data.assets.textures[0]);
+	set_clicked_sound(&data.assets.sounds[2]);
 
 	games[SNAKE_GAME] = snake_game_init(&data);
 	games[TETRIS] = tetris_init(&data);
@@ -154,10 +159,21 @@ int	main()
 	return (0);
 }
 
+void	update_volume(GameData *data)
+{
+	for (int i = 0; i < MAX_ASSET; i++) {
+		SetMusicVolume(data->assets.music[i], data->music_vol);
+		SetSoundVolume(data->assets.sounds[i], data->effects_vol);
+	}
+}
+
 static void	load_assets(GameData *data) {
 	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
+	data->assets.sounds[2] = LoadSound("./assets/select_007.ogg");
+
+	data->assets.textures[0] = LoadTexture("./assets/arrow_e.png");
 
 	data->assets.fonts[0] = (FontConfig) {
 		.font = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0),
