@@ -195,7 +195,7 @@ void	main_menu(GameData *data)
 	if (panel_text_button(&panel, "Options", TextConfig)) {
 		data->current_ui = OPTIONS_MENU;
 	}
-	if (panel_text_button(&panel, "Quit", TextConfig) || IsActionPressed("action_2")) {
+	if (panel_text_button(&panel, "Quit", TextConfig) || IsActionPressed(ACTION_2)) {
 		data->quit = true;
 	}
 	panel_end(&panel);
@@ -233,7 +233,7 @@ void	play_menu(GameData *data)
 		data->current_ui = NONE;
 	}
 	
-	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed("action_2")) {
+	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
 		data->current_ui = BACK;
 	}
 
@@ -263,7 +263,7 @@ void	options_menu(GameData *data)
 	if (panel_text_button(&panel, "NOthing agian!", TextConfig)) {
 	}
 	
-	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed("action_2")) {
+	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
 		data->current_ui = BACK;
 	}
 

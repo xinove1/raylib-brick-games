@@ -6,6 +6,7 @@
 typedef Vector2 V2;
 typedef Rectangle Rect;
 
+
 typedef struct {
 	Font	font;
 	int	size;

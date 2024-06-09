@@ -1,3 +1,4 @@
+#include "input.h"
 #include "raylib.h"
 #include "ui.h"
 #define XI_INPUT_ACTIONS_IMPLEMENTATION
@@ -23,8 +24,8 @@ int	main()
 	GameData	data = {0};
 
 	data.window_size = (V2) {640, 360};
-	data.music_vol = 1.0f;
-	data.effects_vol = 1.0f;
+	data.music_vol = 0.5f;
+	data.effects_vol = 0.3f;
 	data.assets = (Assets) {0};
 	data.palette = (ColorPalette) {
 		.black = {0, 0, 0, 255},
@@ -54,23 +55,32 @@ int	main()
 	screen = LoadRenderTexture(data.window_size.x, data.window_size.y);
 	//SetTextureFilter(screen.texture, TEXTURE_FILTER_BILINEAR);  
 	SetTextureFilter(screen.texture, TEXTURE_FILTER_ANISOTROPIC_16X);  
-	
-	RegisterInputKeyAction("right", KEY_D);
-	RegisterInputKeyAction("right", KEY_RIGHT);
-	RegisterInputKeyAction("left", KEY_A);
-	RegisterInputKeyAction("left", KEY_LEFT);
-	RegisterInputKeyAction("up", KEY_W);
-	RegisterInputKeyAction("up", KEY_UP);
-	RegisterInputKeyAction("down", KEY_S);
-	RegisterInputKeyAction("down", KEY_DOWN);
 
-	RegisterInputKeyAction("action_1", KEY_J);
-	RegisterInputKeyAction("action_1", KEY_X);
-	RegisterInputKeyAction("action_2", KEY_K);
-	RegisterInputKeyAction("action_2", KEY_Z);
-	RegisterInputKeyAction("space_bar", KEY_SPACE);
-	RegisterInputKeyAction("open_menu", KEY_ESCAPE);
-	RegisterInputKeyAction("open_menu", KEY_E);
+	RegisterActionName(RIGHT, "right");
+	RegisterActionName(LEFT, "left");
+	RegisterActionName(UP, "up");
+	RegisterActionName(DOWN, "down");
+	RegisterActionName(ACTION_1, "action_1");
+	RegisterActionName(ACTION_2, "action_2");
+	RegisterActionName(ACTION_3, "action_3");
+	RegisterActionName(OPEN_MENU, "open_menu");
+	
+	RegisterInputKeyAction(RIGHT, KEY_D);
+	RegisterInputKeyAction(RIGHT, KEY_RIGHT);
+	RegisterInputKeyAction(LEFT, KEY_A);
+	RegisterInputKeyAction(LEFT, KEY_LEFT);
+	RegisterInputKeyAction(UP, KEY_W);
+	RegisterInputKeyAction(UP, KEY_UP);
+	RegisterInputKeyAction(DOWN, KEY_S);
+	RegisterInputKeyAction(DOWN, KEY_DOWN);
+
+	RegisterInputKeyAction(ACTION_1, KEY_J);
+	RegisterInputKeyAction(ACTION_1, KEY_X);
+	RegisterInputKeyAction(ACTION_2, KEY_K);
+	RegisterInputKeyAction(ACTION_2, KEY_Z);
+	RegisterInputKeyAction(ACTION_3, KEY_SPACE);
+	RegisterInputKeyAction(OPEN_MENU, KEY_ESCAPE);
+	RegisterInputKeyAction(OPEN_MENU, KEY_E);
 
 	load_assets(&data);
 	update_volume(&data);

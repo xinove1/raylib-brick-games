@@ -43,13 +43,13 @@ void	panel_take_key_input(UiPanel *panel)
 {
 	int	*current = &panel->id_current;
 	int	*count = &panel->id_count;
-	if (IsActionPressed("up")) {
+	if (IsActionPressed(UP)) {
 		*current -= 1;
 		if (*current < 0) {
 			*current = *count - 1;
 		}
 	}
-	if (IsActionPressed("down")) {
+	if (IsActionPressed(DOWN)) {
 		*current += 1;
 		if (*current >= *count) {
 			*current = 0;
@@ -111,7 +111,7 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 			SelectorTint);
 		}
 
-		if ((mouse_inside && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) || IsActionPressed("action_1")) {
+		if ((mouse_inside && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) || IsActionPressed(ACTION_1)) {
 			r = true;
 			if (ClickedSound) {
 				PlaySound(*ClickedSound);

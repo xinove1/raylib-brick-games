@@ -74,10 +74,10 @@ static void	update()
 	if (!paused && !IsWindowFocused()) {
 		paused = true;
 	}
-	if (IsActionPressed("open_menu")) {
+	if (IsActionPressed(OPEN_MENU)) {
 		paused = paused ? false : true;
 	}
-	if (IsActionPressed("space_bar")) {
+	if (IsActionPressed(ACTION_3)) {
 		V2	new_pos = pos;
 		while (!check_piece_collision(piece, new_pos, rotation)) {
 			new_pos.y += 1;
@@ -93,15 +93,15 @@ static void	update()
 		tick_time_count = 0;
 		speed_count++;
 
-		if (speed_count == speed || IsActionDown("down")) 
+		if (speed_count == speed || IsActionDown(DOWN)) 
 			force_piece_down();
 
-		if (IsActionDown("left") && !check_piece_collision(piece, (Vector2){pos.x - 1, pos.y}, rotation)) 
+		if (IsActionDown(LEFT) && !check_piece_collision(piece, (Vector2){pos.x - 1, pos.y}, rotation)) 
 			pos = (Vector2) {pos.x - 1, pos.y};
-		if (IsActionDown("right")  && !check_piece_collision(piece, (Vector2){pos.x + 1, pos.y}, rotation)) 
+		if (IsActionDown(RIGHT)  && !check_piece_collision(piece, (Vector2){pos.x + 1, pos.y}, rotation)) 
 			pos = (Vector2) {pos.x + 1, pos.y};
 
-		if (IsActionDown("action_2")) {
+		if (IsActionDown(ACTION_2)) {
 			if (stored_piece == -1) {
 				stored_piece = piece;
 				piece = next_piece;
@@ -114,12 +114,12 @@ static void	update()
 				stored_piece = tmp;
 			}
 		}
-		if (IsActionDown("action_1") || IsActionDown("up")) {
+		if (IsActionDown(ACTION_1) || IsActionDown(UP)) {
 			int	new_rotation = rotation;
-			if (IsActionDown("action_1")) {
+			if (IsActionDown(ACTION_1)) {
 				new_rotation += -1;
 			}
-			if (IsActionDown("up")) {
+			if (IsActionDown(UP)) {
 				new_rotation += 1;
 			}
 			if (piece == 0 && new_rotation == 2) {

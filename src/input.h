@@ -4,14 +4,22 @@
 # include "raylib.h"
 # include "stdio.h"
 
-void	RegisterInputKeyAction(char *action_name, int action_keycode);
-bool	IsActionPressed(char *action_name);
-bool	IsActionReleased(char *action_name);
-bool	IsActionDown(char *action_name);
+// Comment out or redefine if needed
+typedef enum {LEFT, RIGHT, UP, DOWN, ACTION_1, ACTION_2, ACTION_3, OPEN_MENU, INPUT_ACTION_COUNT} InputActions_e;
+
+void	RegisterActionName(int action_id, char *action_name);
+void	RegisterInputKeyAction(int action_id, int action_keycode);
+bool	IsActionPressed(int action_id);
+bool	IsActionReleased(int action_id);
+bool	IsActionDown(int action_id);
 void	PrintActions();
 
-# define MAX_ACTION_KEYCODES 10
-# define MAX_ACTIONS 10
+# ifndef MAX_ACTION_KEYCODES 
+#  define MAX_ACTION_KEYCODES 10
+# endif
+# ifndef MAX_ACTION
+#  define MAX_ACTIONS 10
+# endif
 
 #endif
 
@@ -24,26 +32,15 @@ typedef struct {
 
 Action	actions[MAX_ACTIONS] = {0};
 
-Action	*FindInputAction(char *action_name) 
-{
-	for (int i = 0; i < MAX_ACTIONS; i++) {
-		if (TextIsEqual(actions[i].name, action_name)) {
-			return &actions[i];
-		} else if (actions[i].name  == NULL) {
-			break ;
-		}
-	}
-	return NULL;
-}
-
 void	PrintActions() {
 	printf("Actions list\n");
 	printf("~~~~~~~~~~~~\n");
 	for (int i = 0; i < MAX_ACTIONS; i++) {
 		if (actions[i].name == NULL) {
-			break;
+			printf("Unamned action: \n");
+		} else {
+			printf("%s: \n", actions[i].name);
 		}
-		printf("%s: \n", actions[i].name);
 		for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
 			if (actions[i].keycodes[k] == -1){
 				break ;
@@ -53,44 +50,73 @@ void	PrintActions() {
 	}
 }
 
-void	RegisterInputKeyAction(char *action_name, int action_keycode)
+Action	*get_action(int id) 
+{
+	// TODO  Better error message to account to error on registering and getting input
+	if (id < 0) {
+		TraceLog(LOG_WARNING, "Tryng to register a Key action with negative value, aborting.\n");
+		return (NULL);
+	} else if (id >= MAX_ACTIONS) {
+		TraceLog(LOG_WARNING, "Tryng to register a Key action with value greater/equal than MAX_ACTIONS, aborting.\n");
+		return (NULL);
+	}
+	return (&actions[id]);
+}
+
+void	RegisterActionName(int action_id, char *action_name)
 {
 	if (action_name == NULL) {
 		TraceLog(LOG_WARNING, "Tryng to register a action with null name, aborting.\n");
 		return ;
 	}
-	int	i;
-	for (i = 0; i < MAX_ACTIONS; i++) {
-		if (TextIsEqual(actions[i].name, action_name)) {
-			TraceLog(LOG_DEBUG, "Action \"%s\" already exists, registering the new keycode.\n", action_name);
-			
-			for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-				if (actions[i].keycodes[k] == -1) {
-					actions[i].keycodes[k] = action_keycode;
-					return ;
-				}
-			}
-
-			TraceLog(LOG_WARNING, "Action \"%s\" keycodes are full. See MAX_ACTIONS_KEYCODES macro.\n", action_name);
-			return ;
-		} else if (actions[i].name == NULL) {
-			break ;
-		}
+	
+	Action	*action = get_action(action_id);
+	if (action == NULL) {
+		return ;
 	}
 
-	TraceLog(LOG_DEBUG, "Action \"%s\" does not exists, registering new action.\n", action_name);
-	actions[i].name = action_name;
-	actions[i].keycodes[0] = action_keycode;
+	if (action->name == NULL) {
+		TraceLog(LOG_DEBUG, "Action \"%s\" does not exists, registering new action.\n", action_name);
+		action->name = action_name;
+	} else {
+		TraceLog(LOG_DEBUG, "Overwriting action name \"%s\" with \"%s\".\n", action->name, action_name);
+		action->name = action_name;
+	}
+
 	for (int k = 1; k < MAX_ACTION_KEYCODES; k++) {
-		actions[i].keycodes[k] = -1;
+		action->keycodes[k] = -1;
 	}
+
 }
 
-bool	IsActionPressed(char *action_name)
+// Register a keycode to a action, only works on action already named (so the keycodes can be set to -1)
+void	RegisterInputKeyAction(int action_id, int action_keycode)
 {
-	Action	*action = FindInputAction(action_name);
+	Action	*action = get_action(action_id);
 	if (action == NULL) {
-		TraceLog(LOG_WARNING, "IsActionPressed: Action \"%s\" does not exists.\n", action_name);
+		return ;
+	}
+
+	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
+		if (action->keycodes[k] == -1) {
+			action->keycodes[k] = action_keycode;
+			return ;
+		}
+	}
+	
+	char	*action_name = action->name;
+	if (action_name == NULL) {
+		action_name = (char *)"Unamned action";
+	}
+
+	TraceLog(LOG_WARNING, "Action \"%s\" keycodes are full. See MAX_ACTIONS_KEYCODES macro.\n", action_name);
+	return ;
+}
+
+bool	IsActionPressed(int action_id)
+{
+	Action	*action = get_action(action_id);
+	if (action == NULL) {
 		return false;
 	}
 
@@ -106,12 +132,11 @@ bool	IsActionPressed(char *action_name)
 	return false;
 }
 
-bool	IsActionReleased(char *action_name)
+bool	IsActionReleased(int action_id)
 {
-	Action	*action = FindInputAction(action_name);
+	Action	*action = get_action(action_id);
 	if (action == NULL) {
-		TraceLog(LOG_WARNING, "IsActionReleased: Action \"%s\" does not exists.\n", action_name);
-		return 0;
+		return false;
 	}
 
 	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
@@ -126,12 +151,11 @@ bool	IsActionReleased(char *action_name)
 	return false;
 }
 
-bool	IsActionDown(char *action_name)
+bool	IsActionDown(int action_id)
 {
-	Action	*action = FindInputAction(action_name);
+	Action	*action = get_action(action_id);
 	if (action == NULL) {
-		TraceLog(LOG_WARNING, "IsActionDown: Action \"%s\" does not exists.\n", action_name);
-		return 0;
+		return false;
 	}
 
 	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
@@ -145,5 +169,6 @@ bool	IsActionDown(char *action_name)
 
 	return false;
 }
+
 // NOLINTEND(misc-definitions-in-headers)
 #endif 

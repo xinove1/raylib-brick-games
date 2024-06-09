@@ -12,10 +12,10 @@ static void	start()
 static void	update()
 {
 
-	if (IsActionPressed("action_2")) {
+	if (IsActionPressed(ACTION_2)) {
 		Data->current_ui = TITLE_SCREEN;
 	}
-	if (IsActionPressed("action_1")) {
+	if (IsActionPressed(ACTION_1)) {
 		if (Flag) {
 			Flag =  false;
 		} else {
@@ -41,16 +41,16 @@ static void	draw()
 		DrawPixel(center.x + TILE_SIZE -1, center.y + TILE_SIZE, RED);
 	}
 	static V2	dir = {0, 0};
-	if (IsActionPressed("right")) {
+	if (IsActionPressed(RIGHT)) {
 		dir.x += 1;
 	}
-	if (IsActionPressed("left")) {
+	if (IsActionPressed(LEFT)) {
 		dir.x += -1;
 	}
-	if (IsActionPressed("down")) {
+	if (IsActionPressed(DOWN)) {
 		dir.y += 1;
 	}
-	if (IsActionPressed("up")) {
+	if (IsActionPressed(UP)) {
 		dir.y += -1;
 	}
 	//draw_grid_ex(center, (V2){1,1} , TILE_SIZE, 2, ColorAlpha(GREEN, 0.2));

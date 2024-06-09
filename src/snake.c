@@ -46,19 +46,19 @@ static void update()
 		return ;
 	}
 
-	if (IsActionPressed("right")) {
+	if (IsActionPressed(RIGHT)) {
 		new_dir.x = 1;
 		new_dir.y = 0;
 	}
-	if (IsActionPressed("left")) {
+	if (IsActionPressed(LEFT)) {
 		new_dir.x = -1;
 		new_dir.y = 0;
 	}
-	if (IsActionPressed("up")) {
+	if (IsActionPressed(UP)) {
 		new_dir.x = 0;
 		new_dir.y = -1;
 	}
-	if (IsActionPressed("down")) {
+	if (IsActionPressed(DOWN)) {
 		new_dir.x = 0;
 		new_dir.y = 1;
 	}
