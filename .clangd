@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-DXI_INPUT_ACTIONS_IMPLEMENTATION]

@@ -4,20 +4,19 @@
 # include "raylib.h"
 # include "stdio.h"
 
-void	register_input_action(char *action_name, int action_keycode);
+void	RegisterInputKeyAction(char *action_name, int action_keycode);
 bool	IsActionPressed(char *action_name);
 bool	IsActionReleased(char *action_name);
 bool	IsActionDown(char *action_name);
-void	print_actions();
+void	PrintActions();
 
 # define MAX_ACTION_KEYCODES 10
 # define MAX_ACTIONS 10
-# define ACTIONS_DEBUG_INFO false
 
 #endif
 
 #ifdef XI_INPUT_ACTIONS_IMPLEMENTATION
-
+// NOLINTBEGIN(misc-definitions-in-headers)
 typedef struct {
 	char	*name;
 	int	keycodes[MAX_ACTION_KEYCODES];
@@ -25,7 +24,7 @@ typedef struct {
 
 Action	actions[MAX_ACTIONS] = {0};
 
-Action	*find_action(char *action_name) 
+Action	*FindInputAction(char *action_name) 
 {
 	for (int i = 0; i < MAX_ACTIONS; i++) {
 		if (TextIsEqual(actions[i].name, action_name)) {
@@ -37,7 +36,7 @@ Action	*find_action(char *action_name)
 	return NULL;
 }
 
-void	print_actions() {
+void	PrintActions() {
 	printf("Actions list\n");
 	printf("~~~~~~~~~~~~\n");
 	for (int i = 0; i < MAX_ACTIONS; i++) {
@@ -54,20 +53,16 @@ void	print_actions() {
 	}
 }
 
-void	register_input_action(char *action_name, int action_keycode)
+void	RegisterInputKeyAction(char *action_name, int action_keycode)
 {
 	if (action_name == NULL) {
-		#ifdef ACTIONS_DEBUG_INFO
-			printf("Tryng to register a action with null name, aborting.\n");
-		#endif
+		TraceLog(LOG_WARNING, "Tryng to register a action with null name, aborting.\n");
 		return ;
 	}
 	int	i;
 	for (i = 0; i < MAX_ACTIONS; i++) {
 		if (TextIsEqual(actions[i].name, action_name)) {
-			#ifdef ACTIONS_DEBUG_INFO
-				printf("Action \"%s\" already exists, registering the new keycode.\n", action_name);
-			#endif
+			TraceLog(LOG_DEBUG, "Action \"%s\" already exists, registering the new keycode.\n", action_name);
 			
 			for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
 				if (actions[i].keycodes[k] == -1) {
@@ -75,18 +70,15 @@ void	register_input_action(char *action_name, int action_keycode)
 					return ;
 				}
 			}
-			#ifdef ACTIONS_DEBUG_INFO
-				printf("Action \"%s\" keycodes are full. See MAX_ACTIONS_KEYCODES macro.\n", action_name);
-			#endif
+
+			TraceLog(LOG_WARNING, "Action \"%s\" keycodes are full. See MAX_ACTIONS_KEYCODES macro.\n", action_name);
 			return ;
 		} else if (actions[i].name == NULL) {
 			break ;
 		}
 	}
-	#ifdef ACTIONS_DEBUG_INFO
-		printf("Action \"%s\" does not exists, registering new action.\n", action_name);
-	#endif
-	
+
+	TraceLog(LOG_DEBUG, "Action \"%s\" does not exists, registering new action.\n", action_name);
 	actions[i].name = action_name;
 	actions[i].keycodes[0] = action_keycode;
 	for (int k = 1; k < MAX_ACTION_KEYCODES; k++) {
@@ -96,11 +88,9 @@ void	register_input_action(char *action_name, int action_keycode)
 
 bool	IsActionPressed(char *action_name)
 {
-	Action	*action = find_action(action_name);
+	Action	*action = FindInputAction(action_name);
 	if (action == NULL) {
-		#ifdef ACTIONS_DEBUG_INFO
-			printf("IsActionPressed: Action \"%s\" does not exists.\n", action_name);
-		#endif
+		TraceLog(LOG_WARNING, "IsActionPressed: Action \"%s\" does not exists.\n", action_name);
 		return false;
 	}
 
@@ -118,11 +108,9 @@ bool	IsActionPressed(char *action_name)
 
 bool	IsActionReleased(char *action_name)
 {
-	Action	*action = find_action(action_name);
+	Action	*action = FindInputAction(action_name);
 	if (action == NULL) {
-		#ifdef ACTIONS_DEBUG_INFO
-			printf("IsActionReleased: Action \"%s\" does not exists.\n", action_name);
-		#endif
+		TraceLog(LOG_WARNING, "IsActionReleased: Action \"%s\" does not exists.\n", action_name);
 		return 0;
 	}
 
@@ -140,11 +128,9 @@ bool	IsActionReleased(char *action_name)
 
 bool	IsActionDown(char *action_name)
 {
-	Action	*action = find_action(action_name);
+	Action	*action = FindInputAction(action_name);
 	if (action == NULL) {
-		#ifdef ACTIONS_DEBUG_INFO
-			printf("IsActionDown: Action \"%s\" does not exists.\n", action_name);
-		#endif
+		TraceLog(LOG_WARNING, "IsActionDown: Action \"%s\" does not exists.\n", action_name);
 		return 0;
 	}
 
@@ -159,5 +145,5 @@ bool	IsActionDown(char *action_name)
 
 	return false;
 }
-
+// NOLINTEND(misc-definitions-in-headers)
 #endif 

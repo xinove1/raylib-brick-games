@@ -55,22 +55,22 @@ int	main()
 	//SetTextureFilter(screen.texture, TEXTURE_FILTER_BILINEAR);  
 	SetTextureFilter(screen.texture, TEXTURE_FILTER_ANISOTROPIC_16X);  
 	
-	register_input_action("right", KEY_D);
-	register_input_action("right", KEY_RIGHT);
-	register_input_action("left", KEY_A);
-	register_input_action("left", KEY_LEFT);
-	register_input_action("up", KEY_W);
-	register_input_action("up", KEY_UP);
-	register_input_action("down", KEY_S);
-	register_input_action("down", KEY_DOWN);
+	RegisterInputKeyAction("right", KEY_D);
+	RegisterInputKeyAction("right", KEY_RIGHT);
+	RegisterInputKeyAction("left", KEY_A);
+	RegisterInputKeyAction("left", KEY_LEFT);
+	RegisterInputKeyAction("up", KEY_W);
+	RegisterInputKeyAction("up", KEY_UP);
+	RegisterInputKeyAction("down", KEY_S);
+	RegisterInputKeyAction("down", KEY_DOWN);
 
-	register_input_action("action_1", KEY_J);
-	register_input_action("action_1", KEY_X);
-	register_input_action("action_2", KEY_K);
-	register_input_action("action_2", KEY_Z);
-	register_input_action("space_bar", KEY_SPACE);
-	register_input_action("open_menu", KEY_ESCAPE);
-	register_input_action("open_menu", KEY_E);
+	RegisterInputKeyAction("action_1", KEY_J);
+	RegisterInputKeyAction("action_1", KEY_X);
+	RegisterInputKeyAction("action_2", KEY_K);
+	RegisterInputKeyAction("action_2", KEY_Z);
+	RegisterInputKeyAction("space_bar", KEY_SPACE);
+	RegisterInputKeyAction("open_menu", KEY_ESCAPE);
+	RegisterInputKeyAction("open_menu", KEY_E);
 
 	load_assets(&data);
 	update_volume(&data);
