@@ -56,31 +56,55 @@ int	main()
 	//SetTextureFilter(screen.texture, TEXTURE_FILTER_BILINEAR);  
 	SetTextureFilter(screen.texture, TEXTURE_FILTER_ANISOTROPIC_16X);  
 
-	RegisterActionName(RIGHT, "right");
-	RegisterActionName(LEFT, "left");
-	RegisterActionName(UP, "up");
-	RegisterActionName(DOWN, "down");
-	RegisterActionName(ACTION_1, "action_1");
-	RegisterActionName(ACTION_2, "action_2");
-	RegisterActionName(ACTION_3, "action_3");
-	RegisterActionName(OPEN_MENU, "open_menu");
-	
-	RegisterInputKeyAction(RIGHT, KEY_D);
-	RegisterInputKeyAction(RIGHT, KEY_RIGHT);
-	RegisterInputKeyAction(LEFT, KEY_A);
-	RegisterInputKeyAction(LEFT, KEY_LEFT);
-	RegisterInputKeyAction(UP, KEY_W);
-	RegisterInputKeyAction(UP, KEY_UP);
-	RegisterInputKeyAction(DOWN, KEY_S);
-	RegisterInputKeyAction(DOWN, KEY_DOWN);
+	{
+		SetGamePadId(0);
 
-	RegisterInputKeyAction(ACTION_1, KEY_J);
-	RegisterInputKeyAction(ACTION_1, KEY_X);
-	RegisterInputKeyAction(ACTION_2, KEY_K);
-	RegisterInputKeyAction(ACTION_2, KEY_Z);
-	RegisterInputKeyAction(ACTION_3, KEY_SPACE);
-	RegisterInputKeyAction(OPEN_MENU, KEY_ESCAPE);
-	RegisterInputKeyAction(OPEN_MENU, KEY_E);
+		RegisterActionName(RIGHT, "right");
+		RegisterInputKeyAction(RIGHT, KEY_D);
+		RegisterInputKeyAction(RIGHT, KEY_RIGHT);
+		RegisterGamePadButtonAction(RIGHT, GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
+
+
+		RegisterActionName(LEFT, "left");
+		RegisterInputKeyAction(LEFT, KEY_A);
+		RegisterInputKeyAction(LEFT, KEY_LEFT);
+		RegisterGamePadButtonAction(LEFT, GAMEPAD_BUTTON_LEFT_FACE_LEFT);
+
+
+		RegisterActionName(UP, "up");
+		RegisterInputKeyAction(UP, KEY_W);
+		RegisterInputKeyAction(UP, KEY_UP);
+		RegisterGamePadButtonAction(UP, GAMEPAD_BUTTON_LEFT_FACE_UP);
+
+
+		RegisterActionName(DOWN, "down");
+		RegisterInputKeyAction(DOWN, KEY_S);
+		RegisterInputKeyAction(DOWN, KEY_DOWN);
+		RegisterGamePadButtonAction(DOWN, GAMEPAD_BUTTON_LEFT_FACE_DOWN);
+
+
+		RegisterActionName(ACTION_1, "action_1");
+		RegisterInputKeyAction(ACTION_1, KEY_J);
+		RegisterInputKeyAction(ACTION_1, KEY_X);
+		RegisterGamePadButtonAction(ACTION_1, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+
+
+		RegisterActionName(ACTION_2, "action_2");
+		RegisterInputKeyAction(ACTION_2, KEY_K);
+		RegisterInputKeyAction(ACTION_2, KEY_Z);
+		RegisterGamePadButtonAction(ACTION_2, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT);
+
+
+		RegisterActionName(ACTION_3, "action_3");
+		RegisterInputKeyAction(ACTION_3, KEY_SPACE);
+		RegisterGamePadButtonAction(ACTION_3, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
+
+
+		RegisterActionName(OPEN_MENU, "open_menu");
+		RegisterInputKeyAction(OPEN_MENU, KEY_ESCAPE);
+		RegisterInputKeyAction(OPEN_MENU, KEY_E);
+		RegisterGamePadButtonAction(OPEN_MENU, GAMEPAD_BUTTON_MIDDLE_RIGHT);
+	}
 
 	load_assets(&data);
 	update_volume(&data);
