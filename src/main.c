@@ -1,8 +1,8 @@
-#include "input.h"
-#include "raylib.h"
-#include "ui.h"
-#define XI_INPUT_ACTIONS_IMPLEMENTATION
 #include "game.h"
+#define XI_INPUT_ACTIONS_IMPLEMENTATION
+#define XI_UI_IMPLEMENTATION 
+#include "ui.h"
+#include "input.h"
 
 void	_Testfunc(char *str, GameData data) 
 {

@@ -7,8 +7,8 @@
 # include <string.h>
 # include "raylib.h"
 # include "raymath.h"
-# include "input.h"
 # include "ui.h"
+# include "input.h"
 
 # define MAX(a, b) ((a)>(b)? (a) : (b))
 # define MIN(a, b) ((a)<(b)? (a) : (b))
