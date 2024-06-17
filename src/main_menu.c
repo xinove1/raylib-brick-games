@@ -186,7 +186,7 @@ void	main_menu(GameData *data)
 	panel.pos = center;
 
 	panel_begin(&panel);
-	panel_title(&panel, "Raylib Brick Games", TextConfigHeading);
+	panel_text(&panel, "Raylib Brick Games", TextConfigHeading);
 
 	if (panel_text_button(&panel, "Play", TextConfig)) {
 		data->current_ui = PLAY_MENU;
@@ -216,7 +216,7 @@ void	play_menu(GameData *data)
 	panel.pos = center;
 
 	panel_begin(&panel);
-	panel_title(&panel, "Games", TextConfigHeading);
+	panel_text(&panel, "Games", TextConfigHeading);
 
 	if (panel_text_button(&panel, "Tetris", TextConfig)) {
 		data->current_game = TETRIS;
@@ -247,6 +247,9 @@ void	options_menu(GameData *data)
 	if (flag == false) {
 		panel.id_current = 0;
 		flag = true;
+		V2	txt_size = MeasureTextEx(TextConfig.font, "test", TextConfig.size, TextConfig.spacing);
+	printf("vol: %f\n", data->effects_vol);
+		panel.height = txt_size.y;
 	}
 	
 	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
@@ -255,12 +258,20 @@ void	options_menu(GameData *data)
 	panel.pos = center;
 
 	panel_begin(&panel);
-	panel_title(&panel, "Options", TextConfigHeading);
+	panel_text(&panel, "Options", TextConfigHeading);
 
-	if (panel_text_button(&panel, "NOthing", TextConfig)) {
+
+	panel_text(&panel, "Music Volume", TextConfig);
+	if (panel_slider(&panel, &data->music_vol, 0, 1)) {
+		update_volume(Data);
 	}
 
-	if (panel_text_button(&panel, "NOthing agian!", TextConfig)) {
+	
+	// if (panel_text_button(&panel, "Effects Volume:", TextConfig)) {
+	// }
+	panel_text(&panel, "Effects Volume", TextConfig);
+	if (panel_slider(&panel, &data->effects_vol, 0, 1)) {
+		update_volume(Data);
 	}
 	
 	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
@@ -285,7 +296,7 @@ void	game_over_menu(GameData *data)
 	panel.pos = center;
 
 	panel_begin(&panel);
-	panel_title(&panel, "Game Over", TextConfigHeading);
+	panel_text(&panel, "Game Over", TextConfigHeading);
 
 	if (panel_text_button(&panel, "Play Again", TextConfig)) {
 		data->current_ui = NONE;

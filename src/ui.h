@@ -4,6 +4,7 @@
 # include "raylib.h"
 # include "stdio.h"
 # include "input.h"
+# include "raymath.h"
 
 // TODO  Create header for types
 typedef Vector2 V2; typedef Rectangle Rect;
@@ -20,7 +21,7 @@ typedef struct UiPanel
 {
 	V2	pos; // NOTE  Remember initialize this
 	float	width; // Width of the longest element added
-	//float	height;
+	float	height; // Height of the elements
 	float	at_x; // Position after last lement added
 	float	at_y;
 	int	id_count; 
@@ -36,8 +37,10 @@ void	set_selector_texture_tint(Color tint);
 void	panel_begin(UiPanel *panel);
 void	panel_end(UiPanel *panel);
 void	panel_take_key_input(UiPanel *panel);
-void	panel_title(UiPanel *panel, char *text, FontConfig font);
+void	panel_text(UiPanel *panel, char *text, FontConfig font);
 bool	panel_text_button(UiPanel *panel, char *text, FontConfig config);
+bool	panel_slider(UiPanel *panel, float *value, float min, float max);
+bool	panel_slider_sized(UiPanel *panel, V2 size, float *value, float min, float max);
 
 #endif
 
@@ -100,7 +103,8 @@ void	panel_take_key_input(UiPanel *panel)
 	}
 }
 
-void	panel_title(UiPanel *panel, char *text, FontConfig font) 
+// TODO  Pass different padding 
+void	panel_text(UiPanel *panel, char *text, FontConfig font) 
 {
 	V2	text_size = MeasureTextEx(font.font, text, font.size, font.spacing);
 	V2	offset = {panel->at_x, panel->at_y};
@@ -131,30 +135,31 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 
 	if (panel->centralized) {
 		offset.x -= text_size.x * 0.5f;
+		rect.x = offset.x;
 	}
 
 	// TODO Add flag if last change in current ui selected was with keys, and then not check mouse pos until mouse movement
+	DrawRectanglePro(rect, (V2){0, 0}, 0, GREEN);
 	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
 		panel->id_current = id;
 		mouse_inside = true;
 	}
 	if (panel->id_current == id) {
 		color = config.tint_hover;
-		DrawRectangle(offset.x - 10, offset.y + (text_size.y * 0.5f) - 2.5f, 5, 5, RED); // Temp
 //		draw_selector_cursor((V2){panel->at_x, panel->at_y + text_size.y * 0.5f});
 		//DrawTexture(SelectorTexture, offset.x - SelectorTexture.width - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture.height * 0.5f), SelectorTint);
 		// TODO  Refactor into function that draws texture scaled
 		if (SelectorTexture) { 
 			DrawTexturePro(
 				*SelectorTexture,
-				(Rect){0, 0, SelectorTexture->width, SelectorTexture->height},
+				(Rect){0, 0, (float)SelectorTexture->width, (float)SelectorTexture->height},
 				(Rect){offset.x - (SelectorTexture->width * 0.50f) - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture->height * 0.25f), SelectorTexture->width * 0.5f, SelectorTexture->height * 0.5f},
 				(V2){0,0},
 				0,
 			SelectorTint);
 		}
 
-		if ((mouse_inside && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) || IsActionPressed(ACTION_1)) {
+		if ((mouse_inside && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) || IsActionPressed(ACTION_1)) {
 			r = true;
 			if (ClickedSound) {
 				PlaySound(*ClickedSound);
@@ -172,9 +177,77 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 	return (r);
 }
 
-void	panel_slider(Rect bounds, float min, float max)
+bool	panel_slider(UiPanel *panel, float *value, float min, float max)
+{
+	V2	size = {panel->width * 0.8f, panel->height};
+	return (panel_slider_sized(panel, size, value, min, max));
+}
+
+bool	panel_slider_sized(UiPanel *panel, V2 size, float *value, float min, float max)
 {
 
+	bool	r = false;
+	bool	mouse_inside = false;
+	V2	offset = {panel->at_x, panel->at_y};
+	Rect	rect = {offset.x, offset.y, size.x, size.y};
+	int	id = panel->id_count; 
+	float	step = 0.1f;
+	panel->id_count++;
+
+	if (panel->centralized) {
+		offset.x -= size.x * 0.5f;
+		rect.x = offset.x;
+	}
+
+	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+		panel->id_current = id;
+		mouse_inside = true;
+	}
+	if (panel->id_current == id) {
+		DrawRectangle(offset.x - 10, offset.y + (rect.y * 0.5f) - 2.5f, 5, 5, BLACK); // Temp
+		
+		if (mouse_inside) {
+			float wheel = GetMouseWheelMove();
+			if (wheel == 1.0f || wheel == -1.0f) {
+				*value += step * wheel;	
+				r = true;
+			}
+			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+				V2	pos = Vector2Subtract(GetMousePosition(), (V2){rect.x, rect.y});
+				*value = Remap(pos.x, 0, rect.width, 0, 1);
+				//printf("remap: %f\n", Remap(pos.x, 0, rect.width, 0, 1));
+				r = true;
+			}
+		}
+
+		if (IsActionPressed(RIGHT)) {
+			*value += step;	
+			if (ClickedSound) PlaySound(*ClickedSound);
+			r = true;
+		}
+		if (IsActionPressed(LEFT)) {
+			*value -= step;	
+			if (ClickedSound) PlaySound(*ClickedSound);
+			r = true;
+		}
+	}
+
+	if (*value > max) *value = max;
+	if (*value < min) *value = min;
+
+	Rect	rect2 = {rect.x, rect.y, rect.width * (*value), rect.height};
+
+	DrawRectanglePro(rect, (V2){0,0}, 0, GREEN);
+	DrawRectanglePro(rect2, (V2){0,0}, 0, BLUE);
+
+
+	panel->at_y += size.y;
+	panel->at_y += 10; // Padding // NOTE  Hard coded
+	if (panel->width < size.x){
+		panel->width  = size.x;
+	}
+	if (r) PlaySound(*ClickedSound);
+	return (r);
 }
 
 // NOLINTEND(misc-definitions-in-headers)
