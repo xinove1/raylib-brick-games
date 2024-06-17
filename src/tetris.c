@@ -185,12 +185,14 @@ static void	draw() {
 	}
 
 	if (paused) {
-		ui_trasition_from((V2){1, 0});
-		data->current_ui = OPTIONS_MENU;
+		// FIX 
+		// ui_trasition_from((V2){1, 0});
+		// data->current_ui = OPTIONS_MENU;
 		paused = false;
 	} else if (game_over) {
-		ui_trasition_from((V2){1, 0});
-		data->current_ui = GAME_OVER_MENU;
+		//ui_trasition_from((V2){1, 0});
+		// FIX 
+		//data->current_ui = GAME_OVER_MENU;
 		game_over = false;
 		start();
 		 

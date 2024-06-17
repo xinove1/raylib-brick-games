@@ -14,14 +14,17 @@ static V2		BrickSize = {60, 30};
 static float	tick_time = 0.050f; // In seconds
 static FontConfig	TextConfig;
 static FontConfig	TextConfigHeading;
-static void	main_menu(GameData *data);
-static void	play_menu(GameData *data);
-static void	options_menu(GameData *data);
-static void	keybind_menu(GameData *data); // TODO
-static void	paused_menu(GameData *data);
-static void	colors_menu(GameData *data);
-static void	game_over_menu(GameData *data);
-static void	tutorial_menu(GameData *data);
+static UiState	current_screen;
+static void	title_screen(GameData *data);
+static void	play_screen(GameData *data);
+static void	options_screen(GameData *data);
+static void	paused_screen(GameData *data);
+static void	game_over_screen(GameData *data);
+
+// TODO : 
+static void	tutorial_screen(GameData *data);
+static void	colors_screen(GameData *data);
+static void	keybind_screen(GameData *data);
 
 void	draw_blocks(GameData *data);
 
@@ -41,24 +44,24 @@ static void	update()
 	BeginTextureMode(TextTexture);
 	ClearBackground((Color){0, 0, 0, 0});
 
-	switch (Data->current_ui) {
+	switch (current_screen) {
 		case (TITLE_SCREEN):
-			main_menu(Data);
+			title_screen(Data);
 			break;
 		case (PLAY_MENU):
-			play_menu(Data);
+			play_screen(Data);
 			break;
 		case (OPTIONS_MENU):
-			options_menu(Data);
+			options_screen(Data);
 			break;
 		case (GAME_OVER_MENU):
-			game_over_menu(Data);
+			game_over_screen(Data);
 			break;
 		// case(PAUSED_MENU):
 		// 	paused_menu(game_data);
 		// 	break;
 		default:
-			TraceLog(LOG_INFO, "Main_menu.c: MenuScreen not implementd. state id: %d \n", Data->current_ui);
+			TraceLog(LOG_INFO, "Main_menu.c: MenuScreen not implementd. state id: %d \n", current_screen);
 			break;
 	}
 	EndTextureMode();
@@ -91,6 +94,13 @@ static void draw()
 	Rect	rect_back = {0, 0, Data->window_size.x * 1.2f, -Data->window_size.y * 1.2f};
 	DrawTextureRec(BackgroundTexture.texture, rect_back, BackgroundPos, WHITE);
 	DrawTextureRec(TextTexture.texture, rect, TextTexturePos, WHITE);
+
+	{
+		char	*text  = "By: @thomi_dx";
+		V2	text_size = MeasureTextEx(TextConfig.font, text, TextConfig.size, TextConfig.spacing); 
+		V2	pos = {Data->window_size.x - text_size.x - 5, Data->window_size.y - text_size.y - 5};
+		DrawTextEx(TextConfig.font, text, pos, TextConfig.size, TextConfig.spacing, TextConfig.tint);
+	}
 }
 
 GameFunctions	main_menu_init(GameData *data)
@@ -105,6 +115,8 @@ GameFunctions	main_menu_init(GameData *data)
 	TextConfigHeading = data->assets.fonts[2];
 	TextConfigHeading.tint = data->palette.black;
 	TextConfigHeading.tint_hover = data->palette.purple;
+
+	current_screen = TITLE_SCREEN;
 
 	return (GameFunctions) { 
 		.name = "Main menu",
@@ -171,7 +183,7 @@ void	draw_blocks(GameData *data) {
 	}
 }
 
-void	main_menu(GameData *data)
+void	title_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	static bool	flag = false;
@@ -186,22 +198,24 @@ void	main_menu(GameData *data)
 	panel.pos = center;
 
 	panel_begin(&panel);
-	panel_text(&panel, "Raylib Brick Games", TextConfigHeading);
+	{
+		panel_text(&panel, "Raylib Brick Games", TextConfigHeading);
 
-	if (panel_text_button(&panel, "Play", TextConfig)) {
-		data->current_ui = PLAY_MENU;
-	}
+		if (panel_text_button(&panel, "Play", TextConfig)) {
+			current_screen = PLAY_MENU;
+		}
 
-	if (panel_text_button(&panel, "Options", TextConfig)) {
-		data->current_ui = OPTIONS_MENU;
-	}
-	if (panel_text_button(&panel, "Quit", TextConfig) || IsActionPressed(ACTION_2)) {
-		data->quit = true;
+		if (panel_text_button(&panel, "Options", TextConfig)) {
+			current_screen = OPTIONS_MENU;
+		}
+		if (panel_text_button(&panel, "Quit", TextConfig) || IsActionPressed(ACTION_2)) {
+			data->quit = true;
+		}
 	}
 	panel_end(&panel);
 }
 
-void	play_menu(GameData *data)
+void	play_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	static bool	flag = false;
@@ -220,27 +234,27 @@ void	play_menu(GameData *data)
 
 	if (panel_text_button(&panel, "Tetris", TextConfig)) {
 		data->current_game = TETRIS;
-		data->current_ui = NONE;
+		current_screen = NONE;
 	}
 
 	if (panel_text_button(&panel, "Snake", TextConfig)) {
 		data->current_game = SNAKE_GAME;
-		data->current_ui = NONE;
+		current_screen = NONE;
 	}
 
 	if (panel_text_button(&panel, "Test", TextConfig)) {
 		data->current_game = TEST;
-		data->current_ui = NONE;
+		current_screen = NONE;
 	}
 	
 	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
-		data->current_ui = BACK;
+		current_screen = TITLE_SCREEN;
 	}
 
 	panel_end(&panel);
 }
 
-void	options_menu(GameData *data)
+void	options_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	static bool	flag = false;
@@ -275,13 +289,13 @@ void	options_menu(GameData *data)
 	}
 	
 	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
-		data->current_ui = BACK;
+		current_screen = TITLE_SCREEN;
 	}
 
 	panel_end(&panel);
 }
 
-void	game_over_menu(GameData *data)
+void	game_over_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	static bool	flag = false;
@@ -299,12 +313,12 @@ void	game_over_menu(GameData *data)
 	panel_text(&panel, "Game Over", TextConfigHeading);
 
 	if (panel_text_button(&panel, "Play Again", TextConfig)) {
-		data->current_ui = NONE;
+		current_screen = NONE;
 	}
 	
 	// Quit to main menu
 	if (panel_text_button(&panel, "Quit to Main Menu", TextConfig)) {
-		data->current_ui = TITLE_SCREEN;
+		data->current_game = MAIN_MENU;
 	}
 	if (panel_text_button(&panel, "Quit to Desktop", TextConfig)) {
 		data->quit = true;

@@ -13,7 +13,7 @@ static void	update()
 {
 
 	if (IsActionPressed(ACTION_2)) {
-		Data->current_ui = TITLE_SCREEN;
+		// Data->current_ui = TITLE_SCREEN;
 	}
 	if (IsActionPressed(ACTION_1)) {
 		if (Flag) {

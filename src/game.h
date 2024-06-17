@@ -29,7 +29,6 @@ typedef enum {
 	TUTORIAL_MENU,
 	// Option state returned by menus funcs
 	NONE,
-	BACK,
 } UiState;
 
 typedef struct ColorPalette {
@@ -61,7 +60,6 @@ typedef struct {
 	bool	quit;
 	ColorPalette	palette;
 	Games_e	current_game;
-	UiState	current_ui;
 	Assets	assets;
 } GameData;
 

@@ -15,8 +15,6 @@ static void	unload_assets(GameData *data);
 
 static GameFunctions	games[GAME_COUNT] = {0};
 static Games_e	game;
-static UiState	ui;
-static UiState	prev_ui;
 static RenderTexture2D	screen;
 
 int	main()
@@ -39,11 +37,8 @@ int	main()
 		.purple= {130, 5, 165, 255},
 		.background = {237, 191, 198, 255},
 	};
-	data.current_game = GAME_COUNT;
+	data.current_game = MAIN_MENU;
 	game = -1;
-	data.current_ui = TITLE_SCREEN;
-	ui = NONE;
-	prev_ui = NONE;
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED );
 	InitWindow(data.window_size.x, data.window_size.y, "Raylib Bricks games");
@@ -130,8 +125,10 @@ int	main()
 		//Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
 		SetMouseOffset(-(GetScreenWidth() - (data.window_size.x*screen_scale))*0.5f, -(GetScreenHeight() - (data.window_size.y*screen_scale))*0.5f);
 		SetMouseScale(1 / screen_scale, 1 / screen_scale);
+
+
 		if (data.current_game < 0 || data.current_game >= GAME_COUNT) {
-			TraceLog(LOG_INFO, "main.c: Invalid option for current_game, won't change.\n");
+//			TraceLog(LOG_INFO, "main.c: Invalid option for current_game, won't change.\n");
 		}
 		else if (data.current_game != game) {
 			printf("changed game\n");
@@ -139,44 +136,29 @@ int	main()
 			games[game].start();
 		}
 
-		if (data.current_ui != ui && data.current_ui != BACK) {
-			prev_ui = ui;
-			ui = data.current_ui;
-			if (ui == TITLE_SCREEN) {
-				ui_trasition_from((V2) {0, -1});
-			}
-		} else if (data.current_ui == BACK) {
-			ui = prev_ui;
-			data.current_ui = prev_ui;
-			prev_ui = NONE;
-		}
+		games[game].update();
 
-		if (ui == NONE) { // Only call update if none of the ui is active
-			games[game].update();
-		} else {
-			games[MAIN_MENU].update();
-		}
 		BeginTextureMode(screen);
-		ClearBackground(RAYWHITE);
-		if (ui == NONE) { // Only call update if none of the ui is active
+		{
+			ClearBackground(RAYWHITE);
 			games[game].draw();
-		} else {
-			games[MAIN_MENU].draw();
 		}
 		EndTextureMode();
 
 		BeginDrawing();
-		ClearBackground(BLACK);
-		// Draw render texture to screen, properly scaled
-		DrawTexturePro(screen.texture,
-		 (Rect){0.0f, 0.0f, (float) screen.texture.width, (float) -screen.texture.height},
-		 (Rect){(GetScreenWidth() - ((float) data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((float) data.window_size.y*screen_scale)) * 0.5f,
-			(float)data.window_size.x * screen_scale, (float)data.window_size.y * screen_scale },
-		 (Vector2){ 0, 0 },
-		 0.0f,
-		 WHITE);
-		FontConfig	font = data.assets.fonts[1];
-		DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
+		{
+			ClearBackground(BLACK);
+			// Draw render texture to screen, properly scaled
+			DrawTexturePro(screen.texture,
+		  (Rect){0.0f, 0.0f, (float) screen.texture.width, (float) -screen.texture.height},
+		  (Rect){(GetScreenWidth() - ((float) data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((float) data.window_size.y*screen_scale)) * 0.5f,
+		  (float)data.window_size.x * screen_scale, (float)data.window_size.y * screen_scale },
+		  (Vector2){ 0, 0 },
+		  0.0f,
+			WHITE);
+			FontConfig	font = data.assets.fonts[1];
+			DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
+		}
 		EndDrawing();
 
 	}

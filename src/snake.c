@@ -40,7 +40,8 @@ static void	start()
 static void update()
 {
 	if (game_over) {
-		data->current_ui = GAME_OVER_MENU;
+		// FIX 
+		//data->current_ui = GAME_OVER_MENU;
 		game_over = false;
 		start(); // Reset game state
 		return ;
