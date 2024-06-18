@@ -20,6 +20,8 @@ static V2	apples[MAX_APPLES] = {0};
 static float	tick_time_count = 0;
 static const float	tick_rate = 0.150; // How much time until a game tick in seconds
 static float	apple_spawn_rate = 5; // in seconds
+static bool	play_screen = true;
+static bool	paused = false;
 static bool	game_over = false;
 static bool	easy_mode = true;
 
@@ -30,7 +32,11 @@ static void	start()
 	memset(snake, 0, MAX_SNAKE_SIZE);
 	memset(apples, 0, MAX_APPLES);
 	snake[0] = (V2) {(int) (board_size.x * 0.5f), (int) (board_size.y * 0.5f)}; // Set snake head to middle of the board
+
+	play_screen = true; 
 	game_over = false;
+	paused = false;
+
 	tick_time_count = 0;
 	dir = (V2) {1,0};
 	new_dir = (V2) {1,0};
@@ -39,11 +45,11 @@ static void	start()
 
 static void update()
 {
-	if (game_over) {
-		// FIX 
-		//data->current_ui = GAME_OVER_MENU;
-		game_over = false;
-		start(); // Reset game state
+	if (!play_screen && !game_over && IsActionPressed(OPEN_MENU)) { 
+		paused = paused ? false : true;
+
+	}
+	if (play_screen || paused || game_over) {
 		return ;
 	}
 
@@ -111,6 +117,99 @@ static void	draw()
 {
 	ClearBackground(RAYWHITE);
 	draw_game();
+
+	if (play_screen) {
+		static UiPanel	panel = {.id_current = 0, .centralized = true};
+
+		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+		V2	window = data->window_size;
+		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+		panel.pos = center;
+
+		panel_begin(&panel);
+		{
+			FontConfig	big = data->assets.fonts[2];
+			big.tint = YELLOW;
+			FontConfig	small = data->assets.fonts[1];
+
+			panel_text(&panel, "Snake", big);
+
+			if (panel_text_button(&panel, "Play", small)) { 
+				play_screen = false;
+			}
+
+			char	*mode = easy_mode ? "Mode: Easy" : "Mode: Normal";
+			if (panel_text_button(&panel, mode, small)) { 
+				easy_mode = easy_mode ? false : true;
+			}
+
+			if (panel_text_button(&panel, "Back", small)) { 
+				data->current_game = MAIN_MENU;
+			}
+		}
+		panel_end(&panel);
+
+		if (IsActionPressed(ACTION_2)) {
+			data->current_game = MAIN_MENU;
+		}
+	}
+
+	if (game_over) {
+		UiState	state = game_over_screen(data);
+		if (state == NONE) {
+			game_over = false;
+			start();
+		} else if (state == TITLE_SCREEN) {
+			// SAVE?
+			data->current_game = MAIN_MENU;
+			game_over = false;
+		}
+	}
+
+	static bool	options = false;
+	if (paused && options == false) {
+		static UiPanel	panel = {.id_current = 0, .centralized = true};
+
+		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+		V2	window = data->window_size;
+		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+		panel.pos = center;
+
+		panel_begin(&panel);
+		{
+			FontConfig	big = data->assets.fonts[2];
+			big.tint = YELLOW;
+			FontConfig	small = data->assets.fonts[1];
+
+			panel_text(&panel, "Game Paused", big);
+
+			if (panel_text_button(&panel, "Back to Game", small)) { 
+				paused = false;
+			} 
+
+			if (panel_text_button(&panel, "Options", small)) { 
+				options = true;
+			}
+
+			if (panel_text_button(&panel, "Exit To Main Menu", small)) { 
+				data->current_game = MAIN_MENU;
+			}
+
+			if (panel_text_button(&panel, "Exit To Desktop", small)) { 
+				data->quit = true;
+			}
+		}
+		panel_end(&panel);
+		if (IsActionPressed(ACTION_2)) {
+			paused = false;
+		}
+
+	} else if (paused && options) {
+		UiState	state = options_screen(data);
+		if (state == BACK) {
+			options = false;
+		}
+	}
 }
 
 void	de_init() {

@@ -16,6 +16,7 @@ static int	made_lines[18] = {0}; // NOTE hard coded
 static bool	is_made_lines = false;
 static bool	paused = false;
 static bool	game_over = false;
+static bool	play_screen = false;
 static TetrisSounds	game_sounds;
 
 // Drawing related
@@ -61,6 +62,9 @@ static void	clean_board();
 static void start()
 {
 	clean_board();
+	paused = false;
+	game_over = false;
+	play_screen = true;
 	piece = rand() % 7;
 	next_piece = rand() % 7;
 	stored_piece = -1;
@@ -71,12 +75,14 @@ static void	update()
 {
 	UpdateMusicStream(game_sounds.music);
 
-	if (!paused && !IsWindowFocused()) {
-		paused = true;
-	}
-	if (IsActionPressed(OPEN_MENU)) {
+	if (!play_screen && !game_over && IsActionPressed(OPEN_MENU)) {
 		paused = paused ? false : true;
 	}
+
+	if (play_screen || paused || game_over) {
+		return ;
+	}
+
 	if (IsActionPressed(ACTION_3)) {
 		V2	new_pos = pos;
 		while (!check_piece_collision(piece, new_pos, rotation)) {
@@ -89,7 +95,7 @@ static void	update()
 
 	if (tick_time_count < tick_time) {
 		tick_time_count += GetFrameTime();
-	} else if (!paused && !game_over) {
+	} else {
 		tick_time_count = 0;
 		speed_count++;
 
@@ -184,22 +190,120 @@ static void	draw() {
 		}
 	}
 
-	if (paused) {
-		// FIX 
-		// ui_trasition_from((V2){1, 0});
-		// data->current_ui = OPTIONS_MENU;
-		paused = false;
-	} else if (game_over) {
-		//ui_trasition_from((V2){1, 0});
-		// FIX 
-		//data->current_ui = GAME_OVER_MENU;
-		game_over = false;
-		start();
+	if (play_screen) {
+		static UiPanel	panel = {.id_current = 0, .centralized = true};
+
+		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+		V2	window = data->window_size;
+		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+		panel.pos = center;
+
+		panel_begin(&panel);
+		{
+			FontConfig	big = data->assets.fonts[2];
+			big.tint = PURPLE;
+			FontConfig	small = data->assets.fonts[1];
+
+			panel_text(&panel, "Tetris", big);
+
+			if (panel_text_button(&panel, "Play", small)) { 
+				play_screen = false;
+			}
+
+			// BUG  speed is modified on game loop so when playing again this will not work
+			char	*mode = "should not be this";
+			printf("speed: %d\n", speed);
+			if (speed == 10) {
+				mode = "Mode: Easy";
+			}
+			if (speed == 5) {
+				mode = "Mode: Normal";
+			}
+			if (speed == 2) {
+				mode = "Mode: Hard";
+			}
+			if (panel_text_button(&panel, mode, small)) { 
+				if (speed == 10) {
+					speed = 5;
+				} else if (speed == 5) {
+					speed = 2;
+				} else if (speed == 2) {
+					speed = 10;
+				}
+			}
+
+			if (panel_text_button(&panel, "Back", small)) { 
+				data->current_game = MAIN_MENU;
+			}
+		}
+		panel_end(&panel);
+
+		if (IsActionPressed(ACTION_2)) {
+			data->current_game = MAIN_MENU;
+		}
+	}
+
+	if (game_over) {
+		ui_trasition_from((V2){1, 0});
+		UiState	state = game_over_screen(data);
+		if (state == NONE) {
+			game_over = false;
+			start();
+		} else if (state == TITLE_SCREEN) {
+			// SAVE?
+			data->current_game = MAIN_MENU;
+			game_over = false;
+		}
 		 
 		// TODO Display score & high_score
 		if (score > high_score) {
 			high_score = score;
 			//  TODO  Custom text for new highScore
+		}
+	}
+
+	static bool	options = false;
+	if (paused && options == false) {
+		static UiPanel	panel = {.id_current = 0, .centralized = true};
+
+		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+		V2	window = data->window_size;
+		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
+		panel.pos = center;
+
+		panel_begin(&panel);
+		{
+			FontConfig	big = data->assets.fonts[2];
+			big.tint = YELLOW;
+			FontConfig	small = data->assets.fonts[1];
+
+			panel_text(&panel, "Game Paused", big);
+
+			if (panel_text_button(&panel, "Back to Game", small)) { 
+				paused = false;
+			} 
+
+			if (panel_text_button(&panel, "Options", small)) { 
+				options = true;
+			}
+
+			if (panel_text_button(&panel, "Exit To Main Menu", small)) { 
+				data->current_game = MAIN_MENU;
+			}
+
+			if (panel_text_button(&panel, "Exit To Desktop", small)) { 
+				data->quit = true;
+			}
+		}
+		panel_end(&panel);
+		if (IsActionPressed(ACTION_2)) {
+			paused = false;
+		}
+
+	} else if (paused && options) {
+		UiState	state = options_screen(data);
+		if (state == BACK) {
+			options = false;
 		}
 	}
 }

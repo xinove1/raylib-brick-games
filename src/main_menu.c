@@ -17,9 +17,7 @@ static FontConfig	TextConfigHeading;
 static UiState	current_screen;
 static void	title_screen(GameData *data);
 static void	play_screen(GameData *data);
-static void	options_screen(GameData *data);
 static void	paused_screen(GameData *data);
-static void	game_over_screen(GameData *data);
 
 // TODO : 
 static void	tutorial_screen(GameData *data);
@@ -31,6 +29,7 @@ void	draw_blocks(GameData *data);
 static void	start() 
 {
 	//target_pos = (V2) {game_data->window_size.x, 0}; // right
+	current_screen = TITLE_SCREEN;
 }
 
 static void	de_init()
@@ -52,7 +51,9 @@ static void	update()
 			play_screen(Data);
 			break;
 		case (OPTIONS_MENU):
-			options_screen(Data);
+			if (options_screen(Data) == BACK) {
+				current_screen = TITLE_SCREEN;
+			}
 			break;
 		case (GAME_OVER_MENU):
 			game_over_screen(Data);
@@ -96,7 +97,7 @@ static void draw()
 	DrawTextureRec(TextTexture.texture, rect, TextTexturePos, WHITE);
 
 	{
-		char	*text  = "By: @thomi_dx";
+		char	*text  = "By: @thomi_dx"; // FIX  When created twitter account
 		V2	text_size = MeasureTextEx(TextConfig.font, text, TextConfig.size, TextConfig.spacing); 
 		V2	pos = {Data->window_size.x - text_size.x - 5, Data->window_size.y - text_size.y - 5};
 		DrawTextEx(TextConfig.font, text, pos, TextConfig.size, TextConfig.spacing, TextConfig.tint);
@@ -186,11 +187,6 @@ void	draw_blocks(GameData *data) {
 void	title_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
-	static bool	flag = false;
-	if (flag == false) {
-		panel.id_current = 0;
-		flag = true;
-	}
 	
 	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
 	V2	window = data->window_size;
@@ -218,11 +214,6 @@ void	title_screen(GameData *data)
 void	play_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
-	static bool	flag = false;
-	if (flag == false) {
-		panel.id_current = 0;
-		flag = true;
-	}
 	
 	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
 	V2	window = data->window_size;
@@ -254,16 +245,14 @@ void	play_screen(GameData *data)
 	panel_end(&panel);
 }
 
-void	options_screen(GameData *data)
+UiState	options_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	static bool	flag = false;
 	if (flag == false) {
-		panel.id_current = 0;
-		flag = true;
 		V2	txt_size = MeasureTextEx(TextConfig.font, "test", TextConfig.size, TextConfig.spacing);
-	printf("vol: %f\n", data->effects_vol);
 		panel.height = txt_size.y;
+		flag = true;
 	}
 	
 	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
@@ -289,20 +278,16 @@ void	options_screen(GameData *data)
 	}
 	
 	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
-		current_screen = TITLE_SCREEN;
+		return (BACK);
 	}
 
 	panel_end(&panel);
+	return (NOTHING);
 }
 
-void	game_over_screen(GameData *data)
+UiState	game_over_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
-	static bool	flag = false;
-	if (flag == false) {
-		panel.id_current = 0;
-		flag = true;
-	}
 	
 	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
 	V2	window = data->window_size;
@@ -313,16 +298,16 @@ void	game_over_screen(GameData *data)
 	panel_text(&panel, "Game Over", TextConfigHeading);
 
 	if (panel_text_button(&panel, "Play Again", TextConfig)) {
-		current_screen = NONE;
+		return (NONE);
 	}
 	
 	// Quit to main menu
 	if (panel_text_button(&panel, "Quit to Main Menu", TextConfig)) {
-		data->current_game = MAIN_MENU;
+		return (TITLE_SCREEN);
 	}
 	if (panel_text_button(&panel, "Quit to Desktop", TextConfig)) {
 		data->quit = true;
 	}
-
 	panel_end(&panel);
+	return (NOTHING);
 }
