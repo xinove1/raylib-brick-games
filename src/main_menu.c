@@ -29,6 +29,7 @@ void	draw_blocks(GameData *data);
 static void	start() 
 {
 	//target_pos = (V2) {game_data->window_size.x, 0}; // right
+	ui_trasition_from((V2){0, -1});
 	current_screen = TITLE_SCREEN;
 }
 

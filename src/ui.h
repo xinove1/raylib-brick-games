@@ -47,11 +47,14 @@ bool	panel_slider_sized(UiPanel *panel, V2 size, float *value, float min, float 
 #ifdef XI_UI_IMPLEMENTATION
 
 // NOLINTBEGIN(misc-definitions-in-headers)
+//
+void	DrawSelector(V2 offset, V2 target_bounds);
 
 // IDK MAN AOETNHOANTEH
 static Texture2D	*SelectorTexture = NULL; 
 static Color		SelectorTint = RAYWHITE;
 static Sound		*ClickedSound = NULL;
+static bool		CheckMouse = false;
 
 void	set_selector_texture(Texture2D *texture)
 {
@@ -70,11 +73,16 @@ void	set_clicked_sound(Sound *sound)
 
 void	panel_begin(UiPanel *panel) 
 {
-
 	panel->width = 0;
 	panel->at_x = panel->pos.x;
 	panel->at_y = panel->pos.y;
 	panel->id_count = 0;
+
+	if (!IsMouseMoving() && WasAnyActionDown()) {
+		CheckMouse = false;
+	} else if (IsMouseMoving()) {
+		CheckMouse = true;
+	}
 }
 
 void	panel_end(UiPanel *panel)
@@ -124,7 +132,7 @@ void	panel_text(UiPanel *panel, char *text, FontConfig font)
 
 bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 {
-	bool	r = false;
+	bool	pressed = false;
 	bool	mouse_inside = false;
 	V2	text_size = MeasureTextEx(config.font, text, config.size, config.spacing);
 	V2	offset = {panel->at_x, panel->at_y};
@@ -140,7 +148,7 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 
 	// TODO Add flag if last change in current ui selected was with keys, and then not check mouse pos until mouse movement
 	DrawRectanglePro(rect, (V2){0, 0}, 0, GREEN);
-	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rect)) { // FIXME  
 		panel->id_current = id;
 		mouse_inside = true;
 	}
@@ -149,18 +157,10 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 //		draw_selector_cursor((V2){panel->at_x, panel->at_y + text_size.y * 0.5f});
 		//DrawTexture(SelectorTexture, offset.x - SelectorTexture.width - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture.height * 0.5f), SelectorTint);
 		// TODO  Refactor into function that draws texture scaled
-		if (SelectorTexture) { 
-			DrawTexturePro(
-				*SelectorTexture,
-				(Rect){0, 0, (float)SelectorTexture->width, (float)SelectorTexture->height},
-				(Rect){offset.x - (SelectorTexture->width * 0.50f) - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture->height * 0.25f), SelectorTexture->width * 0.5f, SelectorTexture->height * 0.5f},
-				(V2){0,0},
-				0,
-			SelectorTint);
-		}
+		DrawSelector(offset, text_size);
 
 		if ((mouse_inside && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) || IsActionPressed(ACTION_1)) {
-			r = true;
+			pressed = true;
 			if (ClickedSound) {
 				PlaySound(*ClickedSound);
 			}
@@ -174,7 +174,7 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 	if (panel->width < text_size.x){
 		panel->width  = text_size.x;
 	}
-	return (r);
+	return (pressed);
 }
 
 bool	panel_slider(UiPanel *panel, float *value, float min, float max)
@@ -186,7 +186,7 @@ bool	panel_slider(UiPanel *panel, float *value, float min, float max)
 bool	panel_slider_sized(UiPanel *panel, V2 size, float *value, float min, float max)
 {
 
-	bool	r = false;
+	bool	pressed = false;
 	bool	mouse_inside = false;
 	V2	offset = {panel->at_x, panel->at_y};
 	Rect	rect = {offset.x, offset.y, size.x, size.y};
@@ -199,36 +199,35 @@ bool	panel_slider_sized(UiPanel *panel, V2 size, float *value, float min, float 
 		rect.x = offset.x;
 	}
 
-	if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rect)) {
 		panel->id_current = id;
 		mouse_inside = true;
 	}
 	if (panel->id_current == id) {
-		DrawRectangle(offset.x - 10, offset.y + (rect.y * 0.5f) - 2.5f, 5, 5, BLACK); // Temp
+		DrawSelector(offset, size);
 		
 		if (mouse_inside) {
 			float wheel = GetMouseWheelMove();
 			if (wheel == 1.0f || wheel == -1.0f) {
 				*value += step * wheel;	
-				r = true;
+				pressed = true;
 			}
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
 				V2	pos = Vector2Subtract(GetMousePosition(), (V2){rect.x, rect.y});
 				*value = Remap(pos.x, 0, rect.width, 0, 1);
-				//printf("remap: %f\n", Remap(pos.x, 0, rect.width, 0, 1));
-				r = true;
+				pressed = true;
 			}
 		}
 
 		if (IsActionPressed(RIGHT)) {
 			*value += step;	
 			if (ClickedSound) PlaySound(*ClickedSound);
-			r = true;
+			pressed = true;
 		}
 		if (IsActionPressed(LEFT)) {
 			*value -= step;	
 			if (ClickedSound) PlaySound(*ClickedSound);
-			r = true;
+			pressed = true;
 		}
 	}
 
@@ -246,8 +245,21 @@ bool	panel_slider_sized(UiPanel *panel, V2 size, float *value, float min, float 
 	if (panel->width < size.x){
 		panel->width  = size.x;
 	}
-	if (r) PlaySound(*ClickedSound);
-	return (r);
+	if (pressed) PlaySound(*ClickedSound);
+	return (pressed);
+}
+
+void	DrawSelector(V2 offset, V2 target_bounds)
+{
+	if (SelectorTexture) { 
+		DrawTexturePro(
+			*SelectorTexture,
+			(Rect){0, 0, (float)SelectorTexture->width, (float)SelectorTexture->height},
+			(Rect){offset.x - (SelectorTexture->width * 0.50f) - 5, offset.y + (target_bounds.y * 0.5f) - (SelectorTexture->height * 0.25f), SelectorTexture->width * 0.5f, SelectorTexture->height * 0.5f},
+			(V2){0,0},
+			0,
+		SelectorTint);
+	}
 }
 
 // NOLINTEND(misc-definitions-in-headers)
