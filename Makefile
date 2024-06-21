@@ -9,7 +9,6 @@ CC_WINDOWS= x86_64-w64-mingw32-gcc
 CFLAGS= -I$(RAYLIB) -I$(RAYLIB)/external -std=c99 #-Wall -Wextra -Werror
 DEBUG_FLAGS= -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -Wdouble-promotion \
              -fsanitize=address -fsanitize=undefined -fsanitize-trap \
-             -DRAYGUI_DEBUG_RECS_BOUNDS -DRAYGUI_DEBUG_TEXT_BOUNDS \
              #-Wconversion  -Wno-sign-conversion \
 
 RFLAGS= -lGL -lm -lpthread -ldl -lrt -lX11
@@ -24,13 +23,14 @@ RM= rm -f
 
 SRC= $(wildcard src/*.c)
 
-OBJ=$(notdir $(SRC:.c=.o))
+OBJ= $(notdir $(SRC:.c=.o))
 
 DEPENDACIES= $(SRC) $(wildcard src/*.h)
 
 $(NAME): $(DEPENDACIES)
+	@make -C $(RAYLIB) RAYLIB_LIBTYPE=SHARED
 	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -c $(SRC)
-	$(CC) $(OBJ) $(CFLAGS) $(DEBUG_FLAGS) -lraylib $(RFLAGS) -o $(NAME)
+	$(CC) $(OBJ) $(CFLAGS) $(DEBUG_FLAGS) -Wl,-rpath=$(RAYLIB)/ -lraylib $(RFLAGS) -o $(NAME)
 
 static: $(DEPENDACIES)
 	@make -C $(RAYLIB)
