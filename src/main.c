@@ -58,30 +58,35 @@ int	main()
 		RegisterInputKeyAction(RIGHT, KEY_D);
 		RegisterInputKeyAction(RIGHT, KEY_RIGHT);
 		RegisterGamePadButtonAction(RIGHT, GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
+		RegisterGamePadAxisAction(RIGHT, GAMEPAD_AXIS_LEFT_X, 0.5f);
 
 
 		RegisterActionName(LEFT, "left");
 		RegisterInputKeyAction(LEFT, KEY_A);
 		RegisterInputKeyAction(LEFT, KEY_LEFT);
 		RegisterGamePadButtonAction(LEFT, GAMEPAD_BUTTON_LEFT_FACE_LEFT);
+		RegisterGamePadAxisAction(LEFT, GAMEPAD_AXIS_LEFT_X, -0.5f);
 
 
 		RegisterActionName(UP, "up");
 		RegisterInputKeyAction(UP, KEY_W);
 		RegisterInputKeyAction(UP, KEY_UP);
 		RegisterGamePadButtonAction(UP, GAMEPAD_BUTTON_LEFT_FACE_UP);
+		RegisterGamePadAxisAction(UP, GAMEPAD_AXIS_LEFT_Y, -0.5f);
 
 
 		RegisterActionName(DOWN, "down");
 		RegisterInputKeyAction(DOWN, KEY_S);
 		RegisterInputKeyAction(DOWN, KEY_DOWN);
 		RegisterGamePadButtonAction(DOWN, GAMEPAD_BUTTON_LEFT_FACE_DOWN);
+		RegisterGamePadAxisAction(DOWN, GAMEPAD_AXIS_LEFT_Y, 0.5f);
 
 
 		RegisterActionName(ACTION_1, "action_1");
 		RegisterInputKeyAction(ACTION_1, KEY_J);
 		RegisterInputKeyAction(ACTION_1, KEY_X);
 		RegisterGamePadButtonAction(ACTION_1, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+		RegisterGamePadAxisAction(ACTION_1, GAMEPAD_AXIS_RIGHT_TRIGGER, 0.7f);
 
 
 		RegisterActionName(ACTION_2, "action_2");
@@ -113,6 +118,8 @@ int	main()
 	games[TEST] = test_game_init(&data);
 
 	while (!WindowShouldClose() && !data.quit) {
+		PoolActions();
+		//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());
 
 		float screen_scale = MIN((float)GetScreenWidth()/data.window_size.x, (float)GetScreenHeight() / data.window_size.y);
 		// Update virtual mouse (clamped mouse value behind game screen)

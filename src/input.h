@@ -10,11 +10,14 @@ typedef enum {LEFT, RIGHT, UP, DOWN, ACTION_1, ACTION_2, ACTION_3, OPEN_MENU, IN
 void	RegisterActionName(int action_id, char *action_name);
 void	RegisterInputKeyAction(int action_id, int keycode);
 void	RegisterGamePadButtonAction(int action_id, int gamepad_button);
-//void	RegisterGamePadAxisAction(int action_id, int gamepad_axis, float trigger_deadzone); Need to have a layer on top on raylib provided stuff, or modify raylib itself
+void	RegisterGamePadAxisAction(int action_id, int gamepad_axis, float trigger_deadzone);
 void	SetGamePadId(int gamepad); // Which GamePad to use
 bool	IsActionPressed(int action_id);
 bool	IsActionReleased(int action_id);
 bool	IsActionDown(int action_id);
+bool	IsMouseMoving();
+bool	WasAnyActionDown();
+void	PoolActions();
 void	PrintActions();
 
 # ifndef MAX_ACTION_KEYCODES 
@@ -42,6 +45,10 @@ typedef struct {
 
 typedef struct {
 	char		*name;
+	bool		down;
+	bool		down_last_frame;
+	bool		pressed;
+	bool		released;
 	int		keycodes[MAX_ACTION_KEYCODES];
 	int		gamepad_button[MAX_ACTION_GAMEPADBUTTONS];
 	ActionAxis	gamepad_axis[MAX_ACTION_AXIS];
@@ -49,6 +56,10 @@ typedef struct {
 
 Action	Actions[MAX_ACTIONS] = {0};
 int	GamePadId = -1;
+Vector2	MousePosition = {0, 0};
+Vector2	MouseLastPosition = {0, 0};
+bool	MouseMoving = false;
+bool	WasActionDown = false;
 
 // Which GamePad to use
 void	SetGamePadId(int gamepad)
@@ -59,25 +70,80 @@ void	SetGamePadId(int gamepad)
 	GamePadId = gamepad;
 }
 
-void	PrintActions() {
-	printf("Actions list\n");
-	printf("~~~~~~~~~~~~\n");
-	for (int i = 0; i < MAX_ACTIONS; i++) {
-		if (Actions[i].name == NULL) {
-			printf("Unamned action: \n");
-		} else {
-			printf("%s: \n", Actions[i].name);
+bool	_CheckDown(Action *action) 
+{
+	for (int i = 0; i < MAX_ACTION_KEYCODES; i++) {
+		if (action->keycodes[i] == -1) break ;
+
+		if (IsKeyDown(action->keycodes[i])) {
+			return true;
 		}
-		for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-			if (Actions[i].keycodes[k] == -1){
-				break ;
+	}
+
+	// Don't check Gamepad stuff if it's unavailable
+	if (IsGamepadAvailable(GamePadId) == false) {
+		return false;
+	}
+
+	for (int i = 0; i < MAX_ACTION_GAMEPADBUTTONS; i++) {
+		if (action->gamepad_button[i] == -1) break ;
+
+		if (IsGamepadButtonDown(GamePadId, action->gamepad_button[i])) {
+			return true;
+		}
+	}
+
+	for (int i = 0; i < MAX_ACTION_AXIS; i++) {
+		if (action->gamepad_axis[i].id == -1) break ;
+
+		float	f = GetGamepadAxisMovement(GamePadId, action->gamepad_axis[i].id);
+		float	trigger = action->gamepad_axis[i].trigger_point;
+		if (trigger > 0) {
+			if (f >= action->gamepad_axis[i].trigger_point) {
+				return true;
 			}
-			printf("  %d\n", Actions[i].keycodes[k]);
+		} else if (trigger < 0) {
+			if (f <= action->gamepad_axis[i].trigger_point) {
+				return true;
+			}
+		} else {
+			TraceLog(LOG_WARNING, "Action |%s| gamepad_axis_id %d has a trigger point of 0 \n", action->name, action->gamepad_axis[i].id);
 		}
+	}
+	
+	return false;
+}
+
+void	PoolActions() 
+{
+	WasActionDown = false;
+	for (int i = 0; i < MAX_ACTIONS; i++) {
+		Action	*action = &Actions[i];
+		if (action->name == NULL) continue ;
+		
+		action->down_last_frame = action->down;
+		action->down = _CheckDown(action);
+		action->pressed = false;
+		action->released = false;
+		if (action->down && action->down_last_frame == false) {
+			action->pressed = true;
+		} else if (action->down_last_frame && action->down == false) {
+			action->released = true;
+		}
+
+		if (action->down_last_frame) {
+			WasActionDown = true;
+		}
+	}
+	MouseMoving = false;
+	MouseLastPosition = MousePosition;
+	MousePosition = GetMousePosition();
+	if (!(MousePosition.x == MouseLastPosition.x && MousePosition.y == MouseLastPosition.y)) {
+		MouseMoving = true;
 	}
 }
 
-Action	*get_action(int id) 
+Action	*_GetAction(int id) 
 {
 	// TODO  Better error message to account to error on registering and getting input
 	if (id < 0) {
@@ -97,7 +163,7 @@ void	RegisterActionName(int action_id, char *action_name)
 		return ;
 	}
 	
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return ;
 	}
@@ -110,30 +176,33 @@ void	RegisterActionName(int action_id, char *action_name)
 		action->name = action_name;
 	}
 
-	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-		action->keycodes[k] = -1;
+	action->down_last_frame = false;
+	action->down = false;
+
+	for (int i = 0; i < MAX_ACTION_KEYCODES; i++) {
+		action->keycodes[i] = -1;
 	}
 
-	for (int k = 0; k < MAX_ACTION_GAMEPADBUTTONS; k++) {
-		action->gamepad_button[k] = -1;
+	for (int i = 0; i < MAX_ACTION_GAMEPADBUTTONS; i++) {
+		action->gamepad_button[i] = -1;
 	}
 
-	for (int k = 0; k < MAX_ACTION_AXIS; k++) {
-		action->gamepad_axis[k].id = -1;
+	for (int i = 0; i < MAX_ACTION_AXIS; i++) {
+		action->gamepad_axis[i].id = -1;
 	}
 }
 
 // Register a keycode to a action, only works on action already named (so the keycodes can be set to -1)
 void	RegisterInputKeyAction(int action_id, int action_keycode)
 {
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return ;
 	}
 
-	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-		if (action->keycodes[k] == -1) {
-			action->keycodes[k] = action_keycode;
+	for (int i = 0; i < MAX_ACTION_KEYCODES; i++) {
+		if (action->keycodes[i] == -1) {
+			action->keycodes[i] = action_keycode;
 			return ;
 		}
 	}
@@ -149,14 +218,14 @@ void	RegisterInputKeyAction(int action_id, int action_keycode)
 
 void	RegisterGamePadButtonAction(int action_id, int gamepad_button) 
 {
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return ;
 	}
 
-	for (int k = 0; k < MAX_ACTION_GAMEPADBUTTONS; k++) {
-		if (action->gamepad_button[k] == -1) {
-			action->gamepad_button[k] = gamepad_button;
+	for (int i = 0; i < MAX_ACTION_GAMEPADBUTTONS; i++) {
+		if (action->gamepad_button[i] == -1) {
+			action->gamepad_button[i] = gamepad_button;
 			return ;
 		}
 	}
@@ -170,18 +239,17 @@ void	RegisterGamePadButtonAction(int action_id, int gamepad_button)
 	return ;
 }
 
-// NOTE  aoeuou
 void	RegisterGamePadAxisAction(int action_id, int gamepad_axis, float trigger_point)
 {
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return ;
 	}
 
-	for (int k = 0; k < MAX_ACTION_AXIS; k++) {
-		if (action->gamepad_axis[k].id == -1) {
-			action->gamepad_axis[k].id = gamepad_axis;
-			action->gamepad_axis[k].trigger_point = trigger_point;
+	for (int i = 0; i < MAX_ACTION_AXIS; i++) {
+		if (action->gamepad_axis[i].id == -1) {
+			action->gamepad_axis[i].id = gamepad_axis;
+			action->gamepad_axis[i].trigger_point = trigger_point;
 			return ;
 		}
 	}
@@ -198,92 +266,57 @@ void	RegisterGamePadAxisAction(int action_id, int gamepad_axis, float trigger_po
 
 bool	IsActionPressed(int action_id)
 {
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return false;
 	}
-
-	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-		if (action->keycodes[k] == -1) break ;
-
-		if (IsKeyPressed(action->keycodes[k])) {
-			return true;
-		}
-	}
-	for (int k = 0; k < MAX_ACTION_GAMEPADBUTTONS; k++) {
-		if (action->gamepad_button[k] == -1) break ;
-
-		if (IsGamepadButtonPressed(GamePadId, action->gamepad_button[k])) {
-			return true;
-		}
-	}
-
-	// TODO  Somehow implement action pressed for axis, probaly needs to modify raylib itself
-
-	return false;
+	return (action->pressed);
 }
 
 bool	IsActionReleased(int action_id)
 {
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return false;
 	}
-
-	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-		if (action->keycodes[k] == -1) break ;
-
-		if (IsKeyReleased(action->keycodes[k])) {
-			return true;
-		}
-	}
-
-	for (int k = 0; k < MAX_ACTION_GAMEPADBUTTONS; k++) {
-		if (action->gamepad_button[k] == -1) break ;
-
-		if (IsGamepadButtonReleased(GamePadId, action->gamepad_button[k])) {
-			return true;
-		}
-	}
-
-	// TODO  Somehow implement action Released for axis, probaly needs to modify raylib itself
-
-	return false;
+	return (action->released);
 }
 
 bool	IsActionDown(int action_id)
 {
-	Action	*action = get_action(action_id);
+	Action	*action = _GetAction(action_id);
 	if (action == NULL) {
 		return false;
 	}
+	return (action->down);
+}
 
-	for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
-		if (action->keycodes[k] == -1) break ;
+bool	IsMouseMoving() 
+{
+	return (MouseMoving);
+}
 
-		if (IsKeyDown(action->keycodes[k])) {
-			return true;
+bool	WasAnyActionDown()
+{
+	return (WasActionDown);
+}
+
+void	PrintActions() {
+	printf("Actions list\n");
+	printf("~~~~~~~~~~~~\n");
+	for (int i = 0; i < MAX_ACTIONS; i++) {
+		if (Actions[i].name == NULL) {
+			printf("Unamned action: \n");
+		} else {
+			printf("%s: \n", Actions[i].name);
+		}
+		for (int k = 0; k < MAX_ACTION_KEYCODES; k++) {
+			if (Actions[i].keycodes[k] == -1){
+				break ;
+			}
+			printf("  %d\n", Actions[i].keycodes[k]);
 		}
 	}
-
-	for (int k = 0; k < MAX_ACTION_GAMEPADBUTTONS; k++) {
-		if (action->gamepad_button[k] == -1) break ;
-
-		if (IsGamepadButtonDown(GamePadId, action->gamepad_button[k])) {
-			return true;
-		}
-	}
-
-	// for (int k = 0; k < MAX_ACTION_AXIS; k++) {
-	// 	if (action->gamepad_axis[k].id == -1) break ;
-
-	// 	float	f = GetGamepadAxisMovement(GamePadId, action->gamepad_axis[k].id);
-	// 	if (f >= action->gamepad_axis[k].trigger_point) {
-	// 		return true;
-	// 	}
-	// }
-
-	return false;
 }
 
 // NOLINTEND(misc-definitions-in-headers)
