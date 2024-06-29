@@ -120,7 +120,8 @@ void	panel_text(UiPanel *panel, char *text, FontConfig font)
 		offset.x -= text_size.x * 0.5f;
 	}
 
-	DrawRectangle(offset.x, offset.y, text_size.x, text_size.y, font.tint_hover);
+	// TODO  Option for drawing rectangle behind text?
+	//DrawRectangle(offset.x, offset.y, text_size.x, text_size.y, font.tint_hover);
 	DrawTextEx(font.font, text, offset, font.size, font.spacing, font.tint);
 
 	panel->at_y += text_size.y;
@@ -146,13 +147,12 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 		rect.x = offset.x;
 	}
 
-	// TODO Add flag if last change in current ui selected was with keys, and then not check mouse pos until mouse movement
-	DrawRectanglePro(rect, (V2){0, 0}, 0, GREEN);
-	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rect)) { // FIXME  
+	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rect)) {
 		panel->id_current = id;
 		mouse_inside = true;
 	}
 	if (panel->id_current == id) {
+		DrawRectangleV((V2){rect.x - 2, rect.y}, (V2){rect.width + 2, rect.height + 1}, config.tint);
 		color = config.tint_hover;
 //		draw_selector_cursor((V2){panel->at_x, panel->at_y + text_size.y * 0.5f});
 		//DrawTexture(SelectorTexture, offset.x - SelectorTexture.width - 5, offset.y + (text_size.y * 0.5f) - (SelectorTexture.height * 0.5f), SelectorTint);
@@ -165,6 +165,8 @@ bool	panel_text_button(UiPanel *panel, char *text, FontConfig config)
 				PlaySound(*ClickedSound);
 			}
 		}
+	} else {
+		DrawRectangleV((V2){rect.x - 2, rect.y}, (V2){rect.width + 2, rect.height}, config.tint_hover);
 	}
 
 	DrawTextEx(config.font, text, offset, config.size, config.spacing, color);

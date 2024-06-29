@@ -14,6 +14,7 @@ static V2		BrickSize = {60, 30};
 static float	tick_time = 0.050f; // In seconds
 static FontConfig	TextConfig;
 static FontConfig	TextConfigHeading;
+static Color		UiBackgroundColor;
 static UiState	current_screen;
 static void	title_screen(GameData *data);
 static void	play_screen(GameData *data);
@@ -110,13 +111,14 @@ GameFunctions	main_menu_init(GameData *data)
 	Data = data;
 	TextTexture = LoadRenderTexture(data->window_size.x, data->window_size.y);
 	BackgroundTexture = LoadRenderTexture(data->window_size.x * 1.2f, data->window_size.y * 1.2f);
+
+	UiBackgroundColor = data->palette.red;
 	TextConfig = data->assets.fonts[1];
 	TextConfig.tint = data->palette.black;
 	TextConfig.tint_hover = data->palette.red;
-
 	TextConfigHeading = data->assets.fonts[2];
 	TextConfigHeading.tint = data->palette.black;
-	TextConfigHeading.tint_hover = data->palette.purple;
+	TextConfigHeading.tint_hover = data->palette.blue;
 
 	current_screen = TITLE_SCREEN;
 
@@ -189,7 +191,7 @@ void	title_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	
-	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
 	panel.pos = center;
@@ -216,7 +218,7 @@ void	play_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	
-	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
 	panel.pos = center;
@@ -256,7 +258,7 @@ UiState	options_screen(GameData *data)
 		flag = true;
 	}
 	
-	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
 	panel.pos = center;
@@ -290,7 +292,7 @@ UiState	game_over_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	
-	DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
+	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
 	V2	window = data->window_size;
 	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
 	panel.pos = center;
