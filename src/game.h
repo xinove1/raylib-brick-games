@@ -17,7 +17,7 @@
 typedef Vector2 V2 ;
 typedef Rectangle Rect;
 
-typedef enum {MAIN_MENU, TETRIS, SNAKE_GAME, TEST, GAME_COUNT} Games_e;
+typedef enum {MAIN_MENU, TETRIS, SNAKE_GAME, PONG, BREAKOUT, TEST, GAME_COUNT} Games_e;
 typedef enum {
 	TITLE_SCREEN, 
 	PLAY_MENU, // Game Selection
@@ -79,6 +79,8 @@ GameFunctions	snake_game_init(GameData *data);
 GameFunctions	tetris_init(GameData *data);
 GameFunctions	main_menu_init(GameData *data);
 GameFunctions	test_game_init(GameData *data);
+GameFunctions	pong_init(GameData *data);
+GameFunctions	breakout_init(GameData *data);
 
 void	update_volume(GameData *data);
 void	ui_trasition_from(V2 dir);

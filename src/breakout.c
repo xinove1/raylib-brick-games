@@ -1,16 +1,43 @@
 #include "game.h"
-#include "raylib.h"
+
+typedef struct {
+	V2	pos;
+	V2	size;
+	V2	dir;
+	float	speed;
+} Obj;
 
 static GameData	*Data = NULL;
 static bool	GameOver = false;
 static bool	GamePaused = false;
 static bool	PlayScreen = true;
 
+static Obj	Paddle = {};
+static Obj	Ball = {};
+
 static void	start()
 {
 	GameOver = false;
 	GamePaused = false;
 	PlayScreen = true;
+	
+	Paddle = (Obj) {
+		.pos = (V2) { Data->window_size.x * 0.5f, Data->window_size.y - 10 },
+		.size = (V2) { 25, 5 },
+		.dir = (V2) { 0 },
+		.speed = 10,
+	};
+
+	Ball = (Obj) {
+		.pos = (V2) { Paddle.pos.x, Paddle.pos.y - 10},
+		.size = (V2) { 10, 10 },
+		.dir = (V2) { 0 },
+		.speed = 10,
+	};
+}
+
+static void	de_init()
+{
 }
 
 static void	update()
@@ -26,6 +53,7 @@ static void	update()
 
 static void	draw()
 {
+
 	// Ui Screens
 	if (PlayScreen) {
 		static UiPanel	panel = {.id_current = 0, .centralized = true};
@@ -41,7 +69,7 @@ static void	draw()
 			big.tint = YELLOW;
 			FontConfig	small = Data->assets.fonts[1];
 
-			panel_text(&panel, "Template", big);
+			panel_text(&panel, "BreakOut", big);
 
 			if (panel_text_button(&panel, "Play", small)) { 
 				PlayScreen = false;
@@ -74,19 +102,15 @@ static void	draw()
 	}
 }
 
-static void	de_init()
-{
-}
-
-GameFunctions	test_game_init(GameData *data)
+GameFunctions	breakout_init(GameData *data)
 {
 	Data = data;
 
-	return (GameFunctions) {
-		.name = "Template",
-		.start = &start,
+	return (GameFunctions) { 
+		.name = "BreakOut",
 		.update = &update,
 		.draw = &draw,
+		.start = &start,
 		.de_init = &de_init,
 	};
 }

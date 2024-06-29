@@ -115,6 +115,8 @@ int	main()
 	games[SNAKE_GAME] = snake_game_init(&data);
 	games[TETRIS] = tetris_init(&data);
 	games[MAIN_MENU] = main_menu_init(&data);
+	games[PONG] = pong_init(&data);
+	games[BREAKOUT] = breakout_init(&data);
 	games[TEST] = test_game_init(&data);
 
 	while (!WindowShouldClose() && !data.quit) {
@@ -170,10 +172,12 @@ int	main()
 
 	}
 
-	games[SNAKE_GAME].de_init();
 	games[TETRIS].de_init();
-	games[MAIN_MENU].de_init();
+	games[SNAKE_GAME].de_init();
+	games[PONG].de_init();
+	games[BREAKOUT].de_init();
 	games[TEST].de_init();
+	games[MAIN_MENU].de_init();
 
 	unload_assets(&data);
 
@@ -202,21 +206,21 @@ static void	load_assets(GameData *data) {
 		.font = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0),
 		.size = 20,
 		.spacing = 2,
-		.tint = data->palette.black,
+		.tint = data->palette.red,
 		.tint_hover = data->palette.black,
 		};
 	data->assets.fonts[1] = (FontConfig) {
 		.font = LoadFontEx("./assets/PixeloidSans-Bold.ttf", 22, NULL, 0),
 		.size = 22,
 		.spacing = 2,
-		.tint = data->palette.black,
+		.tint = data->palette.red,
 		.tint_hover = data->palette.black,
 		};
 	data->assets.fonts[2] = (FontConfig) {
 		.font = LoadFontEx("./assets/kenney_future_square.ttf", 40, NULL, 0),
 		.size = 40,
 		.spacing = 2,
-		.tint = data->palette.black,
+		.tint = data->palette.red,
 		.tint_hover = data->palette.black,
 	};
 

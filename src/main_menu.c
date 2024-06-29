@@ -236,6 +236,16 @@ void	play_screen(GameData *data)
 		current_screen = NONE;
 	}
 
+	if (panel_text_button(&panel, "Pong", TextConfig)) {
+		data->current_game = PONG;
+		current_screen = NONE;
+	}
+
+	if (panel_text_button(&panel, "BreakOut", TextConfig)) {
+		data->current_game = BREAKOUT;
+		current_screen = NONE;
+	}
+
 	if (panel_text_button(&panel, "Test", TextConfig)) {
 		data->current_game = TEST;
 		current_screen = NONE;
