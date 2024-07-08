@@ -155,7 +155,7 @@ static void	draw()
 	}
 
 	if (game_over) {
-		UiState	state = game_over_screen(data);
+		UiStates	state = game_over_screen(data);
 		if (state == NONE) {
 			game_over = false;
 			start();
@@ -205,7 +205,7 @@ static void	draw()
 		}
 
 	} else if (paused && options) {
-		UiState	state = options_screen(data);
+		UiStates	state = options_screen(data);
 		if (state == BACK) {
 			options = false;
 		}

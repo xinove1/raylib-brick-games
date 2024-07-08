@@ -63,7 +63,7 @@ static void	draw()
 		}
 	}
 	if (GameOver) {
-		UiState	state = game_over_screen(Data);
+		UiStates	state = game_over_screen(Data);
 		if (state == NONE) {
 			GameOver = false;
 			start();

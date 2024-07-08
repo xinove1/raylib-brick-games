@@ -9,13 +9,9 @@
 # include "raymath.h"
 # include "ui.h"
 # include "input.h"
+# include "types.h"
 
-# define MAX(a, b) ((a)>(b)? (a) : (b))
-# define MIN(a, b) ((a)<(b)? (a) : (b))
 # define TILE_SIZE 16
-
-typedef Vector2 V2 ;
-typedef Rectangle Rect;
 
 typedef enum {MAIN_MENU, TETRIS, SNAKE_GAME, PONG, BREAKOUT, TEST, GAME_COUNT} Games_e;
 typedef enum {
@@ -31,7 +27,7 @@ typedef enum {
 	NONE,
 	BACK,
 	NOTHING, // When nothing was done
-} UiState;
+} UiStates;
 
 typedef struct ColorPalette {
 	Color	black;
@@ -50,30 +46,29 @@ typedef struct ColorPalette {
 
 typedef struct Assets {
 	FontConfig	fonts[MAX_ASSET];
-	Sound	sounds[MAX_ASSET];
-	Music	music[MAX_ASSET];
+	Sound		sounds[MAX_ASSET];
+	Music		music[MAX_ASSET];
 	Texture2D	textures[MAX_ASSET];
 } Assets;
 
 typedef struct {
-	Vector2	window_size; // TODO  rename, canvas?
-	float	effects_vol;
-	float	music_vol;
-	bool	quit;
+	Vector2		window_size; // TODO  rename, canvas?
+	float		effects_vol;
+	float		music_vol;
+	bool		quit;
 	ColorPalette	palette;
-	Games_e	current_game;
-	Assets	assets;
+	Games_e		current_game;
+	Assets		assets;
 } GameData;
 
-typedef struct GameFunctions GameFunctions ;
-struct GameFunctions
+typedef struct GameFunctions
 {
 	char	*name;
 	void	(*start)(void);
 	void	(*update)(void);
 	void	(*draw)(void);
 	void	(*de_init)(void);
-};
+} GameFunctions;
 
 GameFunctions	snake_game_init(GameData *data);
 GameFunctions	tetris_init(GameData *data);
@@ -84,10 +79,11 @@ GameFunctions	breakout_init(GameData *data);
 
 void	update_volume(GameData *data);
 void	ui_trasition_from(V2 dir);
-UiState	game_over_screen(GameData *data);
-UiState	options_screen(GameData *data);
+UiStates	game_over_screen(GameData *data);
+UiStates	options_screen(GameData *data);
 void	draw_grid_ex(V2 position, V2 grid_size, int tile_size, float line_thickness, Color color);
 void	draw_grid(V2 position, V2 grid_size, int tile_size);
 void	pause_game();
 V2	ExpDecayV2(V2 a, V2 b, float decay);
+Rect	RectV2(V2 pos, V2 size);
 #endif // GAME_H_

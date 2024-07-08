@@ -5,9 +5,7 @@
 # include "stdio.h"
 # include "input.h"
 # include "raymath.h"
-
-// TODO  Create header for types
-typedef Vector2 V2; typedef Rectangle Rect;
+# include "types.h"
 
 typedef struct {
 	Font	font;

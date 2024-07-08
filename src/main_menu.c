@@ -15,7 +15,7 @@ static float	tick_time = 0.050f; // In seconds
 static FontConfig	TextConfig;
 static FontConfig	TextConfigHeading;
 static Color		UiBackgroundColor;
-static UiState	current_screen;
+static UiStates	current_screen;
 static void	title_screen(GameData *data);
 static void	play_screen(GameData *data);
 static void	paused_screen(GameData *data);
@@ -258,7 +258,7 @@ void	play_screen(GameData *data)
 	panel_end(&panel);
 }
 
-UiState	options_screen(GameData *data)
+UiStates	options_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	static bool	flag = false;
@@ -298,7 +298,7 @@ UiState	options_screen(GameData *data)
 	return (NOTHING);
 }
 
-UiState	game_over_screen(GameData *data)
+UiStates	game_over_screen(GameData *data)
 {
 	static UiPanel	panel = {.id_current = 0, .centralized = true};
 	

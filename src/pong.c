@@ -77,7 +77,7 @@ static void	draw()
 	DrawRectangleV(BallPos, BallSize, RED);
 
 	if (GameOver) {
-		UiState	state = game_over_screen(Data);
+		UiStates	state = game_over_screen(Data);
 		if (state == NONE) {
 			GameOver = false;
 			start();

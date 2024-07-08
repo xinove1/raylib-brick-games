@@ -10,6 +10,11 @@ V2	ExpDecayV2(V2 a, V2 b, float decay)
 	return Vector2Add(b, d);
 }
 
+// Crate Rectangle from to Vectors
+inline Rect	RectV2(V2 pos, V2 size) {
+	return ((Rect) {.x = pos.x, .y = pos.y, .width = size.x, .height = size.y});
+}
+
 void	draw_grid(V2 position, V2 grid_size, int tile_size)
 {
 	draw_grid_ex(position, grid_size, tile_size, 1, ColorAlpha(BLACK, 0.1));
