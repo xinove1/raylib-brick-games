@@ -1,39 +1,92 @@
 #include "game.h"
 
+#define MAX_BRICKS 100
+
+typedef enum {
+	SPEED_SELF,
+	SPEED_OTHER,
+	DESTROY_SELF,
+	DESTROY_OTHER,
+} CollResolution_e ;
+
 typedef struct {
 	V2	pos;
 	V2	size;
 	V2	dir;
 	float	speed;
-} Obj;
+	Color	color;
+	CollResolution_e	collision;
+} Object;
 
 static GameData	*Data = NULL;
 static bool	GameOver = false;
 static bool	GamePaused = false;
 static bool	PlayScreen = true;
 
-static Obj	Paddle = {};
-static Obj	Ball = {};
+static V2	BoardSize = { 100, 200 };
+static V2	BoardOffset = { 0, 0};
+static Object	Bricks[MAX_BRICKS] = {};
+static Object	Paddle = {};
+static Object	Ball = {};
+
+static void	draw_game();
+static bool	CollideBallWithRect(Rect rect);
 
 static void	start()
 {
 	GameOver = false;
 	GamePaused = false;
 	PlayScreen = true;
+
+	BoardOffset = (V2){ Data->window_size.x * 0.5f - BoardSize.x * 0.5f,  Data->window_size.y * 0.5f - BoardSize.y * 0.5f };
 	
-	Paddle = (Obj) {
-		.pos = (V2) { Data->window_size.x * 0.5f, Data->window_size.y - 10 },
+	Paddle = (Object) {
+		.pos  = (V2) { BoardSize.x * 0.5f, BoardSize.y - 10 },
 		.size = (V2) { 25, 5 },
-		.dir = (V2) { 0 },
-		.speed = 10,
+		.dir  = (V2) { 0, 0 },
+		.speed = 80,
+		.color = Data->palette.red,
 	};
 
-	Ball = (Obj) {
-		.pos = (V2) { Paddle.pos.x, Paddle.pos.y - 10},
-		.size = (V2) { 10, 10 },
-		.dir = (V2) { 0 },
-		.speed = 10,
+	Ball = (Object) {
+		.pos  = (V2) { Paddle.pos.x, Paddle.pos.y - 10},
+		.size = (V2) { 5, 5 },
+		.dir  = (V2) { 1, 1 },
+		.speed = 100,
+		.color = Data->palette.blue,
 	};
+
+	memset(Bricks, -1, sizeof(Bricks));
+	{
+		float	padding = 2; // Padding between bricks
+		float	padding_sides = padding * 2; // Padding between bricks an corner of the board
+		int	collumns = 5; // How Many bricks per line do we want
+		
+		V2	brick_size = {((BoardSize.x - (padding_sides * 2)) / collumns) - padding, 5};
+		int	lines = (BoardSize.y * 0.3f) / (brick_size.y + padding * 2);
+
+		printf("qty_line * lines: %d\n", collumns * lines);
+		printf("brick_size: %f, %f\n", brick_size.x, brick_size.y);
+		assert(collumns * lines < MAX_BRICKS);
+
+		float	at_y = padding_sides;
+		for (int row = 0; row < lines; row++) {
+			float	at_x = padding_sides;
+			for (int col = 0; col < collumns; col++) {
+				Object	*brick = &Bricks[(row * collumns) + col];
+				*brick = (Object) {
+					.pos = (V2) {at_x, at_y},
+					.size = brick_size,
+					.dir = Vector2Zero(),
+					.speed = 0,
+					.collision = DESTROY_SELF,
+					.color = Data->palette.pink,
+				};
+				at_x += padding + brick_size.x;
+			}
+			at_y += padding + brick_size.y;
+		}
+	}
 }
 
 static void	de_init()
@@ -49,11 +102,63 @@ static void	update()
 	if (GameOver || GamePaused || PlayScreen) {
 		return ;
 	}
+
+	if (IsActionDown(RIGHT)) {
+		Paddle.dir = (V2) {1, 0};
+	} else if (IsActionDown(LEFT)) {
+		Paddle.dir = (V2) {-1, 0};
+	} else {
+		Paddle.dir = (V2) {0, 0};
+	}
+
+	{
+		Paddle.pos = Vector2Add(Paddle.pos, Vector2Scale(Paddle.dir, Paddle.speed * GetFrameTime()));
+
+		if (Paddle.pos.x <= 0) {
+			Paddle.pos.x = 0;
+		} else if ((Paddle.pos.x + Paddle.size.x) >= BoardSize.x) {
+			Paddle.pos.x = BoardSize.x - Paddle.size.x;
+		}
+	}
+	
+	{
+		Ball.pos = Vector2Add(Ball.pos, Vector2Scale(Ball.dir, Ball.speed * GetFrameTime()));
+
+		Rect	ball = RectV2(Ball.pos, Ball.size);
+		Rect	paddle = RectV2(Paddle.pos, Paddle.size);
+
+		// Check ball collision with bricks
+		for (int i = 0; i < MAX_BRICKS; i++) {
+			Object	*brick = &Bricks[i];
+			if (brick->size.x == -1 && brick->size.y == -1) break ;
+			if (brick->size.x == 0 && brick->size.y == 0) continue ;
+			if (CollideBallWithRect(RectV2(brick->pos, brick->size))) {
+				brick->size.x = 0; brick->size.y = 0;
+			}
+		}
+
+		// Check ball Collision with paddle
+		if (CollideBallWithRect(paddle)) {
+			Ball.dir.y = -Ball.dir.y;
+			if (Paddle.dir.x != 0) {
+				Ball.dir.x = Paddle.dir.x;
+			}
+		} // Check ball Collision with board border
+		else if (ball.x <= 0 || (ball.x + ball.width) >= BoardSize.x) {
+			Ball.dir.x = -Ball.dir.x;
+		} else if (ball.y <= 0) {
+			Ball.dir.x = -Ball.dir.x;
+			Ball.dir.y = -Ball.dir.y;
+		} else if ((ball.y + ball.height) >= BoardSize.y){
+			printf("death \n");
+			start();
+		}
+	}
 }
 
 static void	draw()
 {
-
+	draw_game();
 	// Ui Screens
 	if (PlayScreen) {
 		static UiPanel	panel = {.id_current = 0, .centralized = true};
@@ -91,7 +196,7 @@ static void	draw()
 		}
 	}
 	if (GameOver) {
-		UiState	state = game_over_screen(Data);
+		UiStates	state = game_over_screen(Data);
 		if (state == NONE) {
 			GameOver = false;
 			start();
@@ -113,4 +218,34 @@ GameFunctions	breakout_init(GameData *data)
 		.start = &start,
 		.de_init = &de_init,
 	};
+}
+
+static void	draw_game()
+{
+	DrawRectangleV(BoardOffset, BoardSize, Data->palette.black);
+	DrawRectangleV(Vector2Add(Ball.pos, BoardOffset), Ball.size, Ball.color);
+	DrawRectangleV(Vector2Add(Paddle.pos, BoardOffset), Paddle.size, Paddle.color);
+	//DrawRectangleLinesEx(RectV2(BoardOffset, BoardSize), 1, Data->palette.green);
+
+	for (int i = 0; i < MAX_BRICKS; i++) {
+		Object	brick = Bricks[i];
+		if (brick.size.x == -1 && brick.size.y == -1) break ;
+		if (brick.size.x == 0 && brick.size.y == 0) continue ;
+		DrawRectangleV(Vector2Add(brick.pos, BoardOffset), brick.size, brick.color);
+	}
+}
+
+static bool	CollideBallWithRect(Rect rec) 
+{
+	bool	collided = false;
+
+	if (CheckCollisionRecs(RectV2(Ball.pos, Ball.size), rec)) {
+		collided = true;
+
+		V2	rect_center = {rec.x * 0.5f, rec.y * 0.5f};
+		V2	collision_normal = Vector2Normalize(Vector2Subtract(Ball.pos, rect_center));
+		Ball.dir = (V2) {collision_normal.x, collision_normal.y};
+	}
+
+	return (collided);
 }
