@@ -1,4 +1,5 @@
 #include "game.h"
+#include "collision.h"
 
 #define MAX_BRICKS 100
 
@@ -247,5 +248,21 @@ static bool	CollideBallWithRect(Rect rec)
 		Ball.dir = (V2) {collision_normal.x, collision_normal.y};
 	}
 
+	return (collided);
+}
+
+static bool	CollideObjectObject(Object a, Object b) 
+{
+	bool	collided = false;
+
+	// V2	contact_point, contact_normal;
+	// float	time;
+	// float	dt = GetFrameTime();
+	// if (CheckCollisionDynamicRectRect(RectV2(a.pos, a.size), a.vel, RectV2(b.pos, b.size), &contact_point, &contact_normal, &time, dt))
+	// {
+	// 	Vector2	vel_abs = {fabsf(a.vel.x), fabsf(a.vel.y)};
+	// 	a.vel = Vector2Add(a.vel, Vector2Multiply(contact_normal, Vector2Scale(vel_abs, 1 - time)));
+	// 	DrawCircleV(contact_point, 4, RED);
+	// }
 	return (collided);
 }

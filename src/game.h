@@ -81,9 +81,12 @@ void	update_volume(GameData *data);
 void	ui_trasition_from(V2 dir);
 UiStates	game_over_screen(GameData *data);
 UiStates	options_screen(GameData *data);
+void	pause_game();
+
 void	draw_grid_ex(V2 position, V2 grid_size, int tile_size, float line_thickness, Color color);
 void	draw_grid(V2 position, V2 grid_size, int tile_size);
-void	pause_game();
 V2	ExpDecayV2(V2 a, V2 b, float decay);
 Rect	RectV2(V2 pos, V2 size);
+V2	V2RectPos(Rect rect);
+V2	V2RectSize(Rect rect);
 #endif // GAME_H_

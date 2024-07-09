@@ -54,7 +54,7 @@ web: $(DEPENDACIES)
 #emcc -o game.html game.c -Os -Wall ./path-to/libraylib.a -I. -Ipath-to-raylib-h -L. -Lpath-to-libraylib-a  --shell-file path-to/shell.html
 
 web_run: $(web)
-	emrun ./$(NAME).html
+	emrun ./index.html
 
 run: $(NAME)
 	./$(NAME)

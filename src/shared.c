@@ -15,6 +15,13 @@ inline Rect	RectV2(V2 pos, V2 size) {
 	return ((Rect) {.x = pos.x, .y = pos.y, .width = size.x, .height = size.y});
 }
 
+inline V2	V2RectPos(Rect rect) {
+	return ((V2) {rect.x, rect.y});
+}
+inline V2	V2RectSize(Rect rect) {
+	return ((V2) {rect.width, rect.height});
+}
+
 void	draw_grid(V2 position, V2 grid_size, int tile_size)
 {
 	draw_grid_ex(position, grid_size, tile_size, 1, ColorAlpha(BLACK, 0.1));

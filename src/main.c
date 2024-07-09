@@ -1,7 +1,9 @@
 #include "game.h"
 #define XI_INPUT_ACTIONS_IMPLEMENTATION
 #define XI_UI_IMPLEMENTATION 
+#define XI_COLLISION_IMPLEMENTATION
 #include "ui.h"
+#include "collision.h"
 #include "input.h"
 
 void	_Testfunc(char *str, GameData data) 
