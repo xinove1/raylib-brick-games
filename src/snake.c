@@ -93,6 +93,7 @@ static void update()
 		}
 
 		int	collision = check_collision(new_pos);
+		move_snake_body(new_pos, collision);
 		if (collision == 1) {
 			game_over = true;
 			return ;
@@ -100,7 +101,6 @@ static void update()
 		if (collision == 2 || (int)tick_time_count % (int)apple_spawn_rate == 0) {
 			spawn_apple();
 		}
-		move_snake_body(new_pos, collision);
 		if (snake[(int)MAX_SNAKE_SIZE - 1].x != 0) {
 			printf("YOU WIN!!/n");
 			game_over = true;
