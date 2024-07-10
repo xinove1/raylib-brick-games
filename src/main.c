@@ -239,5 +239,6 @@ static void	unload_assets(GameData *data) {
 // TODO change raylib window flags to window unfocused
 void	pause_game() 
 {
+	SetWindowState(FLAG_WINDOW_MINIMIZED);
 	printf("Pause game called\n");
 }

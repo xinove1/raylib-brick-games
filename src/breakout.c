@@ -96,11 +96,7 @@ static void	de_init()
 
 static void	update()
 {
-	if (!PlayScreen && !GameOver && IsActionPressed(OPEN_MENU)) { 
-		GamePaused = GamePaused  ? false : true;
-	}
-
-	if (GameOver || GamePaused || PlayScreen) {
+	if (!ShouldGameRun(&PlayScreen , &GamePaused, &PlayScreen)) {
 		return ;
 	}
 

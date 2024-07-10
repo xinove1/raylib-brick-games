@@ -75,11 +75,7 @@ static void	update()
 {
 	UpdateMusicStream(game_sounds.music);
 
-	if (!play_screen && !game_over && IsActionPressed(OPEN_MENU)) {
-		paused = paused ? false : true;
-	}
-
-	if (play_screen || paused || game_over) {
+	if (!ShouldGameRun(&play_screen, &paused, &game_over)) {
 		return ;
 	}
 

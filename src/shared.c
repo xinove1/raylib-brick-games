@@ -45,3 +45,27 @@ void	draw_grid_ex(V2 position, V2 grid_size, int tile_size, float line_thickness
 	}
 }
 
+// idk
+bool	ShouldGameRun(bool *play_screen, bool *paused, bool *game_over)
+{
+	if (play_screen == NULL || paused == NULL || game_over == NULL) {
+		TraceLog(LOG_WARNING, "ShouldGameRun: was provided with a null value, will always return true\n");
+		return (true);
+	}
+
+	if (!*play_screen && !*game_over) {
+		if (IsActionPressed(OPEN_MENU)) { 
+			*paused = *paused ? false : true;
+		}
+		if (!IsWindowFocused()) {
+			*paused = true;
+		}
+	}
+
+	if (*play_screen || *paused || *game_over) {
+		return (false);
+	}
+
+	return (true);
+}
+
