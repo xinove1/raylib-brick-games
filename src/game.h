@@ -81,8 +81,7 @@ void	update_volume(GameData *data);
 void	ui_trasition_from(V2 dir);
 UiStates	game_over_screen(GameData *data);
 UiStates	options_screen(GameData *data);
-void	pause_game();
-
+void	pause_game(); // Only called from js on the web version
 
 void	draw_grid_ex(V2 position, V2 grid_size, int tile_size, float line_thickness, Color color);
 void	draw_grid(V2 position, V2 grid_size, int tile_size);

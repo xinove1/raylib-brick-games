@@ -123,6 +123,10 @@ int	main()
 
 	while (!WindowShouldClose() && !data.quit) {
 		PoolActions();
+		if (IsWindowMinimized()) {
+			printf("aaaa \n");
+			continue ;
+		}
 		//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());
 
 		float screen_scale = MIN((float)GetScreenWidth()/data.window_size.x, (float)GetScreenHeight() / data.window_size.y);
@@ -139,10 +143,9 @@ int	main()
 
 
 		if (data.current_game < 0 || data.current_game >= GAME_COUNT) {
-//			TraceLog(LOG_INFO, "main.c: Invalid option for current_game, won't change.\n");
-		}
-		else if (data.current_game != game) {
-			printf("changed game\n");
+			TraceLog(LOG_WARNING, "main.c: Invalid option for current_game, won't change.\n");
+		} else if (data.current_game != game) {
+			TraceLog(LOG_INFO, "Changing game\n");
 			game = data.current_game;
 			games[game].start();
 		}
@@ -171,7 +174,6 @@ int	main()
 			DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
 		}
 		EndDrawing();
-
 	}
 
 	games[TETRIS].de_init();
@@ -182,7 +184,6 @@ int	main()
 	games[MAIN_MENU].de_init();
 
 	unload_assets(&data);
-
 	CloseWindow();
 	CloseAudioDevice();
 	return (0);
@@ -236,9 +237,8 @@ static void	unload_assets(GameData *data) {
 	}
 }
 
-// TODO change raylib window flags to window unfocused
+// Only called from js on the web version
 void	pause_game() 
 {
-	SetWindowState(FLAG_WINDOW_MINIMIZED);
-	printf("Pause game called\n");
+	TraceLog(LOG_INFO, "Pause game called but not implemented\n");
 }
