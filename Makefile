@@ -6,7 +6,7 @@ CC= gcc
 CC_WINDOWS= x86_64-w64-mingw32-gcc
 
 
-CFLAGS= -I$(RAYLIB) -I$(RAYLIB)/external -std=c99 #-Wall -Wextra -Werror
+CFLAGS= -I$(RAYLIB) -I$(RAYLIB)/external -std=c99 -Isrc/modules/
 DEBUG_FLAGS= -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -Wdouble-promotion \
              -fsanitize=address -fsanitize=undefined -fsanitize-trap \
              #-Wconversion  -Wno-sign-conversion \
