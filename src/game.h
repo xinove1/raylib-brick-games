@@ -7,8 +7,8 @@
 # include <string.h>
 # include "raylib.h"
 # include "raymath.h"
-# include "ui.h"
 # include "input.h"
+# include "ui.h"
 # include "types.h"
 
 # define TILE_SIZE 16
@@ -59,6 +59,7 @@ typedef struct {
 	ColorPalette	palette;
 	Games_e		current_game;
 	Assets		assets;
+	UiConfig	ui_config;
 } GameData;
 
 typedef struct GameFunctions

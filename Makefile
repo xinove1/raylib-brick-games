@@ -7,9 +7,9 @@ CC_WINDOWS= x86_64-w64-mingw32-gcc
 
 
 CFLAGS= -I$(RAYLIB) -I$(RAYLIB)/external -std=c99 -Isrc/modules/
-DEBUG_FLAGS= -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -Wdouble-promotion \
+DEBUG_FLAGS= -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function \
              -fsanitize=address -fsanitize=undefined -fsanitize-trap \
-             #-Wconversion  -Wno-sign-conversion \
+             #-Wconversion  -Wno-sign-conversion  -Wdouble-promotion\
 
 RFLAGS= -lGL -lm -lpthread -ldl -lrt -lX11
 RFLAGS_WINDOWS= -lopengl32 -lgdi32 -lwinmm
@@ -25,7 +25,7 @@ SRC= $(wildcard src/*.c)
 
 OBJ= $(notdir $(SRC:.c=.o))
 
-DEPENDACIES= $(SRC) $(wildcard src/*.h)
+DEPENDACIES= $(SRC) $(wildcard src/*.h) $(wildcard src/modules/*.h)
 
 $(NAME): $(DEPENDACIES)
 	@make -C $(RAYLIB) RAYLIB_LIBTYPE=SHARED
@@ -65,7 +65,6 @@ bear:
 	bear -- make
 
 clean:
-	@make -C $(RAYLIB) clean
 	@$(RM) $(OBJ)
 
 fclean: clean

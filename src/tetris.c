@@ -24,9 +24,9 @@ static Vector2	board_offset = {0, 0};
 static int	tileSize = TILE_SIZE;
 static Color	piece_colors[9];
 static FontConfig	font;
+static UiContainer Container;
 
 // Game
-
 static Vector2	pos = {board_size.x / 2 - 2, 0};
 static int	piece = 0;
 static int	next_piece = 0;
@@ -187,22 +187,13 @@ static void	draw() {
 	}
 
 	if (play_screen) {
-		static UiPanel	panel = {.id_current = 0, .centralized = true};
+		UiContainer *panel = &Container;
 
-		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
-		V2	window = data->window_size;
-		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-		panel.pos = center;
-
-		panel_begin(&panel);
+		UiBegin(panel);
 		{
-			FontConfig	big = data->assets.fonts[2];
-			big.tint = PURPLE;
-			FontConfig	small = data->assets.fonts[1];
+			UiText(panel, "Tetris", true);
 
-			panel_text(&panel, "Tetris", big);
-
-			if (panel_text_button(&panel, "Play", small)) { 
+			if (UiTextButton(panel, "Play")) { 
 				play_screen = false;
 			}
 
@@ -218,7 +209,7 @@ static void	draw() {
 			if (speed == 2) {
 				mode = "Mode: Hard";
 			}
-			if (panel_text_button(&panel, mode, small)) { 
+			if (UiTextButton(panel, mode)) { 
 				if (speed == 10) {
 					speed = 5;
 				} else if (speed == 5) {
@@ -228,11 +219,11 @@ static void	draw() {
 				}
 			}
 
-			if (panel_text_button(&panel, "Back", small)) { 
+			if (UiTextButton(panel, "Back")) { 
 				data->current_game = MAIN_MENU;
 			}
 		}
-		panel_end(&panel);
+		UiEnd(panel);
 
 		if (IsActionPressed(ACTION_2)) {
 			data->current_game = MAIN_MENU;
@@ -260,38 +251,29 @@ static void	draw() {
 
 	static bool	options = false;
 	if (paused && options == false) {
-		static UiPanel	panel = {.id_current = 0, .centralized = true};
+		UiContainer *panel = &Container;
 
-		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
-		V2	window = data->window_size;
-		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-		panel.pos = center;
-
-		panel_begin(&panel);
+		UiBegin(panel);
 		{
-			FontConfig	big = data->assets.fonts[2];
-			big.tint = YELLOW;
-			FontConfig	small = data->assets.fonts[1];
+			UiText(panel, "Game Paused", true);
 
-			panel_text(&panel, "Game Paused", big);
-
-			if (panel_text_button(&panel, "Back to Game", small)) { 
+			if (UiTextButton(panel, "Back to Game")) { 
 				paused = false;
 			} 
 
-			if (panel_text_button(&panel, "Options", small)) { 
+			if (UiTextButton(panel, "Options")) { 
 				options = true;
 			}
 
-			if (panel_text_button(&panel, "Exit To Main Menu", small)) { 
+			if (UiTextButton(panel, "Exit To Main Menu")) { 
 				data->current_game = MAIN_MENU;
 			}
 
-			if (panel_text_button(&panel, "Exit To Desktop", small)) { 
+			if (UiTextButton(panel, "Exit To Desktop")) { 
 				data->quit = true;
 			}
 		}
-		panel_end(&panel);
+		UiEnd(panel);
 		if (IsActionPressed(ACTION_2)) {
 			paused = false;
 		}
@@ -367,6 +349,9 @@ GameFunctions	tetris_init(GameData *game_data)
 	game_sounds.music = data->assets.music[0];
 	game_sounds.made_line = data->assets.sounds[0];
 	game_sounds.game_over = data->assets.sounds[1];
+
+	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	Container = CreateContainer(center_screen, 0, data->ui_config);
 	
 	return (GameFunctions) { 
 		.name = "Tetris",

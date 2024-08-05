@@ -29,6 +29,7 @@ static V2	BoardOffset = { 0, 0};
 static Object	Bricks[MAX_BRICKS] = {};
 static Object	Paddle = {};
 static Object	Ball = {};
+static UiContainer Container;
 
 static void	draw_game();
 static bool	CollideBallWithRect(Rect rect);
@@ -158,22 +159,13 @@ static void	draw()
 	draw_game();
 	// Ui Screens
 	if (PlayScreen) {
-		static UiPanel	panel = {.id_current = 0, .centralized = true};
+		UiContainer *panel = &Container;
 
-		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
-		V2	window = Data->window_size;
-		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-		panel.pos = center;
-
-		panel_begin(&panel);
+		UiBegin(panel);
 		{
-			FontConfig	big = Data->assets.fonts[2];
-			big.tint = YELLOW;
-			FontConfig	small = Data->assets.fonts[1];
+			UiText(panel, "BreakOut", true);
 
-			panel_text(&panel, "BreakOut", big);
-
-			if (panel_text_button(&panel, "Play", small)) { 
+			if (UiTextButton(panel, "Play")) { 
 				PlayScreen = false;
 			}
 
@@ -182,11 +174,11 @@ static void	draw()
 			// 	easy_mode = easy_mode ? false : true;
 			// }
 
-			if (panel_text_button(&panel, "Back", small)) { 
+			if (UiTextButton(panel, "Back")) { 
 				Data->current_game = MAIN_MENU;
 			}
 		}
-		panel_end(&panel);
+		UiEnd(panel);
 
 		if (IsActionPressed(ACTION_2)) {
 			Data->current_game = MAIN_MENU;
@@ -207,6 +199,9 @@ static void	draw()
 GameFunctions	breakout_init(GameData *data)
 {
 	Data = data;
+
+	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	Container = CreateContainer(center_screen, 0, data->ui_config);
 
 	return (GameFunctions) { 
 		.name = "BreakOut",

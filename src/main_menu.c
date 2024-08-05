@@ -11,9 +11,9 @@ static RenderTexture2D	BackgroundTexture;
 static V2		TextTexturePos;
 static V2		BackgroundPos;
 static V2		BrickSize = {60, 30};
-static float	tick_time = 0.050f; // In seconds
 static FontConfig	TextConfig;
 static FontConfig	TextConfigHeading;
+static UiContainer	Container;
 static Color		UiBackgroundColor;
 static UiStates	current_screen;
 static void	title_screen(GameData *data);
@@ -120,6 +120,9 @@ GameFunctions	main_menu_init(GameData *data)
 	TextConfigHeading.tint = data->palette.black;
 	TextConfigHeading.tint_hover = data->palette.blue;
 
+	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	Container = CreateContainer(center_screen, 0, data->ui_config);
+
 	current_screen = TITLE_SCREEN;
 
 	return (GameFunctions) { 
@@ -189,138 +192,113 @@ void	draw_blocks(GameData *data) {
 
 void	title_screen(GameData *data)
 {
-	static UiPanel	panel = {.id_current = 0, .centralized = true};
-	
-	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
-	V2	window = data->window_size;
-	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-	panel.pos = center;
+	UiContainer *panel = &Container;
 
-	panel_begin(&panel);
+	UiBegin(panel);
 	{
-		panel_text(&panel, "Raylib Brick Games", TextConfigHeading);
+		UiText(panel, "Raylib Brick Games", true);
 
-		if (panel_text_button(&panel, "Play", TextConfig)) {
+		if (UiTextButton(panel, "Play")) {
 			current_screen = PLAY_MENU;
 		}
 
-		if (panel_text_button(&panel, "Options", TextConfig)) {
+		if (UiTextButton(panel, "Options")) {
 			current_screen = OPTIONS_MENU;
 		}
-		if (panel_text_button(&panel, "Quit", TextConfig) || IsActionPressed(ACTION_2)) {
+		if (UiTextButton(panel, "Quit") || IsActionPressed(ACTION_2)) {
 			data->quit = true;
 		}
 	}
-	panel_end(&panel);
+	UiEnd(panel);
 }
 
 void	play_screen(GameData *data)
 {
-	static UiPanel	panel = {.id_current = 0, .centralized = true};
+	UiContainer *panel = &Container;
 	
-	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
-	V2	window = data->window_size;
-	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-	panel.pos = center;
+	UiBegin(panel);
+	{
+		UiText(panel, "Games", true);
 
-	panel_begin(&panel);
-	panel_text(&panel, "Games", TextConfigHeading);
+		if (UiTextButton(panel, "Tetris")) {
+			data->current_game = TETRIS;
+			current_screen = NONE;
+		}
 
-	if (panel_text_button(&panel, "Tetris", TextConfig)) {
-		data->current_game = TETRIS;
-		current_screen = NONE;
+		if (UiTextButton(panel, "Snake")) {
+			data->current_game = SNAKE_GAME;
+			current_screen = NONE;
+		}
+
+		if (UiTextButton(panel, "Pong")) {
+			data->current_game = PONG;
+			current_screen = NONE;
+		}
+
+		if (UiTextButton(panel, "BreakOut")) {
+			data->current_game = BREAKOUT;
+			current_screen = NONE;
+		}
+
+		if (UiTextButton(panel, "Test")) {
+			data->current_game = TEST;
+			current_screen = NONE;
+		}
+
+		if (UiTextButton(panel, "Back") || IsActionPressed(ACTION_2)) {
+			current_screen = TITLE_SCREEN;
+		}
 	}
-
-	if (panel_text_button(&panel, "Snake", TextConfig)) {
-		data->current_game = SNAKE_GAME;
-		current_screen = NONE;
-	}
-
-	if (panel_text_button(&panel, "Pong", TextConfig)) {
-		data->current_game = PONG;
-		current_screen = NONE;
-	}
-
-	if (panel_text_button(&panel, "BreakOut", TextConfig)) {
-		data->current_game = BREAKOUT;
-		current_screen = NONE;
-	}
-
-	if (panel_text_button(&panel, "Test", TextConfig)) {
-		data->current_game = TEST;
-		current_screen = NONE;
-	}
-	
-	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
-		current_screen = TITLE_SCREEN;
-	}
-
-	panel_end(&panel);
+	UiEnd(panel);
 }
 
 UiStates	options_screen(GameData *data)
 {
-	static UiPanel	panel = {.id_current = 0, .centralized = true};
-	static bool	flag = false;
-	if (flag == false) {
-		V2	txt_size = MeasureTextEx(TextConfig.font, "test", TextConfig.size, TextConfig.spacing);
-		panel.height = txt_size.y;
-		flag = true;
+	UiContainer *panel = &Container;
+
+	UiBegin(panel);
+	{
+		UiText(panel, "Options", true);
+
+		UiText(panel, "Music Volume", true);
+		if (UiSlider(panel, &data->music_vol, 0, 1)) {
+			update_volume(Data);
+		}
+
+		UiText(panel, "Effects Volume", true);
+		if (UiSlider(panel, &data->effects_vol, 0, 1)) {
+			update_volume(Data);
+		}
+
+		if (UiTextButton(panel, "Back") || IsActionPressed(ACTION_2)) {
+			return (BACK);
+		}
 	}
-	
-	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
-	V2	window = data->window_size;
-	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-	panel.pos = center;
-
-	panel_begin(&panel);
-	panel_text(&panel, "Options", TextConfigHeading);
-
-
-	panel_text(&panel, "Music Volume", TextConfig);
-	if (panel_slider(&panel, &data->music_vol, 0, 1)) {
-		update_volume(Data);
-	}
-
-	
-	// if (panel_text_button(&panel, "Effects Volume:", TextConfig)) {
-	// }
-	panel_text(&panel, "Effects Volume", TextConfig);
-	if (panel_slider(&panel, &data->effects_vol, 0, 1)) {
-		update_volume(Data);
-	}
-	
-	if (panel_text_button(&panel, "Back", TextConfig) || IsActionPressed(ACTION_2)) {
-		return (BACK);
-	}
-
-	panel_end(&panel);
+	UiEnd(panel);
 	return (NOTHING);
 }
 
 UiStates	game_over_screen(GameData *data)
 {
-	static UiPanel	panel = {.id_current = 0, .centralized = true};
-	
-	DrawRectangle(panel.pos.x - 2, panel.pos.y, panel.width, panel.at_y - panel.pos.y, UiBackgroundColor);
-	V2	window = data->window_size;
-	V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-	panel.pos = center;
+	UiContainer *panel = &Container;
 
-	panel_begin(&panel);
-	panel_text(&panel, "Game Over", TextConfigHeading);
+	UiBegin(panel);
+	{
+		UiText(panel, "Game Over", true);
 
-	if (panel_text_button(&panel, "Play Again", TextConfig)) {
-		return (NONE);
+		if (UiTextButton(panel, "Play Again")) {
+			return (NONE);
+		}
+
+		// Quit to main menu
+		if (UiTextButton(panel, "Quit to Main Menu")) {
+			return (TITLE_SCREEN);
+		}
+		if (UiTextButton(panel, "Quit to Desktop")) {
+			data->quit = true;
+		}
 	}
-	
-	// Quit to main menu
-	if (panel_text_button(&panel, "Quit to Main Menu", TextConfig)) {
-		return (TITLE_SCREEN);
-	}
-	if (panel_text_button(&panel, "Quit to Desktop", TextConfig)) {
-		data->quit = true;
-	}
-	panel_end(&panel);
+	UiEnd(panel);
+
 	return (NOTHING);
 }

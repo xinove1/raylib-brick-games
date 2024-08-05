@@ -1,10 +1,4 @@
 #include "game.h"
-#define XI_INPUT_ACTIONS_IMPLEMENTATION
-#define XI_UI_IMPLEMENTATION 
-#define XI_COLLISION_IMPLEMENTATION
-#include "ui.h"
-#include "collision.h"
-#include "input.h"
 
 void	_Testfunc(char *str, GameData data) 
 {
@@ -111,8 +105,26 @@ int	main()
 	load_assets(&data);
 	update_volume(&data);
 
-	set_selector_texture(&data.assets.textures[0]);
-	set_clicked_sound(&data.assets.sounds[2]);
+	data.ui_config = (UiConfig) {
+		.alignment = UiAlignCentralized,
+		.font = data.assets.fonts[1],
+		.draw_container_bounds = true,
+		.play_sound = true,
+		.draw_selector = true,
+		.take_key_input = true,
+		.padding_row = 10,
+		.padding_collumn = 5,
+		.padding_border  = 5,
+		.padding_element = 0,
+		.color_background = YELLOW,
+		.color_font = RED,
+		.color_font_highlight = BLACK,
+		.color_borders = BLACK,
+	};
+
+	SetSelectorTexture(&data.assets.textures[0]);
+	SetSelectorTextureTint(WHITE);
+	SetClickedSound(&data.assets.sounds[2]);
 
 	games[SNAKE_GAME] = snake_game_init(&data);
 	games[TETRIS] = tetris_init(&data);

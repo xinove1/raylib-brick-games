@@ -2,108 +2,109 @@
 #include "raylib.h"
 
 # define MAX_APPLES 10
-# define MAX_SNAKE_SIZE ((board_size.x - 1) * (board_size.y - 1))
+# define MAX_SNAKE_SIZE ((BoardSize.x - 1) * (BoardSize.y - 1))
 
-static V2	board_size = {15, 15};
-static int	tile_size = TILE_SIZE;
-static void	draw();
-static void	draw_game();
-static int	check_collision(Vector2	pos);
-static void	move_snake_body(Vector2 new_head_pos, int add_body);
-static void	spawn_apple();
+static void draw();
+static void draw_game();
+static void move_snake_body(Vector2 new_head_pos, int add_body);
+static void spawn_apple();
+static i32  check_collision(Vector2	pos);
 
-static V2	board_offset;
-static V2	*snake;
-static V2	dir = {1, 0};
-static V2	new_dir = {1, 0};
-static V2	apples[MAX_APPLES] = {0};
-static float	tick_time_count = 0;
-static const float	tick_rate = 0.150; // How much time until a game tick in seconds
-static float	apple_spawn_rate = 5; // in seconds
-static bool	play_screen = true;
-static bool	paused = false;
-static bool	game_over = false;
-static bool	easy_mode = true;
+static i32 TileSize = TILE_SIZE;
+static V2 BoardSize = {15, 15};
+static V2 BoardOffset;
+static V2 *Snake;
+static V2 Dir = {1, 0};
+static V2 NewDir = {1, 0};
+static V2 Apples[MAX_APPLES] = {0};
+static f32 TickTimeCount = 0;
+static f32 TickRate = 0.150; // How much time until a game tick in seconds
+static f32 AppleSpawnRate = 5; // in seconds
+static bool PlayScreen = true;
+static bool Paused = false;
+static bool GameOver = false;
+static bool EasyMode = true;
+static UiContainer Container;
 
 GameData *data = 0;
 
-static void	start()
+static void start()
 {
-	memset(snake, 0, MAX_SNAKE_SIZE);
-	memset(apples, 0, MAX_APPLES);
-	snake[0] = (V2) {(int) (board_size.x * 0.5f), (int) (board_size.y * 0.5f)}; // Set snake head to middle of the board
+	memset(Snake, 0, sizeof(V2) * MAX_SNAKE_SIZE);
+	memset(Apples, 0, sizeof(V2) * MAX_APPLES);
+	Snake[0] = (V2) {(int) (BoardSize.x * 0.5f), (int) (BoardSize.y * 0.5f)}; // Set snake head to middle of the board
 
-	play_screen = true; 
-	game_over = false;
-	paused = false;
+	PlayScreen = true; 
+	GameOver = false;
+	Paused = false;
 
-	tick_time_count = 0;
-	dir = (V2) {1,0};
-	new_dir = (V2) {1,0};
+	TickTimeCount = 0;
+	Dir = (V2) {1,0};
+	NewDir = (V2) {1,0};
 	spawn_apple();
 }
 
 static void update()
 {
-	if (!ShouldGameRun(&play_screen, &paused, &game_over)) {
+	if (!ShouldGameRun(&PlayScreen, &Paused, &GameOver)) {
 		return ;
 	}
 
 	if (IsActionPressed(RIGHT)) {
-		new_dir.x = 1;
-		new_dir.y = 0;
+		NewDir.x = 1;
+		NewDir.y = 0;
 	}
 	if (IsActionPressed(LEFT)) {
-		new_dir.x = -1;
-		new_dir.y = 0;
+		NewDir.x = -1;
+		NewDir.y = 0;
 	}
 	if (IsActionPressed(UP)) {
-		new_dir.x = 0;
-		new_dir.y = -1;
+		NewDir.x = 0;
+		NewDir.y = -1;
 	}
 	if (IsActionPressed(DOWN)) {
-		new_dir.x = 0;
-		new_dir.y = 1;
+		NewDir.x = 0;
+		NewDir.y = 1;
 	}
 
 	// TODO  Implement easy mode (not collide with walls)
 	
 	
-	tick_time_count += GetFrameTime();
-	if (tick_time_count >= tick_rate) {
-		tick_time_count = 0;
+	TickTimeCount += GetFrameTime();
+	if (TickTimeCount >= TickRate) {
+		TickTimeCount = 0;
 		// Check to see if player is not tryng to 
-		if (snake[1].x == 0 || -new_dir.x != dir.x || -new_dir.y != dir.y ) {
-			dir = new_dir;
+		if (Snake[1].x == 0 || -NewDir.x != Dir.x || -NewDir.y != Dir.y ) {
+			Dir = NewDir;
 		}
 
-		V2	new_pos = Vector2Add(snake[0], dir);
+		V2	new_pos = Vector2Add(Snake[0], Dir);
 
-		if (easy_mode) {
+		if (EasyMode) {
 			if (new_pos.x == 0) {
-				new_pos.x = board_size.x - 1;
-			} else if (new_pos.x == board_size.x) {
+				new_pos.x = BoardSize.x - 1;
+			} else if (new_pos.x == BoardSize.x) {
 				new_pos.x = 1;
 			}
 			if (new_pos.y == 0) {
-				new_pos.y = board_size.y - 1;
-			} else if (new_pos.y == board_size.y) {
+				new_pos.y = BoardSize.y - 1;
+			} else if (new_pos.y == BoardSize.y) {
 				new_pos.y = 1;
 			}
 		}
 
-		int	collision = check_collision(new_pos);
+		i32 collision = check_collision(new_pos);
 		move_snake_body(new_pos, collision);
 		if (collision == 1) {
-			game_over = true;
+			GameOver = true;
 			return ;
 		}
-		if (collision == 2 || (int)tick_time_count % (int)apple_spawn_rate == 0) {
+		if (collision == 2 || (int)TickTimeCount % (int)AppleSpawnRate == 0) {
 			spawn_apple();
 		}
-		if (snake[(int)MAX_SNAKE_SIZE - 1].x != 0) {
+		if (Snake[(int)MAX_SNAKE_SIZE - 1].x != 0) {
 			printf("YOU WIN!!/n");
-			game_over = true;
+			GameOver = true;
 			// TODO draw win screen
 		}
 	}
@@ -114,94 +115,79 @@ static void	draw()
 	ClearBackground(RAYWHITE);
 	draw_game();
 
-	if (play_screen) {
-		static UiPanel	panel = {.id_current = 0, .centralized = true};
-
-		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
-		V2	window = data->window_size;
-		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-		panel.pos = center;
-
-		panel_begin(&panel);
+	if (PlayScreen) {
+		UiContainer *panel = &Container;
+		UiBegin(panel);
 		{
-			FontConfig	big = data->assets.fonts[2];
-			big.tint = YELLOW;
-			FontConfig	small = data->assets.fonts[1];
+			// Workaround for now
+			V2 max_size = MeasureTextEx(panel->config.font.font, " Mode: Normal ", panel->config.font.size, panel->config.font.spacing);
+			panel->width = max_size.x + 15;
 
-			panel_text(&panel, "Snake", big);
+			UiText(panel, "Snake", true);
 
-			if (panel_text_button(&panel, "Play", small)) { 
-				play_screen = false;
+			if (UiTextButton(panel, "Play")) { 
+				PlayScreen = false;
 			}
 
-			char	*mode = easy_mode ? "Mode: Easy" : "Mode: Normal";
-			if (panel_text_button(&panel, mode, small)) { 
-				easy_mode = easy_mode ? false : true;
+			char *mode = EasyMode ? "Mode: Easy" : "Mode: Normal";
+			if (UiTextButton(panel, mode)) { 
+				EasyMode = EasyMode ? false : true;
 			}
 
-			if (panel_text_button(&panel, "Back", small)) { 
+			if (UiTextButton(panel, "Back")) { 
 				data->current_game = MAIN_MENU;
 			}
 		}
-		panel_end(&panel);
+		UiEnd(panel);
 
 		if (IsActionPressed(ACTION_2)) {
 			data->current_game = MAIN_MENU;
 		}
 	}
 
-	if (game_over) {
-		UiStates	state = game_over_screen(data);
+	if (GameOver) {
+		UiStates state = game_over_screen(data);
 		if (state == NONE) {
-			game_over = false;
+			GameOver = false;
 			start();
 		} else if (state == TITLE_SCREEN) {
 			// SAVE?
 			data->current_game = MAIN_MENU;
-			game_over = false;
+			GameOver = false;
 		}
 	}
 
-	static bool	options = false;
-	if (paused && options == false) {
-		static UiPanel	panel = {.id_current = 0, .centralized = true};
+	static bool options = false;
+	if (Paused && options == false) {
 
-		DrawRectangle(panel.pos.x, panel.pos.y, panel.width, panel.at_y - panel.pos.y, RED);
-		V2	window = data->window_size;
-		V2	center = {window.x * 0.5f, window.y * 0.25f}; // Center offset to where to start drawing text
-		panel.pos = center;
-
-		panel_begin(&panel);
+		UiContainer *panel = &Container;
+		UiBegin(panel);
 		{
-			FontConfig	big = data->assets.fonts[2];
-			big.tint = YELLOW;
-			FontConfig	small = data->assets.fonts[1];
+			UiText(panel, "Game Paused", true);
 
-			panel_text(&panel, "Game Paused", big);
-
-			if (panel_text_button(&panel, "Back to Game", small)) { 
-				paused = false;
+			if (UiTextButton(panel, "Back to Game")) { 
+				Paused = false;
 			} 
 
-			if (panel_text_button(&panel, "Options", small)) { 
+			if (UiTextButton(panel, "Options")) { 
 				options = true;
 			}
 
-			if (panel_text_button(&panel, "Exit To Main Menu", small)) { 
+			if (UiTextButton(panel, "Exit To Main Menu")) { 
 				data->current_game = MAIN_MENU;
 			}
 
-			if (panel_text_button(&panel, "Exit To Desktop", small)) { 
+			if (UiTextButton(panel, "Exit To Desktop")) { 
 				data->quit = true;
 			}
 		}
-		panel_end(&panel);
+		UiEnd(panel);
 		if (IsActionPressed(ACTION_2)) {
-			paused = false;
+			Paused = false;
 		}
 
-	} else if (paused && options) {
-		UiStates	state = options_screen(data);
+	} else if (Paused && options) {
+		UiStates state = options_screen(data);
 		if (state == BACK) {
 			options = false;
 		}
@@ -209,18 +195,21 @@ static void	draw()
 }
 
 void	de_init() {
-	free(snake);
+	free(Snake);
 }
 
 GameFunctions	snake_game_init(GameData *game_data)
 {
 	data = game_data;
 
-	snake = calloc(MAX_SNAKE_SIZE, sizeof(Vector2));
-	board_offset =  (V2) {
-		.x = data->window_size.x * 0.5f - (board_size.x * tile_size) * 0.5f,
-		.y = data->window_size.y * 0.5f - (board_size.y * tile_size) * 0.5f
+	Snake = calloc(MAX_SNAKE_SIZE, sizeof(Vector2));
+	BoardOffset =  (V2) {
+		.x = data->window_size.x * 0.5f - (BoardSize.x * TileSize) * 0.5f,
+		.y = data->window_size.y * 0.5f - (BoardSize.y * TileSize) * 0.5f
 	};
+
+	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	Container = CreateContainer(center_screen, 0, data->ui_config);
 
 	return (GameFunctions) { 
 		.name = "Snake Game",
@@ -234,33 +223,33 @@ GameFunctions	snake_game_init(GameData *game_data)
 static void	move_snake_body(Vector2 new_head_pos, int add_body)
 {
 	int i;
-	Vector2	tmp = snake[0];
+	Vector2	tmp = Snake[0];
 	for (i = 1; i < MAX_SNAKE_SIZE; i++) {
-		if (snake[i].x == 0) // Assuming snake is initialised with 0's and that pos 0,0 is inside board and you can't reach this part of the code being there
+		if (Snake[i].x == 0) // Assuming snake is initialised with 0's and that pos 0,0 is inside board and you can't reach this part of the code being there
 			break ;
-		Vector2	tmp2 = snake[i];
-		snake[i] = tmp;
+		Vector2	tmp2 = Snake[i];
+		Snake[i] = tmp;
 		tmp = tmp2;
 	}
 	assert(i != MAX_SNAKE_SIZE);
 	if (add_body) {
 		//Vector2	_dir = Vector2Subtract(snake[i - 1], snake[i - 2]);
 		//printf("dir: %f,%f\n", _dir.x, _dir.y);
-		snake[i] = tmp;
+		Snake[i] = tmp;
 	}
-	snake[0] = new_head_pos;
+	Snake[0] = new_head_pos;
 }
 
 static void	spawn_apple()
 {
 	Vector2	pos;
 	do {
-		pos = (V2) {GetRandomValue(1, board_size.x - 1), GetRandomValue(1, board_size.y - 1)};
+		pos = (V2) {GetRandomValue(1, BoardSize.x - 1), GetRandomValue(1, BoardSize.y - 1)};
 	} while (check_collision(pos));
 
 	for (int i = 0; i < MAX_APPLES; i++) {
-		if (apples[i].x == 0) {
-			apples[i] = pos;
+		if (Apples[i].x == 0) {
+			Apples[i] = pos;
 			break ;
 		}
 	}
@@ -269,23 +258,23 @@ static void	spawn_apple()
 static int	check_collision(Vector2	pos)
 {
 	// Check collision with game board
-	if (!easy_mode && (pos.x == 0 || pos.x == board_size.x || pos.y == 0 || pos.y == board_size.y)) {
+	if (!EasyMode && (pos.x == 0 || pos.x == BoardSize.x || pos.y == 0 || pos.y == BoardSize.y)) {
 		return (1);
 	}
 
 	for (int i = 1; i < MAX_SNAKE_SIZE; i++) {
-		if (snake[i].x == 0)
+		if (Snake[i].x == 0)
 			break ;
-		if (pos.x == snake[i].x && pos.y == snake[i].y) {
+		if (pos.x == Snake[i].x && pos.y == Snake[i].y) {
 			return (1); // Colliding
 		}
 	}
 
 	for (int i = 0; i < MAX_APPLES; i++) {
-		if (apples[i].x == 0)
+		if (Apples[i].x == 0)
 			continue;
-		if (pos.x == apples[i].x && pos.y == apples[i].y) {
-			apples[i] = (Vector2) {0,0};
+		if (pos.x == Apples[i].x && pos.y == Apples[i].y) {
+			Apples[i] = (Vector2) {0,0};
 			return (2); // Colliding with apple
 		}
 	}
@@ -297,38 +286,38 @@ static void	draw_game()
 	ColorPalette	palette = data->palette;
 
 	// Grid
-	draw_grid((V2){board_offset.x + tile_size, board_offset.y + tile_size}, (V2){board_size.x -1, board_size.y -1}, tile_size);
+	draw_grid((V2){BoardOffset.x + TileSize, BoardOffset.y + TileSize}, (V2){BoardSize.x -1, BoardSize.y -1}, TileSize);
 
 	// Snake
 	for (int i = 0; i < MAX_SNAKE_SIZE; i++) {
-		if (snake[i].x == 0)
+		if (Snake[i].x == 0)
 			break ;
-		Vector2	pos = Vector2Scale(snake[i], tile_size);
-		pos = Vector2Add(pos, board_offset);
-		DrawRectangle(pos.x, pos.y, tile_size, tile_size, palette.green);
+		Vector2	pos = Vector2Scale(Snake[i], TileSize);
+		pos = Vector2Add(pos, BoardOffset);
+		DrawRectangle(pos.x, pos.y, TileSize, TileSize, palette.green);
 		// Head Eyes
 		if (i == 0) {
-			float	offset = tile_size * 0.35f;
+			float	offset = TileSize * 0.35f;
 			float	size = 2.5;
 			V2	v1 = {pos.x + offset - size, pos.y + offset - size}; // upper left
-			V2	v2 = {(pos.x + tile_size) - offset, pos.y + offset - size}; // upper right
-			V2	v3 = {pos.x + offset - size, (pos.y + tile_size) - offset}; // down left
-			V2	v4 = {(pos.x + tile_size) - offset, (pos.y + tile_size) - offset}; // down right
+			V2	v2 = {(pos.x + TileSize) - offset, pos.y + offset - size}; // upper right
+			V2	v3 = {pos.x + offset - size, (pos.y + TileSize) - offset}; // down left
+			V2	v4 = {(pos.x + TileSize) - offset, (pos.y + TileSize) - offset}; // down right
 			V2	eye1;
 			V2	eye2;
-			if (dir.x == 1) {
+			if (Dir.x == 1) {
 				eye1 = v2;
 				eye2 = v4;
 			}
-			if (dir.x == -1) {
+			if (Dir.x == -1) {
 				eye1 = v1;
 				eye2 = v3;
 			}
-			if (dir.y == 1) {
+			if (Dir.y == 1) {
 				eye1 = v3;
 				eye2 = v4;
 			}
-			if (dir.y == -1) {
+			if (Dir.y == -1) {
 				eye1 = v1;
 				eye2 = v2;
 			}
@@ -339,20 +328,20 @@ static void	draw_game()
 
 	// Apples
 	for (int i = 0; i < MAX_APPLES; i++) {
-		if (apples[i].x == 0)
+		if (Apples[i].x == 0)
 			continue;
-		Vector2	pos = Vector2Scale(apples[i], tile_size);
-		pos = Vector2Add(pos, board_offset);
-		DrawRectangle(pos.x, pos.y, tile_size, tile_size, palette.red);
+		Vector2	pos = Vector2Scale(Apples[i], TileSize);
+		pos = Vector2Add(pos, BoardOffset);
+		DrawRectangle(pos.x, pos.y, TileSize, TileSize, palette.red);
 	}
 
 	// Board border
 	float	line_thickness = 5;
 	Rect	board = {
-		.x = board_offset.x + tile_size - line_thickness,
-		.y = board_offset.y + tile_size - line_thickness,
-		.width = board_size.x * (tile_size -1) + tile_size * 0.5f,
-		.height= board_size.y * (tile_size -1) + tile_size * 0.5f
+		.x = BoardOffset.x + TileSize - line_thickness,
+		.y = BoardOffset.y + TileSize - line_thickness,
+		.width = BoardSize.x * (TileSize -1) + TileSize * 0.5f,
+		.height= BoardSize.y * (TileSize -1) + TileSize * 0.5f
 	};
 	DrawRectangleLinesEx(board, line_thickness, palette.red);
 
