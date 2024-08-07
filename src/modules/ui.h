@@ -7,7 +7,10 @@
 # include "input.h"
 # include "raymath.h"
 # include "types.h"
+# include <string.h>
+# include <stdlib.h>
 
+// TODO  Remove font config and add size and spacing to UiConfig?
 typedef struct {
 	Font  font;
 	i32   size;
@@ -52,7 +55,6 @@ typedef struct
 	UiConfig config;
 	b32	 hide;
 	// For When Title Bar is used
-	// TODO  Set option to disable dragging
 	b32	 mouse_dragging;
 	V2	 mouse_last_pos;
 } UiContainer;
@@ -61,18 +63,22 @@ void SetClickedSound(Sound *sound);
 void SetSelectorTexture(Texture2D *texture);
 void SetSelectorTextureTint(Color tint);
 
+// TODO  Change Ex functions to not accept font, as it can be easely passed in config 
+// TODO  Change draw_bounds flag in funcs to be an option in config?
+
 UiContainer CreateContainer(V2 pos, f32 width, UiConfig config);
 UiConfig    GetDefaultUiConfig(); 
 void        SetDefaultUiConfig(UiConfig config);
 void        UiBegin(UiContainer *container);
 void        UiEnd(UiContainer *container);
+void        UiTitleBarEx(UiContainer *container, UiConfig config, byte *title, FontConfig font, Color bounds_color);
 void        UiText(UiContainer *container, byte *text, b32 draw_bounds);
 void        UiTextEx(UiContainer *container, UiConfig config, byte *text, b32 draw_bounds, FontConfig font);
-bool        UiTextButton(UiContainer *container, byte *text);
-bool        UiTextButtonEx(UiContainer *container, UiConfig config, byte *text, FontConfig font);
-bool        UiSlider(UiContainer *container, f32 *value, f32 min, f32 max);
-bool        UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32 min, f32 max);
-void        UiTitleBarEx(UiContainer *container, UiConfig config, byte *title, FontConfig font, Color bounds_color);
+b32         UiTextOptionsEx(UiContainer *container, UiConfig config, b32 draw_bounds, byte *text_pre, byte **options, u32 options_size, i32 *selected);
+b32         UiTextButton(UiContainer *container, byte *text);
+b32         UiTextButtonEx(UiContainer *container, UiConfig config, byte *text, FontConfig font);
+b32         UiSlider(UiContainer *container, f32 *value, f32 min, f32 max);
+b32         UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32 min, f32 max);
 
 #endif
 
@@ -85,6 +91,7 @@ static void _take_input(UiContainer *container);
 static void _play_clicked_sound();
 static void _update_at_pos(UiContainer *container, UiConfig config, V2 element_pos, V2 element_size); // TODO better name
 static V2 _get_next_pos(UiContainer *container, UiConfig config);
+static byte *_strjoin(const byte *s1, const byte *s2);
 
 static Texture2D *SelectorTexture = NULL; 
 static Color     SelectorTint = RAYWHITE;
@@ -253,7 +260,7 @@ void UiTextEx(UiContainer *container, UiConfig config, byte *text, b32 draw_boun
 	_update_at_pos(container, config, pos, size);
 }
 
-bool UiTextButton(UiContainer *container, byte *text)
+b32 UiTextButton(UiContainer *container, byte *text)
 {
 	if (container->hide == true) { return(false); }
 	if (!IsFontReady(container->config.font.font)) {
@@ -263,7 +270,7 @@ bool UiTextButton(UiContainer *container, byte *text)
 	return (UiTextButtonEx(container, container->config, text, container->config.font));
 }
 
-bool UiTextButtonEx(UiContainer *container, UiConfig config, byte *text, FontConfig font)
+b32 UiTextButtonEx(UiContainer *container, UiConfig config, byte *text, FontConfig font)
 {
 	if (container->hide == true) { return(false); }
 	V2 text_size = MeasureTextEx(font.font, text, font.size, font.spacing);
@@ -305,14 +312,82 @@ bool UiTextButtonEx(UiContainer *container, UiConfig config, byte *text, FontCon
 	return (pressed);
 }
 
-bool UiSlider(UiContainer *container, f32 *value, f32 min, f32 max)
+b32        UiTextOptionsEx(UiContainer *container, UiConfig config, b32 draw_bounds, byte *text_pre, byte **options, u32 options_size, i32 *selected)
+{
+	if (container->hide == true) { return (false); }
+	if (*selected < 0 || *selected >= options_size) {
+		TraceLog(LOG_WARNING, "UiTextOptionsEx: selected arg [%d] is out of bounds of options [size: %lu], aborting.", *selected, options_size);
+		return (false);
+	}
+	byte *text = _strjoin(text_pre, options[*selected]);
+	V2 text_size = MeasureTextEx(config.font.font, text, config.font.size, config.font.spacing);
+
+	V2 pos = _get_next_pos(container, config);
+	if (config.alignment == UiAlignCentralized) {
+		pos.x -= text_size.x * 0.5f;
+	}
+	V2 text_pos = {pos.x + config.padding_element, pos.y + config.padding_element};
+
+	V2   size = {.x = text_size.x + (config.padding_element * 2), .y = text_size.y + (config.padding_element * 2) };
+	Rect rect = {pos.x, pos.y, size.x, size.y};
+
+	Color color = config.color_font;
+	b32 pressed = false;
+	b32 mouse_inside = false;
+	i32 id = container->id_count; 
+	container->id_count++;
+
+	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rect)) {
+		container->id_current = id;
+		mouse_inside = true;
+	}
+	if (container->id_current == id) {
+		DrawRectangleRec(rect, config.color_font);
+		color = config.color_font_highlight;
+		if (config.draw_selector) _draw_selector(pos, text_size);
+
+		if (mouse_inside) {
+			f32 wheel = GetMouseWheelMove();
+			if (wheel == 1.0f || wheel == -1.0f) {
+				*selected += (i32) wheel;
+				pressed = true;
+			}
+			if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) { 
+				*selected += 1;
+				pressed = true;
+			}
+		}
+
+		if (IsActionPressed(RIGHT) || IsActionPressed(ACTION_1)) {
+			*selected += 1;
+			pressed = true;
+		}
+		if (IsActionPressed(LEFT)) {
+			*selected -= 1;
+			pressed = true;
+		}
+	} else {
+		DrawRectangleRec(rect, config.color_font_highlight);
+	}
+
+	if (*selected < 0) *selected = options_size - 1; // Checking if it's negative first because a -i32 >= u32 will result to true
+	if (*selected >= options_size) *selected = 0;
+
+	DrawTextEx(config.font.font, text, text_pos, config.font.size, config.font.spacing, color);
+
+	if (pressed && config.play_sound) _play_clicked_sound();
+	_update_at_pos(container, config, pos, size);
+	return (pressed);
+}
+
+b32 UiSlider(UiContainer *container, f32 *value, f32 min, f32 max)
 {
 	if (container->hide == true) { return(false); }
 	V2 size = {container->width * 0.8f, container->height};
 	return (UiSliderEx(container, container->config, size, value, min, max));
 }
 
-bool UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32 min, f32 max)
+b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32 min, f32 max)
 {
 	if (container->hide == true) { return(false); }
 	b32  pressed = false;
@@ -450,6 +525,21 @@ static V2 _get_next_pos(UiContainer *container, UiConfig config)
 	pos = (V2) {container->at_x + config.padding_border, container->at_y};
 
 	return (pos);
+}
+
+// TODO  Change when a i write proper string lib
+static byte *_strjoin(const byte *s1, const byte *s2)
+{
+	byte *join;
+	i32  s1_lenght = strlen(s1);
+	i32  s2_lenght = strlen(s2);
+
+	join = (byte *) malloc(s1_lenght + s2_lenght + 1);
+	if (join == 0) return (join);
+	memcpy(join, s1, s1_lenght);
+	memcpy(&join[s1_lenght], s2, s2_lenght);
+	join[s2_lenght + s1_lenght] = '\0';
+	return (join);
 }
 
 // void _Testfunc(char *str, GameData data) 
