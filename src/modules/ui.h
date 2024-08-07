@@ -375,6 +375,7 @@ b32        UiTextOptionsEx(UiContainer *container, UiConfig config, b32 draw_bou
 
 	DrawTextEx(config.font.font, text, text_pos, config.font.size, config.font.spacing, color);
 
+	free(text);
 	if (pressed && config.play_sound) _play_clicked_sound();
 	_update_at_pos(container, config, pos, size);
 	return (pressed);
