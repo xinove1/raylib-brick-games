@@ -185,6 +185,7 @@ void UiTitleBarEx(UiContainer *container, UiConfig config, byte *title, FontConf
 	V2 text_size = MeasureTextEx(font.font, title, font.size, font.spacing);
 	if (config.alignment == UiAlignCentralized) {
 		pos.x -= text_size.x * 0.5f;
+		pos.x -= config.padding_border * 2;
 	}
 	V2 text_pos  = {pos.x + config.padding_element, pos.y + config.padding_element};
 
