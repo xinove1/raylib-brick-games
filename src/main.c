@@ -1,21 +1,21 @@
 #include "game.h"
 
-void	_Testfunc(char *str, GameData data) 
+void _Testfunc(byte *str, GameData data) 
 {
 	printf("str: %s, data- quit: %d, music_vol: %f\n", str, data.quit, data.music_vol);
 }
 #define Testfunc(str, ...) _Testfunc((str), (GameData){.quit = false, __VA_ARGS__})
 
-static void	load_assets(GameData *data);
-static void	unload_assets(GameData *data);
+static void load_assets(GameData *data);
+static void unload_assets(GameData *data);
 
-static GameFunctions	games[GAME_COUNT] = {0};
-static Games_e	game;
-static RenderTexture2D	screen;
+static GameFunctions games[GAME_COUNT] = {0};
+static Games_e game;
+static RenderTexture2D screen;
 
-int	main()
+i32 main()
 {
-	GameData	data = {0};
+	GameData data = {0};
 
 	data.window_size = (V2) {640, 360};
 	data.music_vol = 0.5f;
@@ -115,7 +115,7 @@ int	main()
 		.padding_row = 10,
 		.padding_collumn = 5,
 		.padding_border  = 5,
-		.padding_element = 0,
+		.padding_element = 3,
 		.color_background = YELLOW,
 		.color_font = RED,
 		.color_font_highlight = BLACK,
@@ -141,13 +141,13 @@ int	main()
 		}
 		//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());
 
-		float screen_scale = MIN((float)GetScreenWidth()/data.window_size.x, (float)GetScreenHeight() / data.window_size.y);
+		f32 screen_scale = MIN((f32)GetScreenWidth()/data.window_size.x, (f32)GetScreenHeight() / data.window_size.y);
 		// Update virtual mouse (clamped mouse value behind game screen)
-		Vector2 mouse = GetMousePosition();
-		Vector2 virtualMouse = { 0 };
+		V2 mouse = GetMousePosition();
+		V2 virtualMouse = { 0 };
 		virtualMouse.x = (mouse.x - (GetScreenWidth() - (data.window_size.x *screen_scale))*0.5f)/screen_scale;
 		virtualMouse.y = (mouse.y - (GetScreenHeight() - (data.window_size.y *screen_scale))*0.5f)/screen_scale;
-		virtualMouse = Vector2Clamp(virtualMouse, (Vector2){ 0, 0 }, (Vector2){ (float)data.window_size.x, (float)data.window_size.y});
+		virtualMouse = V2Clamp(virtualMouse, (V2){ 0, 0 }, (V2){ (f32)data.window_size.x, (f32)data.window_size.y});
 
 		//Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
 		SetMouseOffset(-(GetScreenWidth() - (data.window_size.x*screen_scale))*0.5f, -(GetScreenHeight() - (data.window_size.y*screen_scale))*0.5f);
@@ -176,13 +176,13 @@ int	main()
 			ClearBackground(BLACK);
 			// Draw render texture to screen, properly scaled
 			DrawTexturePro(screen.texture,
-		  (Rect){0.0f, 0.0f, (float) screen.texture.width, (float) -screen.texture.height},
-		  (Rect){(GetScreenWidth() - ((float) data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((float) data.window_size.y*screen_scale)) * 0.5f,
-		  (float)data.window_size.x * screen_scale, (float)data.window_size.y * screen_scale },
-		  (Vector2){ 0, 0 },
+		  (Rect){0.0f, 0.0f, (f32) screen.texture.width, (f32) -screen.texture.height},
+		  (Rect){(GetScreenWidth() - ((f32) data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((f32) data.window_size.y*screen_scale)) * 0.5f,
+		  (f32)data.window_size.x * screen_scale, (f32)data.window_size.y * screen_scale },
+		  (V2){ 0, 0 },
 		  0.0f,
-			WHITE);
-			FontConfig	font = data.assets.fonts[1];
+		  WHITE);
+			FontConfig font = data.assets.fonts[1];
 			DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
 		}
 		EndDrawing();
@@ -201,15 +201,15 @@ int	main()
 	return (0);
 }
 
-void	update_volume(GameData *data)
+void update_volume(GameData *data)
 {
-	for (int i = 0; i < MAX_ASSET; i++) {
+	for (i32 i = 0; i < MAX_ASSET; i++) {
 		SetMusicVolume(data->assets.music[i], data->music_vol);
 		SetSoundVolume(data->assets.sounds[i], data->effects_vol);
 	}
 }
 
-static void	load_assets(GameData *data) {
+static void load_assets(GameData *data) {
 	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
@@ -241,8 +241,8 @@ static void	load_assets(GameData *data) {
 
 }
 
-static void	unload_assets(GameData *data) {
-	for (int i = 0; i < MAX_ASSET; i++) {
+static void unload_assets(GameData *data) {
+	for (i32 i = 0; i < MAX_ASSET; i++) {
 		UnloadSound(data->assets.sounds[i]);
 		UnloadMusicStream(data->assets.music[i]);
 		UnloadFont(data->assets.fonts[i].font);

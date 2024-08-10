@@ -2,22 +2,22 @@
 #include "raylib.h"
 #include "collision.h"
 
-static GameData	*Data = NULL;
-static bool	GameOver = false;
-static bool	GamePaused = false;
-static bool	PlayScreen = true;
+static GameData *Data = NULL;
+static b32 GameOver = false;
+static b32 GamePaused = false;
+static b32 PlayScreen = true;
 static UiContainer Container;
 
-static V2	Dir = { 0 };
+static V2 Dir = { 0 };
 
-static void	start()
+static void start()
 {
 	GameOver = false;
 	GamePaused = false;
 	PlayScreen = true;
 }
 
-static void	update()
+static void update()
 {
 	if (!ShouldGameRun(&PlayScreen , &GamePaused, &PlayScreen)) {
 		return ;
@@ -37,7 +37,7 @@ static void	update()
 	}
 }
 
-static void	draw()
+static void draw()
 {
 	// Ui Screens
 	if (PlayScreen) {
@@ -67,7 +67,7 @@ static void	draw()
 		}
 	}
 	if (GameOver) {
-		UiStates	state = game_over_screen(Data);
+		UiStates state = game_over_screen(Data);
 		if (state == NONE) {
 			GameOver = false;
 			start();
@@ -76,13 +76,13 @@ static void	draw()
 			GameOver = false;
 		}
 	}
-	float	time;
-	float	speed = 50;
-	V2	point, normal  = { 0 };
-	V2	origin = {0, 0};
-	static Rect	p = {50, 50, 10, 15};
-	static Rect	e = {50, 100, 50, 15};
-	static V2	vel = {0, 0};
+	f32 time;
+	f32 speed = 50;
+	V2 point, normal  = { 0 };
+	V2 origin = {0, 0};
+	static Rect p = {50, 50, 10, 15};
+	static Rect e = {50, 100, 50, 15};
+	static V2 vel = {0, 0};
 	vel = (V2) { Dir.x * speed, Dir.y * speed};
 
 	DrawRectangleRec(p, RED);
@@ -90,16 +90,16 @@ static void	draw()
 
 	if (CheckCollisionDynamicRectRect(p, vel, e, &point, &normal, &time, GetFrameTime()) && time < 1) {
 		DrawCircleV(point, 1, YELLOW);
-		DrawLineV(point, Vector2Add(point, Vector2Scale(normal, 5)), BLUE);
-		Vector2	vel_abs = {fabsf(vel.x), fabsf(vel.y)};
-		vel = Vector2Add(vel, Vector2Multiply(normal, Vector2Scale(vel_abs, 1 - time)));
+		DrawLineV(point, V2Add(point, V2Scale(normal, 5)), BLUE);
+		V2 vel_abs = {fabsf(vel.x), fabsf(vel.y)};
+		vel = V2Add(vel, V2Multiply(normal, V2Scale(vel_abs, 1 - time)));
 	}
 
-	V2	mouse_pos = GetMousePosition();
-	V2	mouse_dir = Vector2Normalize(Vector2Subtract(mouse_pos, V2RectPos(p)));
+	V2 mouse_pos = GetMousePosition();
+	V2 mouse_dir = V2Normalize(V2Subtract(mouse_pos, V2RectPos(p)));
 	if (CheckCollisionRayRec(V2RectPos(p), mouse_dir, e, &point, &normal, &time)) {
 		DrawCircleV(point, 2, YELLOW);
-		DrawLineV(point, Vector2Add(point, Vector2Scale(normal, 5)), BLUE);
+		DrawLineV(point, V2Add(point, V2Scale(normal, 5)), BLUE);
 	}
 	DrawLineV(V2RectPos(p), mouse_pos, GREEN);
 
@@ -108,15 +108,15 @@ static void	draw()
 
 }
 
-static void	de_init()
+static void de_init()
 {
 }
 
-GameFunctions	test_game_init(GameData *data)
+GameFunctions test_game_init(GameData *data)
 {
 	Data = data;
 
-	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	V2 center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
 	Container = CreateContainer(center_screen, 0, data->ui_config);
 
 	return (GameFunctions) {

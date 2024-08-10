@@ -2,20 +2,20 @@
 
 static void move_paddle(V2 dir, V2 *paddle);
 
-static GameData	*Data = NULL;
-static V2	RightPaddle = {};
-static V2	LeftPaddle = {};
-static V2	PaddleSize = {};
-static V2	BallPos = {};
-static V2	BallSize = {};
-static V2	BallDir = {};
-static float	BallSpeed = {};
-static bool	GameOver = false;
+static GameData *Data = NULL;
+static V2 RightPaddle = {};
+static V2 LeftPaddle = {};
+static V2 PaddleSize = {};
+static V2 BallPos = {};
+static V2 BallSize = {};
+static V2 BallDir = {};
+static f32 BallSpeed = {};
+static b32 GameOver = false;
 
 
-static void	start()
+static void start()
 {
-	float	padding = 10;
+	f32 padding = 10;
 
 	RightPaddle = (V2) { padding, Data->window_size.y * 0.5f };
 	LeftPaddle = (V2) { Data->window_size.x - padding, Data->window_size.y * 0.5f };
@@ -27,14 +27,13 @@ static void	start()
 	BallSpeed = 100;
 }
 
-static void	de_init()
+static void de_init()
 {
 }
 
-static void	update()
+static void update()
 {
 	if (GameOver) {
-
 		return ;
 	}
 	if (IsActionDown(DOWN)) {
@@ -50,11 +49,11 @@ static void	update()
 		BallDir.x = 1;
 	}
 	
-	BallPos = Vector2Add(BallPos, Vector2Scale(BallDir, BallSpeed * GetFrameTime()));
+	BallPos = V2Add(BallPos, V2Scale(BallDir, BallSpeed * GetFrameTime()));
 	{
-		Rect	ball_rect = {BallPos.x , BallPos.y, BallSize.x, BallSize.y};
-		Rect	right_rect = {RightPaddle.x, RightPaddle.y, PaddleSize.x, PaddleSize.y};
-		Rect	left_rect = {LeftPaddle.x, LeftPaddle.y, PaddleSize.x, PaddleSize.y};
+		Rect ball_rect = {BallPos.x , BallPos.y, BallSize.x, BallSize.y};
+		Rect right_rect = {RightPaddle.x, RightPaddle.y, PaddleSize.x, PaddleSize.y};
+		Rect left_rect = {LeftPaddle.x, LeftPaddle.y, PaddleSize.x, PaddleSize.y};
 
 		if (CheckCollisionRecs(ball_rect, right_rect)) {
 			BallDir.x = 1;
@@ -70,14 +69,14 @@ static void	update()
 	}
 }
 
-static void	draw()
+static void draw()
 {
 	DrawRectangleV(RightPaddle, PaddleSize, RED);
 	DrawRectangleV(LeftPaddle, PaddleSize, RED);
 	DrawRectangleV(BallPos, BallSize, RED);
 
 	if (GameOver) {
-		UiStates	state = game_over_screen(Data);
+		UiStates state = game_over_screen(Data);
 		if (state == NONE) {
 			GameOver = false;
 			start();
@@ -88,7 +87,7 @@ static void	draw()
 	}
 }
 
-GameFunctions	pong_init(GameData *data)
+GameFunctions pong_init(GameData *data)
 {
 	Data = data;
 
