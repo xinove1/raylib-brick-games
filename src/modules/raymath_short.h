@@ -1,3 +1,27 @@
+/**********************************************************************************************
+*   Modified Version of raymath v1.5, shorting funcs names, changing types and removing unusead funcs
+*      raymath v1.5 - Math functions to work with Vector2, Vector3, Matrix and Quaternions
+*
+*   LICENSE: zlib/libpng
+*
+*   Copyright (c) 2015-2023 Ramon Santamaria (@raysan5)
+*
+*   This software is provided "as-is", without any express or implied warranty. In no event
+*   will the authors be held liable for any damages arising from the use of this software.
+*
+*   Permission is granted to anyone to use this software for any purpose, including commercial
+*   applications, and to alter it and redistribute it freely, subject to the following restrictions:
+*
+*     1. The origin of this software must not be misrepresented; you must not claim that you
+*     wrote the original software. If you use this software in a product, an acknowledgment
+*     in the product documentation would be appreciated but is not required.
+*
+*     2. Altered source versions must be plainly marked as such, and must not be misrepresented
+*     as being the original software.
+*
+*     3. This notice may not be removed or altered from any source distribution.
+*
+**********************************************************************************************/
 #ifndef RAYMATH_SHORT_H_
 # define RAYMATH_SHORT_H_
 # include "types.h"
@@ -8,10 +32,71 @@
 #else
 # define RMSAPI inline
 #endif
+//----------------------------------------------------------------------------------
+// Module Functions Definition - Utils math
+//----------------------------------------------------------------------------------
+
+// Clamp f32 value
+RMSAPI f32 Clamp(f32 value, f32 min, f32 max)
+{
+    f32 result = (value < min)? min : value;
+
+    if (result > max) result = max;
+
+    return result;
+}
+
+// Calculate linear interpolation between two f32s
+RMSAPI f32 Lerp(f32 start, f32 end, f32 amount)
+{
+    f32 result = start + amount*(end - start);
+
+    return result;
+}
+
+// Normalize input value within input range
+RMSAPI f32 Normalize(f32 value, f32 start, f32 end)
+{
+    f32 result = (value - start)/(end - start);
+
+    return result;
+}
+
+// Remap input value within input range to output range
+RMSAPI f32 Remap(f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 outputEnd)
+{
+    f32 result = (value - inputStart)/(inputEnd - inputStart)*(outputEnd - outputStart) + outputStart;
+
+    return result;
+}
+
+// Wrap input value from min to max
+RMSAPI f32 Wrap(f32 value, f32 min, f32 max)
+{
+    f32 result = value - (max - min)*floorf((value - min)/(max - min));
+
+    return result;
+}
+
+// Check whether two given f32s are almost equal
+RMSAPI i32 f32Equals(f32 x, f32 y)
+{
+#if !defined(EPSILON)
+    #define EPSILON 0.000001f
+#endif
+
+    i32 result = (fabsf(x - y)) <= (EPSILON*fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))));
+
+    return result;
+}
 
 //----------------------------------------------------------------------------------
 // Module Functions Definition - V2 math
 //----------------------------------------------------------------------------------
+RMSAPI b32 V2Compare(V2 v1, V2 v2) 
+{
+    return (v1.x == v2.x && v1.y == v2.y);
+}
 
 // Vector with components value 0.0f
 RMSAPI V2 V2Zero(void)
@@ -37,8 +122,8 @@ RMSAPI V2 V2Add(V2 v1, V2 v2)
     return result;
 }
 
-// Add vector and float value
-RMSAPI V2 V2AddValue(V2 v, float add)
+// Add vector and f32 value
+RMSAPI V2 V2AddValue(V2 v, f32 add)
 {
     V2 result = { v.x + add, v.y + add };
 
@@ -53,8 +138,8 @@ RMSAPI V2 V2Subtract(V2 v1, V2 v2)
     return result;
 }
 
-// Subtract vector by float value
-RMSAPI V2 V2SubtractValue(V2 v, float sub)
+// Subtract vector by f32 value
+RMSAPI V2 V2SubtractValue(V2 v, f32 sub)
 {
     V2 result = { v.x - sub, v.y - sub };
 
@@ -62,53 +147,53 @@ RMSAPI V2 V2SubtractValue(V2 v, float sub)
 }
 
 // Calculate vector length
-RMSAPI float V2Length(V2 v)
+RMSAPI f32 V2Length(V2 v)
 {
-    float result = sqrtf((v.x*v.x) + (v.y*v.y));
+    f32 result = sqrtf((v.x*v.x) + (v.y*v.y));
 
     return result;
 }
 
 // Calculate vector square length
-RMSAPI float V2LengthSqr(V2 v)
+RMSAPI f32 V2LengthSqr(V2 v)
 {
-    float result = (v.x*v.x) + (v.y*v.y);
+    f32 result = (v.x*v.x) + (v.y*v.y);
 
     return result;
 }
 
 // Calculate two vectors dot product
-RMSAPI float V2DotProduct(V2 v1, V2 v2)
+RMSAPI f32 V2DotProduct(V2 v1, V2 v2)
 {
-    float result = (v1.x*v2.x + v1.y*v2.y);
+    f32 result = (v1.x*v2.x + v1.y*v2.y);
 
     return result;
 }
 
 // Calculate distance between two vectors
-RMSAPI float V2Distance(V2 v1, V2 v2)
+RMSAPI f32 V2Distance(V2 v1, V2 v2)
 {
-    float result = sqrtf((v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y));
+    f32 result = sqrtf((v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y));
 
     return result;
 }
 
 // Calculate square distance between two vectors
-RMSAPI float V2DistanceSqr(V2 v1, V2 v2)
+RMSAPI f32 V2DistanceSqr(V2 v1, V2 v2)
 {
-    float result = ((v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y));
+    f32 result = ((v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y));
 
     return result;
 }
 
 // Calculate angle between two vectors
 // NOTE: Angle is calculated from origin point (0, 0)
-RMSAPI float V2Angle(V2 v1, V2 v2)
+RMSAPI f32 V2Angle(V2 v1, V2 v2)
 {
-    float result = 0.0f;
+    f32 result = 0.0f;
 
-    float dot = v1.x*v2.x + v1.y*v2.y;
-    float det = v1.x*v2.y - v1.y*v2.x;
+    f32 dot = v1.x*v2.x + v1.y*v2.y;
+    f32 det = v1.x*v2.y - v1.y*v2.x;
 
     result = atan2f(det, dot);
 
@@ -118,9 +203,9 @@ RMSAPI float V2Angle(V2 v1, V2 v2)
 // Calculate angle defined by a two vectors line
 // NOTE: Parameters need to be normalized
 // Current implementation should be aligned with glm::angle
-RMSAPI float V2LineAngle(V2 start, V2 end)
+RMSAPI f32 V2LineAngle(V2 start, V2 end)
 {
-    float result = 0.0f;
+    f32 result = 0.0f;
 
     // TODO(10/9/2023): Currently angles move clockwise, determine if this is wanted behavior
     result = -atan2f(end.y - start.y, end.x - start.x);
@@ -129,7 +214,7 @@ RMSAPI float V2LineAngle(V2 start, V2 end)
 }
 
 // Scale vector (multiply by value)
-RMSAPI V2 V2Scale(V2 v, float scale)
+RMSAPI V2 V2Scale(V2 v, f32 scale)
 {
     V2 result = { v.x*scale, v.y*scale };
 
@@ -164,11 +249,11 @@ RMSAPI V2 V2Divide(V2 v1, V2 v2)
 RMSAPI V2 V2Normalize(V2 v)
 {
     V2 result = { 0 };
-    float length = sqrtf((v.x*v.x) + (v.y*v.y));
+    f32 length = sqrtf((v.x*v.x) + (v.y*v.y));
 
     if (length > 0)
     {
-        float ilength = 1.0f/length;
+        f32 ilength = 1.0f/length;
         result.x = v.x*ilength;
         result.y = v.y*ilength;
     }
@@ -181,9 +266,9 @@ RMSAPI V2 V2Transform(V2 v, Matrix mat)
 {
     V2 result = { 0 };
 
-    float x = v.x;
-    float y = v.y;
-    float z = 0;
+    f32 x = v.x;
+    f32 y = v.y;
+    f32 z = 0;
 
     result.x = mat.m0*x + mat.m4*y + mat.m8*z + mat.m12;
     result.y = mat.m1*x + mat.m5*y + mat.m9*z + mat.m13;
@@ -192,7 +277,7 @@ RMSAPI V2 V2Transform(V2 v, Matrix mat)
 }
 
 // Calculate linear interpolation between two vectors
-RMSAPI V2 V2Lerp(V2 v1, V2 v2, float amount)
+RMSAPI V2 V2Lerp(V2 v1, V2 v2, f32 amount)
 {
     V2 result = { 0 };
 
@@ -207,7 +292,7 @@ RMSAPI V2 V2Reflect(V2 v, V2 normal)
 {
     V2 result = { 0 };
 
-    float dotProduct = (v.x*normal.x + v.y*normal.y); // Dot product
+    f32 dotProduct = (v.x*normal.x + v.y*normal.y); // Dot product
 
     result.x = v.x - (2.0f*normal.x)*dotProduct;
     result.y = v.y - (2.0f*normal.y)*dotProduct;
@@ -216,12 +301,12 @@ RMSAPI V2 V2Reflect(V2 v, V2 normal)
 }
 
 // Rotate vector by angle
-RMSAPI V2 V2Rotate(V2 v, float angle)
+RMSAPI V2 V2Rotate(V2 v, f32 angle)
 {
     V2 result = { 0 };
 
-    float cosres = cosf(angle);
-    float sinres = sinf(angle);
+    f32 cosres = cosf(angle);
+    f32 sinres = sinf(angle);
 
     result.x = v.x*cosres - v.y*sinres;
     result.y = v.x*sinres + v.y*cosres;
@@ -230,17 +315,17 @@ RMSAPI V2 V2Rotate(V2 v, float angle)
 }
 
 // Move Vector towards target
-RMSAPI V2 V2MoveTowards(V2 v, V2 target, float maxDistance)
+RMSAPI V2 V2MoveTowards(V2 v, V2 target, f32 maxDistance)
 {
     V2 result = { 0 };
 
-    float dx = target.x - v.x;
-    float dy = target.y - v.y;
-    float value = (dx*dx) + (dy*dy);
+    f32 dx = target.x - v.x;
+    f32 dy = target.y - v.y;
+    f32 value = (dx*dx) + (dy*dy);
 
     if ((value == 0) || ((maxDistance >= 0) && (value <= maxDistance*maxDistance))) return target;
 
-    float dist = sqrtf(value);
+    f32 dist = sqrtf(value);
 
     result.x = v.x + dx/dist*maxDistance;
     result.y = v.y + dy/dist*maxDistance;
@@ -269,24 +354,24 @@ RMSAPI V2 V2Clamp(V2 v, V2 min, V2 max)
 }
 
 // Clamp the magnitude of the vector between two min and max values
-RMSAPI V2 V2ClampValue(V2 v, float min, float max)
+RMSAPI V2 V2ClampValue(V2 v, f32 min, f32 max)
 {
     V2 result = v;
 
-    float length = (v.x*v.x) + (v.y*v.y);
+    f32 length = (v.x*v.x) + (v.y*v.y);
     if (length > 0.0f)
     {
         length = sqrtf(length);
 
         if (length < min)
         {
-            float scale = min/length;
+            f32 scale = min/length;
             result.x = v.x*scale;
             result.y = v.y*scale;
         }
         else if (length > max)
         {
-            float scale = max/length;
+            f32 scale = max/length;
             result.x = v.x*scale;
             result.y = v.y*scale;
         }
@@ -296,13 +381,13 @@ RMSAPI V2 V2ClampValue(V2 v, float min, float max)
 }
 
 // Check whether two given vectors are almost equal
-RMSAPI int V2Equals(V2 p, V2 q)
+RMSAPI i32 V2Equals(V2 p, V2 q)
 {
 #if !defined(EPSILON)
     #define EPSILON 0.000001f
 #endif
 
-    int result = ((fabsf(p.x - q.x)) <= (EPSILON*fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
+    i32 result = ((fabsf(p.x - q.x)) <= (EPSILON*fmaxf(1.0f, fmaxf(fabsf(p.x), fabsf(q.x))))) &&
                   ((fabsf(p.y - q.y)) <= (EPSILON*fmaxf(1.0f, fmaxf(fabsf(p.y), fabsf(q.y)))));
 
     return result;
