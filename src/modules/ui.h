@@ -3,11 +3,9 @@
 
 # include "raylib.h"
 # include "raymath_short.h"
-# include "stdio.h"
-# include "input.h"
-# include "raymath.h"
 # include "types.h"
-# include <string.h>
+# include "input.h"
+# include <string.h> //  NOTE  Remember to remove when xi_str is created & added
 # include <stdlib.h>
 
 // TODO  Remove font config and add size and spacing to UiConfig?
@@ -419,7 +417,7 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 				pressed = true;
 			}
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-				V2	pos = Vector2Subtract(GetMousePosition(), (V2){rect.x, rect.y});
+				V2	pos = V2Subtract(GetMousePosition(), (V2){rect.x, rect.y});
 				*value = Remap(pos.x, 0, rect.width, 0, 1);
 				pressed = true;
 			}

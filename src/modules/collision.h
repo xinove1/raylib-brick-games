@@ -1,7 +1,7 @@
 #ifndef COLLISION_H_
 # define COLLISION_H_
 # include "raylib.h"
-# include "raymath.h"
+# include "raymath_short.h"
 # include "types.h"
 
 #endif
@@ -20,8 +20,8 @@ bool CheckCollisionRayRec(Vector2 origin, Vector2 dir, Rectangle rec,
 	Vector2 rec_pos = {rec.x, rec.y};
 	Vector2 rec_pos_side = {rec.x + rec.width, rec.y + rec.height};
 	// NOTE Divide By zero could occour here and cause bugs
-	Vector2 t_near = Vector2Divide(Vector2Subtract(rec_pos, origin), dir);
-	Vector2 t_far = Vector2Divide(Vector2Subtract(rec_pos_side, origin), dir);
+	Vector2 t_near = V2Divide(V2Subtract(rec_pos, origin), dir);
+	Vector2 t_far = V2Divide(V2Subtract(rec_pos_side, origin), dir);
 
 	if (t_near.x > t_far.x)
 	{
@@ -45,7 +45,7 @@ bool CheckCollisionRayRec(Vector2 origin, Vector2 dir, Rectangle rec,
 	if (t_hit_far < 0)
 		return (false);
 
-	*contact_point = Vector2Add(origin, Vector2Scale(dir, *contact_time));
+	*contact_point = V2Add(origin, V2Scale(dir, *contact_time));
 
 	if (t_near.x > t_near.y)
 	{
@@ -78,10 +78,10 @@ bool CheckCollisionDynamicRectRect(Rectangle rec, Vector2 vel, Rectangle target,
 	extended_target.height = target.height + rec.height;
 
 	Vector2 origin = {rec.x, rec.y};
-	if (CheckCollisionRayRec(Vector2Add(origin, (Vector2){rec.width/2, rec.height/2}), Vector2Scale(vel, delta_time), extended_target, contact_point, contact_normal, contact_time)) {
+	if (CheckCollisionRayRec(V2Add(origin, (Vector2){rec.width/2, rec.height/2}), V2Scale(vel, delta_time), extended_target, contact_point, contact_normal, contact_time)) {
 		if (*contact_time >= 0 && *contact_time < 1) {
 			// To correct normal  from extended target
-			*contact_point = Vector2Subtract(*contact_point, Vector2Multiply((V2) {rec.width/2, rec.height/2}, *contact_normal));
+			*contact_point = V2Subtract(*contact_point, V2Multiply((V2) {rec.width/2, rec.height/2}, *contact_normal));
 			return (true);
 		}
 	}
