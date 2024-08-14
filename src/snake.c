@@ -1,7 +1,6 @@
 #include "game.h"
 #include "raylib.h"
 
-// TODO  Change max apples to be board_size dependent
 # define MAX_APPLES 10
 # define MAX_SNAKE_SIZE 20*20 // = Max board size
 # define BOARD_SIZE_COUNT 4
@@ -24,6 +23,7 @@ struct SnakeData {
 	f32 apple_spawn_rate; // in seconds
 	f32 apple_spawn_count;
 	f32 scores[8];
+	f32 score_count;
 	b32 play_screen;
 	b32 paused;
 	b32 game_over;
@@ -68,6 +68,7 @@ GameFunctions snake_game_init(GameData *data)
 		.apple_spawn_rate = 5, // in seconds
 		.apple_spawn_count = 0,
 		.scores = 0,
+		.score_count = 0,
 		.play_screen = true,
 		.paused = false,
 		.game_over = false,
@@ -77,6 +78,7 @@ GameFunctions snake_game_init(GameData *data)
 
 	V2 center_screen = {Data->window_size.x * 0.5f, Data->window_size.y * 0.25f};
 	Snake->Container = UiCreateContainer(center_screen, 0, Data->ui_config);
+
 	//Snake->scores = data->scores.snake;
 	memcpy(&Snake->scores, &data->scores.snake, sizeof(Snake->scores));
 
@@ -90,6 +92,7 @@ GameFunctions snake_game_init(GameData *data)
 }
 
 void de_init() {
+	//data->scores.snake = Snake->scores;
 	memcpy(&Data->scores.snake, &Snake->scores, sizeof(Snake->scores));
 }
 
@@ -113,6 +116,23 @@ static void start()
 static void update()
 {
 	assert(Snake);
+
+	// Check for HighScore
+	if ((Snake->won || Snake->game_over) && Snake->score_count != 0) {
+		i32 score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
+		assert(score_index <= sizeof(Snake->scores));
+		if (Snake->scores[score_index] < Snake->score_count) {
+			Snake->scores[score_index] = Snake->score_count;
+			printf("New HighScore!!! \n");
+			
+			//data->scores.snake = Snake->scores;
+			memcpy(&Data->scores.snake, &Snake->scores, sizeof(Snake->scores));
+			
+			SaveScores(SCORES_SAVE_LOCATION, Data->scores);
+		}
+		Snake->score_count = 0;
+	}
+
 	if (!ShouldGameRun(&Snake->play_screen, &Snake->paused, &Snake->game_over) || Snake->won) {
 		return ;
 	}
@@ -164,12 +184,11 @@ static void update()
 
 		i32 collision = check_collision(new_pos);
 		if (collision == 1) {
-			printf("Game Over \n");
 			Snake->game_over = true;
 			return ;
 		}
-		if (debug_pressed) move_snake_body(new_pos, true);
-		else move_snake_body(new_pos, collision);
+
+		move_snake_body(new_pos, collision);
 
 		if (!V2Compare(Snake->snake[Snake->snake_size - 1], V2Zero())) { // This check needs to happen before spawn_apple() is maybe invocked 
 			Snake->won = true;
@@ -177,9 +196,8 @@ static void update()
 		}
 
 		if (collision == 2) {
-			i32 score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
-			assert(score_index <= sizeof(Snake->scores));
-			Snake->scores[score_index] += 50;
+			// TODO  Change Score counting to separate var and on winning/losing see if its a new highscore and request saving scores
+			Snake->score_count += 50;
 			spawn_apple();
 		} else if (Snake->apple_spawn_count >= Snake->apple_spawn_rate) {
 			Snake->apple_spawn_count = 0;
@@ -233,10 +251,10 @@ static void draw()
 	} else if (Snake->play_screen && scores_screen) {
 		UiContainer *panel = &Snake->Container;
 
-		if (!IsKeyDown(KEY_U)) panel->config.alignment = UiAlignLeft; // NOTE  debug stuff
-		
+		panel->config.alignment = UiAlignRight;
 		V2 panel_pos = panel->pos;
 		panel->pos.x -=  panel->width * 0.5f;
+		panel->pos.y -=  panel->at_y * 0.15f;
 		UiBegin(panel);
 		{
 			// Workaround for now
@@ -321,7 +339,7 @@ static void draw()
 		}
 	}
 
-	static bool options = false; // TODO  move to snake
+	static bool options = false;
 	if (Snake->paused && options == false) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);
