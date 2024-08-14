@@ -74,7 +74,7 @@ b32 ShouldGameRun(b32 *play_screen, b32 *paused, b32 *game_over)
 
 HighScores LoadScores(cstr *where) 
 {
-	i32 fd = open(where, O_CREAT | O_RDONLY);
+	i32 fd = open(where, O_RDONLY);
 	if (fd < 0) {
 		TraceLog(LOG_WARNING, "LoadData: %s. \n", strerror(errno));
 		return ((HighScores) {0});

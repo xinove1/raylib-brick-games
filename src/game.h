@@ -12,6 +12,7 @@
 # include "types.h"
 
 # define TILE_SIZE 16
+# define SCORES_SAVE_LOCATION "./data"
 
 typedef enum {MAIN_MENU, TETRIS, SNAKE_GAME, PONG, BREAKOUT, TEST, GAME_COUNT} Games_e;
 typedef enum {
@@ -59,7 +60,7 @@ typedef struct
 } HighScores;
 
 typedef struct {
-	V2           window_size; // TODO  rename, canvas?
+	V2           window_size;
 	f32          effects_vol;
 	f32          music_vol;
 	b32          quit;
@@ -87,12 +88,12 @@ GameFunctions test_game_init(GameData *data);
 GameFunctions pong_init(GameData *data);
 GameFunctions breakout_init(GameData *data);
 
-void update_volume(GameData *data);
-void ui_trasition_from(V2 dir);
 UiStates game_over_screen(GameData *data);
 UiStates options_screen(GameData *data);
+void update_volume(GameData *data);
+void ui_trasition_from(V2 dir);
 void pause_game(); // Only called from js on the web version
-b32 IsPauseRequested();
+b32  IsPauseRequested();
 
 void draw_grid_ex(V2 position, V2 grid_size, i32 tile_size, f32 line_thickness, Color color);
 void draw_grid(V2 position, V2 grid_size, i32 tile_size);

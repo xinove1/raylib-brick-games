@@ -108,7 +108,7 @@ i32 main()
 	Gamesfuncs[TEST].de_init();
 	Gamesfuncs[MAIN_MENU].de_init();
 
-	SaveScores("./data", Data.scores);
+	SaveScores(SCORES_SAVE_LOCATION , Data.scores);
 
 	unload_assets(&Data);
 	CloseWindow();

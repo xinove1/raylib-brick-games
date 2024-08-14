@@ -15,6 +15,7 @@ static FontConfig  TextConfigHeading;
 static UiContainer Container;
 static Color       UiBackgroundColor;
 static UiStates    CurrentScreen;
+static void draw_blocks(GameData *data);
 static void title_screen(GameData *data);
 static void play_screen(GameData *data);
 static void paused_screen(GameData *data);
@@ -24,9 +25,6 @@ static void tutorial_screen(GameData *data);
 static void colors_screen(GameData *data);
 static void keybind_screen(GameData *data);
 
-void draw_blocks(GameData *data);
-
-// TODO  Reset Container->id_current on every change of screen
 
 static void start() 
 {
@@ -105,7 +103,7 @@ static void draw()
 	DrawTextureRec(TextTexture.texture, rect, TextTexturePos, WHITE);
 
 	{
-		byte *text  = "By: @thomi_dx"; // FIX  When created twitter account
+		byte *text  = "By: xinove";
 		V2 text_size = MeasureTextEx(TextConfig.font, text, TextConfig.size, TextConfig.spacing); 
 		V2 pos = {Data->window_size.x - text_size.x - 5, Data->window_size.y - text_size.y - 5};
 		DrawTextEx(TextConfig.font, text, pos, TextConfig.size, TextConfig.spacing, TextConfig.tint);
@@ -153,7 +151,7 @@ void ui_trasition_from(V2 dir)
 	}
 }
 
-void	draw_blocks(GameData *data) {
+static void draw_blocks(GameData *data) {
 	V2 qty = {(data->window_size.x / BrickSize.x) + 4, (data->window_size.y / BrickSize.y) + 2};
 	ColorPalette palette = data->palette;
 	// Color colors[9] = {
