@@ -35,9 +35,11 @@
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Utils math
 //----------------------------------------------------------------------------------
+//
+// Prepend f32 to names to not collide with raylibs use of raymath, (seems to only matter in static builds)
 
 // Clamp f32 value
-RMSAPI f32 Clamp(f32 value, f32 min, f32 max)
+RMSAPI f32 f32Clamp(f32 value, f32 min, f32 max)
 {
     f32 result = (value < min)? min : value;
 
@@ -47,7 +49,7 @@ RMSAPI f32 Clamp(f32 value, f32 min, f32 max)
 }
 
 // Calculate linear interpolation between two f32s
-RMSAPI f32 Lerp(f32 start, f32 end, f32 amount)
+RMSAPI f32 f32Lerp(f32 start, f32 end, f32 amount)
 {
     f32 result = start + amount*(end - start);
 
@@ -55,7 +57,7 @@ RMSAPI f32 Lerp(f32 start, f32 end, f32 amount)
 }
 
 // Normalize input value within input range
-RMSAPI f32 Normalize(f32 value, f32 start, f32 end)
+RMSAPI f32 f32Normalize(f32 value, f32 start, f32 end)
 {
     f32 result = (value - start)/(end - start);
 
@@ -63,7 +65,7 @@ RMSAPI f32 Normalize(f32 value, f32 start, f32 end)
 }
 
 // Remap input value within input range to output range
-RMSAPI f32 Remap(f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 outputEnd)
+RMSAPI f32 f32Remap(f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 outputEnd)
 {
     f32 result = (value - inputStart)/(inputEnd - inputStart)*(outputEnd - outputStart) + outputStart;
 
@@ -71,7 +73,7 @@ RMSAPI f32 Remap(f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 o
 }
 
 // Wrap input value from min to max
-RMSAPI f32 Wrap(f32 value, f32 min, f32 max)
+RMSAPI f32 f32Wrap(f32 value, f32 min, f32 max)
 {
     f32 result = value - (max - min)*floorf((value - min)/(max - min));
 

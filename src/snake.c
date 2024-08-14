@@ -28,6 +28,7 @@ struct SnakeData {
 	b32 paused;
 	b32 game_over;
 	b32 easy_mode;
+	b32 won;
 	UiContainer Container;
 };
 
@@ -70,11 +71,12 @@ GameFunctions snake_game_init(GameData *data)
 		.play_screen = true,
 		.paused = false,
 		.game_over = false,
+		.won = false,
 		.easy_mode = true,
 	};
 
 	V2 center_screen = {Data->window_size.x * 0.5f, Data->window_size.y * 0.25f};
-	Snake->Container = CreateContainer(center_screen, 0, Data->ui_config);
+	Snake->Container = UiCreateContainer(center_screen, 0, Data->ui_config);
 	//Snake->scores = data->scores.snake;
 	memcpy(&Snake->scores, &data->scores.snake, sizeof(Snake->scores));
 
@@ -100,7 +102,7 @@ static void start()
 	Snake->board_offset =  (V2) {
 			.x = Data->window_size.x * 0.5f - (Snake->board_size.x * Snake->tile_size) * 0.5f,
 			.y = Data->window_size.y * 0.5f - (Snake->board_size.y * Snake->tile_size) * 0.5f };
-	Snake->snake_size = ((Snake->board_size.x - 1) * (Snake->board_size.y - 1));
+	Snake->snake_size = (BoardSizes[Snake->selected_board_size] * BoardSizes[Snake->selected_board_size]);
 	memset(Snake->snake, 0, sizeof(V2) * MAX_SNAKE_SIZE);
 	memset(Snake->apples, 0, sizeof(V2) * MAX_APPLES);
 	Snake->snake[0] = (V2) {(i32) (Snake->board_size.x * 0.5f), (i32) (Snake->board_size.y * 0.5f)}; // Set snake head to middle of the board
@@ -111,7 +113,7 @@ static void start()
 static void update()
 {
 	assert(Snake);
-	if (!ShouldGameRun(&Snake->play_screen, &Snake->paused, &Snake->game_over)) {
+	if (!ShouldGameRun(&Snake->play_screen, &Snake->paused, &Snake->game_over) || Snake->won) {
 		return ;
 	}
 
@@ -131,6 +133,10 @@ static void update()
 		Snake->dir_new.x = 0;
 		Snake->dir_new.y = 1;
 	}
+
+	static b32 debug_pressed = false;
+	if (IsKeyDown(KEY_U)) debug_pressed = true;
+	else debug_pressed = false;
 
 	Snake->tick_count += GetFrameTime();
 	Snake->apple_spawn_count += GetFrameTime();
@@ -158,18 +164,26 @@ static void update()
 
 		i32 collision = check_collision(new_pos);
 		if (collision == 1) {
+			printf("Game Over \n");
 			Snake->game_over = true;
 			return ;
 		}
-		move_snake_body(new_pos, collision);
-		if (collision == 2 || Snake->apple_spawn_count >= Snake->apple_spawn_rate) {
+		if (debug_pressed) move_snake_body(new_pos, true);
+		else move_snake_body(new_pos, collision);
+
+		if (!V2Compare(Snake->snake[Snake->snake_size - 1], V2Zero())) { // This check needs to happen before spawn_apple() is maybe invocked 
+			Snake->won = true;
+			return ;
+		}
+
+		if (collision == 2) {
+			i32 score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
+			assert(score_index <= sizeof(Snake->scores));
+			Snake->scores[score_index] += 50;
+			spawn_apple();
+		} else if (Snake->apple_spawn_count >= Snake->apple_spawn_rate) {
 			Snake->apple_spawn_count = 0;
 			spawn_apple();
-		}
-		if (Snake->snake[(i32)Snake->snake_size - 1].x != 0) {
-			printf("YOU WIN!!/n");
-			Snake->game_over = true;
-			// TODO draw win screen
 		}
 	}
 }
@@ -179,7 +193,8 @@ static void draw()
 	ClearBackground(RAYWHITE);
 	draw_game();
 
-	if (Snake->play_screen) {
+	static b32 scores_screen = false;
+	if (Snake->play_screen && !scores_screen) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);
 		{
@@ -202,6 +217,10 @@ static void draw()
 				Snake->easy_mode = Snake->easy_mode ? false : true;
 			}
 
+			if (UiTextButton(panel, "Scores")) { 
+				scores_screen = true;
+			}
+
 			if (UiTextButton(panel, "Back")) { 
 				Data->current_game = MAIN_MENU;
 			}
@@ -211,6 +230,81 @@ static void draw()
 		if (IsActionPressed(ACTION_2)) {
 			Data->current_game = MAIN_MENU;
 		}
+	} else if (Snake->play_screen && scores_screen) {
+		UiContainer *panel = &Snake->Container;
+
+		if (!IsKeyDown(KEY_U)) panel->config.alignment = UiAlignLeft; // NOTE  debug stuff
+		
+		V2 panel_pos = panel->pos;
+		panel->pos.x -=  panel->width * 0.5f;
+		UiBegin(panel);
+		{
+			// Workaround for now
+			// V2 max_size = MeasureTextEx(panel->config.font.font, " Board size: 20x20 ", panel->config.font.size, panel->config.font.spacing);
+			// panel->width = max_size.x + 15;
+
+			UiText(panel, "Scores :", true);
+
+			UiStartColumn(panel, 3);
+			UiText(panel, "     ", false);
+			UiText(panel, " Normal", false);
+			UiText(panel, " Easy  ", false);
+
+			UiStartColumn(panel, 3);
+			UiText(panel, "\t8x8\t", false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[0]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[1]), false);
+
+			UiStartColumn(panel, 3);
+			UiText(panel, (byte *) TextFormat("%s", BoardSizesText[1]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[2]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[3]), false);
+
+			UiStartColumn(panel, 3);
+			UiText(panel, (byte *) TextFormat("%s", BoardSizesText[2]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[4]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[5]), false);
+
+			UiStartColumn(panel, 3);
+			UiText(panel, (byte *) TextFormat("%s", BoardSizesText[3]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[6]), false);
+			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[7]), false);
+
+			if (UiTextButton(panel, "Back")) { 
+				scores_screen = false;
+			}
+		}
+		UiEnd(panel);
+		panel->config.alignment = UiAlignCentralized;
+		panel->pos = panel_pos;
+
+		if (IsActionPressed(ACTION_2)) {
+			scores_screen = false;
+		}
+	}
+
+	if (Snake->won) {
+		UiContainer *panel = &Snake->Container;
+		UiBegin(panel);
+		{
+			UiText(panel, "You Won!!!", true);
+
+			if (UiTextButton(panel, "Play Again")) { 
+				Snake->play_screen = true;
+				Snake->won = false;
+			} 
+
+			if (UiTextButton(panel, "Exit To Main Menu")) { 
+				Data->current_game = MAIN_MENU;
+				Snake->play_screen = true;
+				Snake->won = false;
+			}
+
+			if (UiTextButton(panel, "Exit To Desktop")) { 
+				Data->quit = true;
+			}
+		}
+		UiEnd(panel);
 	}
 
 	if (Snake->game_over) {
@@ -227,7 +321,7 @@ static void draw()
 		}
 	}
 
-	static bool options = false;
+	static bool options = false; // TODO  move to snake
 	if (Snake->paused && options == false) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);

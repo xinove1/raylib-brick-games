@@ -46,7 +46,7 @@ static void update()
 	BeginTextureMode(TextTexture);
 	ClearBackground((Color){0, 0, 0, 0});
 
-	static i32 screen = TITLE_SCREEN;
+	static UiStates screen = TITLE_SCREEN;
 	if (CurrentScreen != screen) {
 		screen = CurrentScreen;
 		Container.id_current = 0;
@@ -127,7 +127,7 @@ GameFunctions main_menu_init(GameData *data)
 	TextConfigHeading.tint_hover = data->palette.blue;
 
 	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
-	Container = CreateContainer(center_screen, 0, data->ui_config);
+	Container = UiCreateContainer(center_screen, 0, data->ui_config);
 
 	CurrentScreen = TITLE_SCREEN;
 
@@ -156,17 +156,17 @@ void ui_trasition_from(V2 dir)
 void	draw_blocks(GameData *data) {
 	V2 qty = {(data->window_size.x / BrickSize.x) + 4, (data->window_size.y / BrickSize.y) + 2};
 	ColorPalette palette = data->palette;
-	Color colors[9] = {
-		palette.red,
-		palette.blue,
-		palette.yellow,
-		palette.green,
-		palette.orange,
-		palette.purple,
-		palette.background,
-		palette.black,
-		palette.white,
-	};
+	// Color colors[9] = {
+	// 	palette.red,
+	// 	palette.blue,
+	// 	palette.yellow,
+	// 	palette.green,
+	// 	palette.orange,
+	// 	palette.purple,
+	// 	palette.background,
+	// 	palette.black,
+	// 	palette.white,
+	// };
 
 	for (i32 y = 0; y < qty.y; y++) {
 		f32 x_offset = 0;

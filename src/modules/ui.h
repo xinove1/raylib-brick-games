@@ -64,9 +64,10 @@ void SetSelectorTextureTint(Color tint);
 // TODO  Change Ex functions to not accept font, as it can be easely passed in config 
 // TODO  Change draw_bounds flag in funcs to be an option in config?
 
-UiContainer CreateContainer(V2 pos, f32 width, UiConfig config);
-UiConfig    GetDefaultUiConfig(); 
-void        SetDefaultUiConfig(UiConfig config);
+UiContainer UiCreateContainer(V2 pos, f32 width, UiConfig config);
+UiConfig    UiGetDefaultConfig(); 
+void        UiStartColumn(UiContainer *container, i32 count);
+void        UiSetDefaultConfig(UiConfig config);
 void        UiBegin(UiContainer *container);
 void        UiEnd(UiContainer *container);
 void        UiTitleBarEx(UiContainer *container, UiConfig config, byte *title, FontConfig font, Color bounds_color);
@@ -112,17 +113,17 @@ void SetClickedSound(Sound *sound)
 	ClickedSound = sound;
 }
 
-UiConfig	GetDefaultUiConfig()
+UiConfig UiGetDefaultConfig()
 {
 	return (DefaultConfig);
 }
 
-void SetDefaultUiConfig(UiConfig config) 
+void UiSetDefaultConfig(UiConfig config) 
 {
 	DefaultConfig = config;
 }
 
-UiContainer CreateContainer(V2 pos, f32 width, UiConfig config)
+UiContainer UiCreateContainer(V2 pos, f32 width, UiConfig config)
 {
 	return ((UiContainer) {
 		.pos = pos,
@@ -140,17 +141,20 @@ UiContainer CreateContainer(V2 pos, f32 width, UiConfig config)
 	});
 }
 
+void UiStartColumn(UiContainer *container, i32 count) {
+	container->column_count = count;
+}
+
 void UiBegin(UiContainer *container) 
 {
 	// TODO  Implement AlignLeft
-	// TODO  Implement Collumn
 	if (container->config.draw_container_bounds && !container->hide) {
-		V2	pos = container->pos;
+		V2 pos = container->pos;
 		if (container->config.alignment == UiAlignCentralized) {
 			f32 padding_remove = (container->config.padding_border * 2) + (container->config.padding_element * 2); // Brain not working so i don't get why it works but it works
 			pos.x -= (container->width - padding_remove) * 0.5f;
 		}
-		V2	size = {container->width, container->at_y - pos.y};
+		V2 size = {container->width, container->at_y - pos.y};
 		DrawRectangleV(pos, size, container->config.color_background);
 	}
 
@@ -418,7 +422,7 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 			}
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
 				V2	pos = V2Subtract(GetMousePosition(), (V2){rect.x, rect.y});
-				*value = Remap(pos.x, 0, rect.width, 0, 1);
+				*value = f32Remap(pos.x, 0, rect.width, 0, 1);
 				pressed = true;
 			}
 		}
@@ -492,15 +496,21 @@ static void _update_at_pos(UiContainer *container, UiConfig config, V2 element_p
 {
 	if (container->column_count > 0) {
 		container->at_x += element_size.x;
+
 		if (container->column_count != 1) { // There's Still Elements to be added
 			container->at_x += config.padding_collumn;
-		} else { // Last Element being added
+		}
+		else { // Last Element being added
 			f32 width_so_far = (container->at_x - container->pos.x) + config.padding_border;
+			//TraceLog(LOG_INFO, "width_so_far %f, container->width %f \n", width_so_far, container->width);
 			if (width_so_far > container->width){
 				container->width  = width_so_far;
 			}
 			container->at_x = container->pos.x;
+			container->at_y += element_size.y;
+			container->at_y += config.padding_row; 
 		}
+
 		container->column_count -= 1;
 	} else {
 		container->at_y += element_size.y;

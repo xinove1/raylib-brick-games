@@ -92,6 +92,7 @@ void ui_trasition_from(V2 dir);
 UiStates game_over_screen(GameData *data);
 UiStates options_screen(GameData *data);
 void pause_game(); // Only called from js on the web version
+b32 IsPauseRequested();
 
 void draw_grid_ex(V2 position, V2 grid_size, i32 tile_size, f32 line_thickness, Color color);
 void draw_grid(V2 position, V2 grid_size, i32 tile_size);
@@ -100,4 +101,6 @@ Rect RectV2(V2 pos, V2 size);
 V2   V2RectPos(Rect rect);
 V2   V2RectSize(Rect rect);
 b32  ShouldGameRun(b32 *play_screen, b32 *paused, b32 *game_over);
+b32 SaveScores(cstr *where, HighScores scores);
+HighScores LoadScores(cstr *where) ;
 #endif // GAME_H_

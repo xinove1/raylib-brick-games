@@ -350,7 +350,7 @@ GameFunctions tetris_init(GameData *game_data)
 	game_sounds.game_over = data->assets.sounds[1];
 
 	V2 center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
-	Container = CreateContainer(center_screen, 0, data->ui_config);
+	Container = UiCreateContainer(center_screen, 0, data->ui_config);
 	
 	return (GameFunctions) { 
 		.name = "Tetris",

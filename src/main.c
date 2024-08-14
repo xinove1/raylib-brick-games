@@ -1,27 +1,30 @@
 #include "game.h"
 
-void _Testfunc(byte *str, GameData data) 
-{
-	printf("str: %s, data- quit: %d, music_vol: %f\n", str, data.quit, data.music_vol);
-}
-#define Testfunc(str, ...) _Testfunc((str), (GameData){.quit = false, __VA_ARGS__})
+#ifdef PLATFORM_WEB
+    #include <emscripten/emscripten.h>
+#endif
 
-static void load_assets(GameData *data);
-static void unload_assets(GameData *data);
+#define static_in static inline // TODO better name and put on a reader
 
-static GameFunctions games[GAME_COUNT] = {0};
-static Games_e game;
-static RenderTexture2D screen;
+static_in void load_assets(GameData *data);
+static_in void unload_assets(GameData *data);
+static_in void register_key_actions();
+static void update_and_draw(void);
+
+static GameFunctions Gamesfuncs[GAME_COUNT] = {0};
+static Games_e Game;
+static RenderTexture2D ScreenTexture;
+static GameData Data = {0};
+static b32 PauseRequested = false;
 
 i32 main()
 {
-	GameData data = {0};
 
-	data.window_size = (V2) {640, 360};
-	data.music_vol = 0.5f;
-	data.effects_vol = 0.3f;
-	data.assets = (Assets) {0};
-	data.palette = (ColorPalette) {
+	Data.window_size = (V2) {640, 360};
+	Data.music_vol = 0.5f;
+	Data.effects_vol = 0.3f;
+	Data.assets = (Assets) {0};
+	Data.palette = (ColorPalette) {
 		.black = {0, 0, 0, 255},
 		.white = {233, 228, 205, 255},
 		.red   = {249, 39, 0, 255},
@@ -33,81 +36,29 @@ i32 main()
 		.purple= {130, 5, 165, 255},
 		.background = {237, 191, 198, 255},
 	};
-	data.current_game = MAIN_MENU;
-	game = -1;
+	Data.scores = LoadScores("./data");
+	Data.current_game = MAIN_MENU;
+	Game = -1;
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED );
-	InitWindow(data.window_size.x, data.window_size.y, "Raylib Bricks games");
+	InitWindow(Data.window_size.x, Data.window_size.y, "Raylib Bricks games");
 	SetWindowState(FLAG_WINDOW_MAXIMIZED);
 	InitAudioDevice();
 	SetTargetFPS(60);
 	SetExitKey(0);
 
-	screen = LoadRenderTexture(data.window_size.x, data.window_size.y);
+	ScreenTexture = LoadRenderTexture(Data.window_size.x, Data.window_size.y);
 	//SetTextureFilter(screen.texture, TEXTURE_FILTER_BILINEAR);  
-	SetTextureFilter(screen.texture, TEXTURE_FILTER_ANISOTROPIC_16X);  
+	SetTextureFilter(ScreenTexture.texture, TEXTURE_FILTER_ANISOTROPIC_16X);  
 
-	{
-		SetGamePadId(0);
+	register_key_actions();
+	load_assets(&Data);
 
-		RegisterActionName(RIGHT, "right");
-		RegisterInputKeyAction(RIGHT, KEY_D);
-		RegisterInputKeyAction(RIGHT, KEY_RIGHT);
-		RegisterGamePadButtonAction(RIGHT, GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
-		RegisterGamePadAxisAction(RIGHT, GAMEPAD_AXIS_LEFT_X, 0.5f);
+	update_volume(&Data);
 
-
-		RegisterActionName(LEFT, "left");
-		RegisterInputKeyAction(LEFT, KEY_A);
-		RegisterInputKeyAction(LEFT, KEY_LEFT);
-		RegisterGamePadButtonAction(LEFT, GAMEPAD_BUTTON_LEFT_FACE_LEFT);
-		RegisterGamePadAxisAction(LEFT, GAMEPAD_AXIS_LEFT_X, -0.5f);
-
-
-		RegisterActionName(UP, "up");
-		RegisterInputKeyAction(UP, KEY_W);
-		RegisterInputKeyAction(UP, KEY_UP);
-		RegisterGamePadButtonAction(UP, GAMEPAD_BUTTON_LEFT_FACE_UP);
-		RegisterGamePadAxisAction(UP, GAMEPAD_AXIS_LEFT_Y, -0.5f);
-
-
-		RegisterActionName(DOWN, "down");
-		RegisterInputKeyAction(DOWN, KEY_S);
-		RegisterInputKeyAction(DOWN, KEY_DOWN);
-		RegisterGamePadButtonAction(DOWN, GAMEPAD_BUTTON_LEFT_FACE_DOWN);
-		RegisterGamePadAxisAction(DOWN, GAMEPAD_AXIS_LEFT_Y, 0.5f);
-
-
-		RegisterActionName(ACTION_1, "action_1");
-		RegisterInputKeyAction(ACTION_1, KEY_J);
-		RegisterInputKeyAction(ACTION_1, KEY_X);
-		RegisterGamePadButtonAction(ACTION_1, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
-		RegisterGamePadAxisAction(ACTION_1, GAMEPAD_AXIS_RIGHT_TRIGGER, 0.7f);
-
-
-		RegisterActionName(ACTION_2, "action_2");
-		RegisterInputKeyAction(ACTION_2, KEY_K);
-		RegisterInputKeyAction(ACTION_2, KEY_Z);
-		RegisterGamePadButtonAction(ACTION_2, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT);
-
-
-		RegisterActionName(ACTION_3, "action_3");
-		RegisterInputKeyAction(ACTION_3, KEY_SPACE);
-		RegisterGamePadButtonAction(ACTION_3, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
-
-
-		RegisterActionName(OPEN_MENU, "open_menu");
-		RegisterInputKeyAction(OPEN_MENU, KEY_ESCAPE);
-		RegisterInputKeyAction(OPEN_MENU, KEY_E);
-		RegisterGamePadButtonAction(OPEN_MENU, GAMEPAD_BUTTON_MIDDLE_RIGHT);
-	}
-
-	load_assets(&data);
-	update_volume(&data);
-
-	data.ui_config = (UiConfig) {
+	Data.ui_config = (UiConfig) {
 		.alignment = UiAlignCentralized,
-		.font = data.assets.fonts[1],
+		.font = Data.assets.fonts[1],
 		.draw_container_bounds = true,
 		.play_sound = true,
 		.draw_selector = true,
@@ -122,83 +73,108 @@ i32 main()
 		.color_borders = BLACK,
 	};
 
-	SetSelectorTexture(&data.assets.textures[0]);
+	SetSelectorTexture(&Data.assets.textures[0]);
 	SetSelectorTextureTint(WHITE);
-	SetClickedSound(&data.assets.sounds[2]);
+	SetClickedSound(&Data.assets.sounds[2]);
 
-	games[SNAKE_GAME] = snake_game_init(&data);
-	games[TETRIS] = tetris_init(&data);
-	games[MAIN_MENU] = main_menu_init(&data);
-	games[PONG] = pong_init(&data);
-	games[BREAKOUT] = breakout_init(&data);
-	games[TEST] = test_game_init(&data);
+	Gamesfuncs[SNAKE_GAME] = snake_game_init(&Data);
+	Gamesfuncs[TETRIS] = tetris_init(&Data);
+	Gamesfuncs[MAIN_MENU] = main_menu_init(&Data);
+	Gamesfuncs[PONG] = pong_init(&Data);
+	Gamesfuncs[BREAKOUT] = breakout_init(&Data);
+	Gamesfuncs[TEST] = test_game_init(&Data);
 
-	while (!WindowShouldClose() && !data.quit) {
-		PoolActions();
-		if (IsWindowMinimized()) {
-			printf("aaaa \n");
-			continue ;
+	printf("sizeof f32 %lu \n", sizeof(f32));
+	printf("sizeof HighScores %lu \n", sizeof(HighScores));
+	printf("sizeof data.scores %lu \n", sizeof(Data.scores));
+
+	#ifdef PLATFORM_WEB
+		printf("PLATAFORM_WEB \n");
+		emscripten_set_main_loop(update_and_draw, 0, 1);
+		printf("PLATAFORM_WEB2 \n");
+	#else
+		printf("not PLATAFORM_WEB \n");
+		while (!WindowShouldClose() && !Data.quit) {
+			update_and_draw();
 		}
-		//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());
+	#endif
 
-		f32 screen_scale = MIN((f32)GetScreenWidth()/data.window_size.x, (f32)GetScreenHeight() / data.window_size.y);
-		// Update virtual mouse (clamped mouse value behind game screen)
-		V2 mouse = GetMousePosition();
-		V2 virtualMouse = { 0 };
-		virtualMouse.x = (mouse.x - (GetScreenWidth() - (data.window_size.x *screen_scale))*0.5f)/screen_scale;
-		virtualMouse.y = (mouse.y - (GetScreenHeight() - (data.window_size.y *screen_scale))*0.5f)/screen_scale;
-		virtualMouse = V2Clamp(virtualMouse, (V2){ 0, 0 }, (V2){ (f32)data.window_size.x, (f32)data.window_size.y});
+	printf("Before de_init's \n");
 
-		//Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
-		SetMouseOffset(-(GetScreenWidth() - (data.window_size.x*screen_scale))*0.5f, -(GetScreenHeight() - (data.window_size.y*screen_scale))*0.5f);
-		SetMouseScale(1 / screen_scale, 1 / screen_scale);
+	Gamesfuncs[TETRIS].de_init();
+	Gamesfuncs[SNAKE_GAME].de_init();
+	Gamesfuncs[PONG].de_init();
+	Gamesfuncs[BREAKOUT].de_init();
+	Gamesfuncs[TEST].de_init();
+	Gamesfuncs[MAIN_MENU].de_init();
 
+	SaveScores("./data", Data.scores);
 
-		if (data.current_game < 0 || data.current_game >= GAME_COUNT) {
-			TraceLog(LOG_WARNING, "main.c: Invalid option for current_game, won't change.\n");
-		} else if (data.current_game != game) {
-			TraceLog(LOG_INFO, "Changing game\n");
-			game = data.current_game;
-			games[game].start();
-		}
-
-		games[game].update();
-
-		BeginTextureMode(screen);
-		{
-			ClearBackground(RAYWHITE);
-			games[game].draw();
-		}
-		EndTextureMode();
-
-		BeginDrawing();
-		{
-			ClearBackground(BLACK);
-			// Draw render texture to screen, properly scaled
-			DrawTexturePro(screen.texture,
-		  (Rect){0.0f, 0.0f, (f32) screen.texture.width, (f32) -screen.texture.height},
-		  (Rect){(GetScreenWidth() - ((f32) data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((f32) data.window_size.y*screen_scale)) * 0.5f,
-		  (f32)data.window_size.x * screen_scale, (f32)data.window_size.y * screen_scale },
-		  (V2){ 0, 0 },
-		  0.0f,
-		  WHITE);
-			FontConfig font = data.assets.fonts[1];
-			DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
-		}
-		EndDrawing();
-	}
-
-	games[TETRIS].de_init();
-	games[SNAKE_GAME].de_init();
-	games[PONG].de_init();
-	games[BREAKOUT].de_init();
-	games[TEST].de_init();
-	games[MAIN_MENU].de_init();
-
-	unload_assets(&data);
+	unload_assets(&Data);
 	CloseWindow();
 	CloseAudioDevice();
 	return (0);
+}
+
+static void update_and_draw(void)
+{
+	#ifdef PLATFORM_WEB
+	if (Data.quit) {
+		emscripten_cancel_main_loop();
+	}
+	#endif
+	PoolActions();
+	if (IsWindowMinimized()) {
+		printf("aaaa \n");
+		return ;
+	}
+	//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());
+
+	f32 screen_scale = MIN((f32)GetScreenWidth()/Data.window_size.x, (f32)GetScreenHeight() / Data.window_size.y);
+	// Update virtual mouse (clamped mouse value behind game screen)
+	V2 mouse = GetMousePosition();
+	V2 virtualMouse = { 0 };
+	virtualMouse.x = (mouse.x - (GetScreenWidth() - (Data.window_size.x *screen_scale))*0.5f)/screen_scale;
+	virtualMouse.y = (mouse.y - (GetScreenHeight() - (Data.window_size.y *screen_scale))*0.5f)/screen_scale;
+	virtualMouse = V2Clamp(virtualMouse, (V2){ 0, 0 }, (V2){ (f32)Data.window_size.x, (f32)Data.window_size.y});
+
+	//Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
+	SetMouseOffset(-(GetScreenWidth() - (Data.window_size.x*screen_scale))*0.5f, -(GetScreenHeight() - (Data.window_size.y*screen_scale))*0.5f);
+	SetMouseScale(1 / screen_scale, 1 / screen_scale);
+
+
+	if (Data.current_game < 0 || Data.current_game >= GAME_COUNT) {
+		TraceLog(LOG_WARNING, "main.c: Invalid option for current_game, won't change.\n");
+	} else if (Data.current_game != Game) {
+		TraceLog(LOG_INFO, "Changing game\n");
+		Game = Data.current_game;
+		Gamesfuncs[Game].start();
+	}
+
+	Gamesfuncs[Game].update();
+
+	BeginTextureMode(ScreenTexture);
+	{
+		ClearBackground(RAYWHITE);
+		Gamesfuncs[Game].draw();
+	}
+	EndTextureMode();
+
+	BeginDrawing();
+	{
+		ClearBackground(BLACK);
+		// Draw render texture to screen, properly scaled
+		DrawTexturePro(ScreenTexture.texture,
+		 (Rect){0.0f, 0.0f, (f32) ScreenTexture.texture.width, (f32) -ScreenTexture.texture.height},
+		 (Rect){(GetScreenWidth() - ((f32) Data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((f32) Data.window_size.y*screen_scale)) * 0.5f,
+		 (f32)Data.window_size.x * screen_scale, (f32)Data.window_size.y * screen_scale },
+		 (V2){ 0, 0 },
+		 0.0f,
+		 WHITE);
+		FontConfig font = Data.assets.fonts[1];
+		//DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
+	}
+	EndDrawing();
 }
 
 void update_volume(GameData *data)
@@ -209,7 +185,7 @@ void update_volume(GameData *data)
 	}
 }
 
-static void load_assets(GameData *data) {
+static_in void load_assets(GameData *data) {
 	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
@@ -241,7 +217,7 @@ static void load_assets(GameData *data) {
 
 }
 
-static void unload_assets(GameData *data) {
+static_in void unload_assets(GameData *data) {
 	for (i32 i = 0; i < MAX_ASSET; i++) {
 		UnloadSound(data->assets.sounds[i]);
 		UnloadMusicStream(data->assets.music[i]);
@@ -249,8 +225,74 @@ static void unload_assets(GameData *data) {
 	}
 }
 
-// Only called from js on the web version
-void	pause_game() 
+static_in void register_key_actions()
 {
-	TraceLog(LOG_INFO, "Pause game called but not implemented\n");
+	SetGamePadId(0);
+
+	RegisterActionName(RIGHT, "right");
+	RegisterInputKeyAction(RIGHT, KEY_D);
+	RegisterInputKeyAction(RIGHT, KEY_RIGHT);
+	RegisterGamePadButtonAction(RIGHT, GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
+	RegisterGamePadAxisAction(RIGHT, GAMEPAD_AXIS_LEFT_X, 0.5f);
+
+
+	RegisterActionName(LEFT, "left");
+	RegisterInputKeyAction(LEFT, KEY_A);
+	RegisterInputKeyAction(LEFT, KEY_LEFT);
+	RegisterGamePadButtonAction(LEFT, GAMEPAD_BUTTON_LEFT_FACE_LEFT);
+	RegisterGamePadAxisAction(LEFT, GAMEPAD_AXIS_LEFT_X, -0.5f);
+
+
+	RegisterActionName(UP, "up");
+	RegisterInputKeyAction(UP, KEY_W);
+	RegisterInputKeyAction(UP, KEY_UP);
+	RegisterGamePadButtonAction(UP, GAMEPAD_BUTTON_LEFT_FACE_UP);
+	RegisterGamePadAxisAction(UP, GAMEPAD_AXIS_LEFT_Y, -0.5f);
+
+
+	RegisterActionName(DOWN, "down");
+	RegisterInputKeyAction(DOWN, KEY_S);
+	RegisterInputKeyAction(DOWN, KEY_DOWN);
+	RegisterGamePadButtonAction(DOWN, GAMEPAD_BUTTON_LEFT_FACE_DOWN);
+	RegisterGamePadAxisAction(DOWN, GAMEPAD_AXIS_LEFT_Y, 0.5f);
+
+
+	RegisterActionName(ACTION_1, "action_1");
+	RegisterInputKeyAction(ACTION_1, KEY_J);
+	RegisterInputKeyAction(ACTION_1, KEY_X);
+	RegisterGamePadButtonAction(ACTION_1, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+	RegisterGamePadAxisAction(ACTION_1, GAMEPAD_AXIS_RIGHT_TRIGGER, 0.7f);
+
+
+	RegisterActionName(ACTION_2, "action_2");
+	RegisterInputKeyAction(ACTION_2, KEY_K);
+	RegisterInputKeyAction(ACTION_2, KEY_Z);
+	RegisterGamePadButtonAction(ACTION_2, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT);
+
+
+	RegisterActionName(ACTION_3, "action_3");
+	RegisterInputKeyAction(ACTION_3, KEY_SPACE);
+	RegisterGamePadButtonAction(ACTION_3, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
+
+
+	RegisterActionName(OPEN_MENU, "open_menu");
+	RegisterInputKeyAction(OPEN_MENU, KEY_ESCAPE);
+	RegisterInputKeyAction(OPEN_MENU, KEY_E);
+	RegisterGamePadButtonAction(OPEN_MENU, GAMEPAD_BUTTON_MIDDLE_RIGHT);
+}
+
+// Only called from js on the web version
+void pause_game() 
+{
+	TraceLog(LOG_DEBUG, "Pause game called. \n");
+	PauseRequested = true;
+}
+
+b32 IsPauseRequested()
+{
+	if (PauseRequested) {
+		PauseRequested = false; // Consume request
+		return (true);
+	}
+	return (PauseRequested);
 }
