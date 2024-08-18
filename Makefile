@@ -14,11 +14,12 @@ DEBUG_FLAGS= -ggdb -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-function 
 RFLAGS= -lGL -lm -lpthread -ldl -lrt -lX11
 RFLAGS_WINDOWS= -lopengl32 -lgdi32 -lwinmm
 
+WEB_CFLAGS= -I$(RAYLIB) -I$(RAYLIB)/external -Isrc/modules/
 WEB_DATA_DIR= --preload-file assets
 WEB_HTML_TEMPLATE= --shell-file ./template.html
 WEB_EXPORTED_FUNCTIONS= -sEXPORTED_FUNCTIONS=_pause_game,_main
 WEB_OUTPUT_EXT= .html
-WEBFLAGS = $(WEB_EXPORTED_FUNCTIONS) $(WEB_HTML_TEMPLATE) $(WEB_DATA_DIR) -DPLATFORM_WEB  -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=ccall,cwrap -s STACK_SIZE=1mb -Os -s USE_GLFW=3 -sGL_ENABLE_GET_PROC_ADDRESS
+WEBFLAGS = $(WEB_EXPORTED_FUNCTIONS) $(WEB_HTML_TEMPLATE) $(WEB_DATA_DIR) --js-library save_load.js -DPLATFORM_WEB  -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=ccall,cwrap -s STACK_SIZE=1mb -Os -s USE_GLFW=3 -sGL_ENABLE_GET_PROC_ADDRESS
 # -s ASYNCIFY 
 
 RM= rm -f
@@ -51,9 +52,12 @@ windows: $(DEPENDACIES)
 
 web: $(DEPENDACIES)
 	make -C $(RAYLIB) PLATFORM=PLATFORM_WEB -B EMSDK_PATH=/home/xinove/stuff/emsdk  PYTHON_PATH=/usr/bin/python NODE_PATH=/home/xinove/stuff/emsdk/node/16.20.0_64bit/bin
-	emcc $(CFLAGS) -DPLATFORM_WEB -c $(SRC)
-	emcc $(OBJ) $(RAYLIB)/libraylib.a $(CFLAGS) $(RFLAGS) $(WEBFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
+	emcc $(WEB_CFLAGS) -DPLATFORM_WEB -c $(SRC)
+	emcc $(OBJ) $(RAYLIB)/libraylib.a $(WEB_CFLAGS) $(RFLAGS) $(WEBFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
 #emcc -o game.html game.c -Os -Wall ./path-to/libraylib.a -I. -Ipath-to-raylib-h -L. -Lpath-to-libraylib-a  --shell-file path-to/shell.html
+web_re:
+	emcc $(WEB_CFLAGS) -DPLATFORM_WEB -c $(SRC)
+	emcc $(OBJ) $(RAYLIB)/libraylib.a $(WEB_CFLAGS) $(RFLAGS) $(WEBFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
 
 web_run: $(web)
 	emrun ./game.html

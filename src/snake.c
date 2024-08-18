@@ -197,7 +197,7 @@ static void update()
 
 		if (collision == 2) {
 			// TODO  Change Score counting to separate var and on winning/losing see if its a new highscore and request saving scores
-			Snake->score_count += 50;
+			Snake->score_count += 50.27f;
 			spawn_apple();
 		} else if (Snake->apple_spawn_count >= Snake->apple_spawn_rate) {
 			Snake->apple_spawn_count = 0;

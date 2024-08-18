@@ -6,6 +6,14 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef PLATFORM_WEB
+	#include <emscripten/emscripten.h>
+	extern void save_scores(void *ptr, i32 size, i32 padding);
+	extern void load_scores(void *ptr, i32 size, i32 padding);
+	extern void save_data(cstr *where, void *ptr, i32 size);
+	extern void load_data(cstr *where, void *ptr, i32 size);
+#endif
+
 V2 ExpDecayV2(V2 a, V2 b, f32 decay) 
 {
 	V2 d = V2Subtract(a, b);
@@ -74,33 +82,44 @@ b32 ShouldGameRun(b32 *play_screen, b32 *paused, b32 *game_over)
 
 HighScores LoadScores(cstr *where) 
 {
-	i32 fd = open(where, O_RDONLY);
-	if (fd < 0) {
-		TraceLog(LOG_WARNING, "LoadData: %s. \n", strerror(errno));
-		return ((HighScores) {0});
-	}
-	byte *buf[sizeof(HighScores)];
-	i32 amount_read = read(fd, buf, sizeof(HighScores));
-	if (amount_read < 0) {
-		TraceLog(LOG_WARNING, "LoadData: %s. \n", strerror(errno));
-		return ((HighScores) {0});
-	}
-	HighScores scores = *(HighScores *)buf;
-	return (scores);
+	#ifdef PLATFORM_WEB
+		HighScores scores = {0};
+		load_data(where, &scores, sizeof(scores));
+		return (scores);
+	#else
+		i32 fd = open(where, O_RDONLY);
+		if (fd < 0) {
+			TraceLog(LOG_WARNING, "LoadData: %s. \n", strerror(errno));
+			return ((HighScores) {0});
+		}
+		byte *buf[sizeof(HighScores)];
+		i32 amount_read = read(fd, buf, sizeof(HighScores));
+		if (amount_read < 0) {
+			TraceLog(LOG_WARNING, "LoadData: %s. \n", strerror(errno));
+			return ((HighScores) {0});
+		}
+		HighScores scores = *(HighScores *)buf;
+		return (scores);
+	#endif
 }
 
 b32 SaveScores(cstr *where, HighScores scores) 
 {
-	i32 fd = open(where, O_CREAT | O_WRONLY, 448);
-	if (fd < 0) {
-		TraceLog(LOG_WARNING, "SaveData: %s. \n", strerror(errno));
-		return (false);
-	}
-	i32 amount_written = write(fd, (byte *)&scores, sizeof(scores));
-	if (amount_written < 0) {
-		TraceLog(LOG_WARNING, "SaveData: %s. \n", strerror(errno));
-		return (false);
-	}
-	return (true);
+	#ifdef PLATFORM_WEB
+		save_data(where, &scores, sizeof(scores));
+		return (true);
+	#else
+		i32 fd = open(where, O_CREAT | O_WRONLY, 448);
+		if (fd < 0) {
+			TraceLog(LOG_WARNING, "SaveData: %s. \n", strerror(errno));
+			return (false);
+		}
+		i32 amount_written = write(fd, (byte *)&scores, sizeof(scores));
+		if (amount_written < 0) {
+			TraceLog(LOG_WARNING, "SaveData: %s. \n", strerror(errno));
+			return (false);
+		}
+		return (true);
+	#endif
 }
 

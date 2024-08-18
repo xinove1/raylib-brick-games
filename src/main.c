@@ -1,7 +1,7 @@
 #include "game.h"
 
 #ifdef PLATFORM_WEB
-    #include <emscripten/emscripten.h>
+	#include <emscripten/emscripten.h>
 #endif
 
 #define static_in static inline // TODO better name and put on a reader
@@ -36,7 +36,6 @@ i32 main()
 		.purple= {130, 5, 165, 255},
 		.background = {237, 191, 198, 255},
 	};
-	Data.scores = LoadScores("./data");
 	Data.current_game = MAIN_MENU;
 	Game = -1;
 
@@ -77,23 +76,23 @@ i32 main()
 	SetSelectorTextureTint(WHITE);
 	SetClickedSound(&Data.assets.sounds[2]);
 
+	Gamesfuncs[MAIN_MENU] = main_menu_init(&Data);
+
+	Data.scores = LoadScores("./data");
+
 	Gamesfuncs[SNAKE_GAME] = snake_game_init(&Data);
 	Gamesfuncs[TETRIS] = tetris_init(&Data);
-	Gamesfuncs[MAIN_MENU] = main_menu_init(&Data);
 	Gamesfuncs[PONG] = pong_init(&Data);
 	Gamesfuncs[BREAKOUT] = breakout_init(&Data);
 	Gamesfuncs[TEST] = test_game_init(&Data);
 
-	printf("sizeof f32 %lu \n", sizeof(f32));
-	printf("sizeof HighScores %lu \n", sizeof(HighScores));
-	printf("sizeof data.scores %lu \n", sizeof(Data.scores));
+	// printf("sizeof f32 %lu \n", sizeof(f32));
+	// printf("sizeof HighScores %lu \n", sizeof(HighScores));
+	// printf("sizeof data.scores %lu \n", sizeof(Data.scores));
 
 	#ifdef PLATFORM_WEB
-		printf("PLATAFORM_WEB \n");
 		emscripten_set_main_loop(update_and_draw, 0, 1);
-		printf("PLATAFORM_WEB2 \n");
 	#else
-		printf("not PLATAFORM_WEB \n");
 		while (!WindowShouldClose() && !Data.quit) {
 			update_and_draw();
 		}
@@ -123,6 +122,7 @@ static void update_and_draw(void)
 		emscripten_cancel_main_loop();
 	}
 	#endif
+	if (IsKeyPressed(KEY_I)){ SaveScores(SCORES_SAVE_LOCATION, Data.scores); } // BUG  DEBUG STUFF
 	PoolActions();
 	if (IsWindowMinimized()) {
 		printf("aaaa \n");
