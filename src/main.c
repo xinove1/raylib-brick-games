@@ -122,10 +122,9 @@ static void update_and_draw(void)
 		emscripten_cancel_main_loop();
 	}
 	#endif
-	if (IsKeyPressed(KEY_I)){ SaveScores(SCORES_SAVE_LOCATION, Data.scores); } // BUG  DEBUG STUFF
 	PoolActions();
 	if (IsWindowMinimized()) {
-		printf("aaaa \n");
+		TraceLog(LOG_INFO, "Window Minimized \n");
 		return ;
 	}
 	//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());

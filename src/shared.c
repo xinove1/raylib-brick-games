@@ -8,8 +8,6 @@
 
 #ifdef PLATFORM_WEB
 	#include <emscripten/emscripten.h>
-	extern void save_scores(void *ptr, i32 size, i32 padding);
-	extern void load_scores(void *ptr, i32 size, i32 padding);
 	extern void save_data(cstr *where, void *ptr, i32 size);
 	extern void load_data(cstr *where, void *ptr, i32 size);
 #endif
