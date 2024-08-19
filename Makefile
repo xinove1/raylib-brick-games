@@ -62,6 +62,11 @@ web_re:
 web_run: $(web)
 	emrun ./game.html
 
+itch:
+	cp $(NAME).html index.html
+	zip brick_games.zip index.html $(NAME).js $(NAME).data $(NAME).wasm
+	rm index.html
+
 run: $(NAME)
 	./$(NAME)
 

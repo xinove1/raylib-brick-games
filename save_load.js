@@ -6,7 +6,11 @@ addToLibrary({
 	},
 	load_data: function(where_cstr, dst, size) {
 		const where = UTF8ToString(where_cstr);
-		const data = Object.values(JSON.parse(localStorage.getItem(where)));
+		const where_data = localStorage.getItem(where);
+		if (!where_data) {
+			return ;
+		}
+		const data = Object.values(JSON.parse(where_data));
 		let i = 0;
 		for (let byte of data) {
 			HEAPU8[dst + i] = byte;
