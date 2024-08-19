@@ -94,8 +94,10 @@ HighScores LoadScores(cstr *where)
 		i32 amount_read = read(fd, buf, sizeof(HighScores));
 		if (amount_read < 0) {
 			TraceLog(LOG_WARNING, "LoadData: %s. \n", strerror(errno));
+			close(fd);
 			return ((HighScores) {0});
 		}
+		close(fd);
 		HighScores scores = *(HighScores *)buf;
 		return (scores);
 	#endif
@@ -115,8 +117,10 @@ b32 SaveScores(cstr *where, HighScores scores)
 		i32 amount_written = write(fd, (byte *)&scores, sizeof(scores));
 		if (amount_written < 0) {
 			TraceLog(LOG_WARNING, "SaveData: %s. \n", strerror(errno));
+			close(fd);
 			return (false);
 		}
+		close(fd);
 		return (true);
 	#endif
 }
