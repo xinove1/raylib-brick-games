@@ -4,18 +4,16 @@
 	#include <emscripten/emscripten.h>
 #endif
 
-#define static_in static inline // TODO better name and put on a header
+internal_inline void load_assets(GameData *data);
+internal_inline void unload_assets(GameData *data);
+internal_inline void register_key_actions();
+internal void update_and_draw(void);
 
-static_in void load_assets(GameData *data);
-static_in void unload_assets(GameData *data);
-static_in void register_key_actions();
-static void update_and_draw(void);
-
-static GameFunctions Gamesfuncs[GAME_COUNT] = {0};
-static Games_e Game;
-static RenderTexture2D ScreenTexture;
-static GameData Data = {0};
-static b32 PauseRequested = false;
+global GameFunctions Gamesfuncs[GAME_COUNT] = {0};
+global Games_e Game;
+global RenderTexture2D ScreenTexture;
+global GameData Data = {0};
+global b32 PauseRequested = false;
 
 i32 main()
 {
@@ -40,7 +38,7 @@ i32 main()
 	Game = -1;
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED );
-	InitWindow(Data.window_size.x, Data.window_size.y, "Raylib Bricks games");
+	InitWindow(Data.window_size.x, Data.window_size.y, "Bricks games");
 	SetWindowState(FLAG_WINDOW_MAXIMIZED);
 	InitAudioDevice();
 	SetTargetFPS(60);
@@ -86,10 +84,6 @@ i32 main()
 	Gamesfuncs[BREAKOUT] = breakout_init(&Data);
 	Gamesfuncs[TEST] = test_game_init(&Data);
 
-	// printf("sizeof f32 %lu \n", sizeof(f32));
-	// printf("sizeof HighScores %lu \n", sizeof(HighScores));
-	// printf("sizeof data.scores %lu \n", sizeof(Data.scores));
-
 	#ifdef PLATFORM_WEB
 		emscripten_set_main_loop(update_and_draw, 0, 1);
 	#else
@@ -97,8 +91,6 @@ i32 main()
 			update_and_draw();
 		}
 	#endif
-
-	printf("Before de_init's \n");
 
 	Gamesfuncs[TETRIS].de_init();
 	Gamesfuncs[SNAKE_GAME].de_init();
@@ -115,19 +107,19 @@ i32 main()
 	return (0);
 }
 
-static void update_and_draw(void)
+internal void update_and_draw(void)
 {
 	#ifdef PLATFORM_WEB
-	if (Data.quit) {
-		emscripten_cancel_main_loop();
-	}
+		if (Data.quit) {
+			emscripten_cancel_main_loop();
+		}
 	#endif
+
 	PoolActions();
 	if (IsWindowMinimized()) {
 		TraceLog(LOG_INFO, "Window Minimized \n");
 		return ;
 	}
-	//printf("MouseMoving %d | WasInput %d \n", IsMouseMoving(), WasAnyActionDown());
 
 	f32 screen_scale = MIN((f32)GetScreenWidth()/Data.window_size.x, (f32)GetScreenHeight() / Data.window_size.y);
 	// Update virtual mouse (clamped mouse value behind game screen)
@@ -184,7 +176,7 @@ void update_volume(GameData *data)
 	}
 }
 
-static_in void load_assets(GameData *data) {
+internal_inline void load_assets(GameData *data) {
 	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
 	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
 	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
@@ -216,7 +208,7 @@ static_in void load_assets(GameData *data) {
 
 }
 
-static_in void unload_assets(GameData *data) {
+internal_inline void unload_assets(GameData *data) {
 	for (i32 i = 0; i < MAX_ASSET; i++) {
 		UnloadSound(data->assets.sounds[i]);
 		UnloadMusicStream(data->assets.music[i]);
@@ -224,7 +216,7 @@ static_in void unload_assets(GameData *data) {
 	}
 }
 
-static_in void register_key_actions()
+internal_inline void register_key_actions()
 {
 	SetGamePadId(0);
 
@@ -234,13 +226,11 @@ static_in void register_key_actions()
 	RegisterGamePadButtonAction(RIGHT, GAMEPAD_BUTTON_LEFT_FACE_RIGHT);
 	RegisterGamePadAxisAction(RIGHT, GAMEPAD_AXIS_LEFT_X, 0.5f);
 
-
 	RegisterActionName(LEFT, "left");
 	RegisterInputKeyAction(LEFT, KEY_A);
 	RegisterInputKeyAction(LEFT, KEY_LEFT);
 	RegisterGamePadButtonAction(LEFT, GAMEPAD_BUTTON_LEFT_FACE_LEFT);
 	RegisterGamePadAxisAction(LEFT, GAMEPAD_AXIS_LEFT_X, -0.5f);
-
 
 	RegisterActionName(UP, "up");
 	RegisterInputKeyAction(UP, KEY_W);
@@ -248,13 +238,11 @@ static_in void register_key_actions()
 	RegisterGamePadButtonAction(UP, GAMEPAD_BUTTON_LEFT_FACE_UP);
 	RegisterGamePadAxisAction(UP, GAMEPAD_AXIS_LEFT_Y, -0.5f);
 
-
 	RegisterActionName(DOWN, "down");
 	RegisterInputKeyAction(DOWN, KEY_S);
 	RegisterInputKeyAction(DOWN, KEY_DOWN);
 	RegisterGamePadButtonAction(DOWN, GAMEPAD_BUTTON_LEFT_FACE_DOWN);
 	RegisterGamePadAxisAction(DOWN, GAMEPAD_AXIS_LEFT_Y, 0.5f);
-
 
 	RegisterActionName(ACTION_1, "action_1");
 	RegisterInputKeyAction(ACTION_1, KEY_J);
@@ -262,17 +250,14 @@ static_in void register_key_actions()
 	RegisterGamePadButtonAction(ACTION_1, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
 	RegisterGamePadAxisAction(ACTION_1, GAMEPAD_AXIS_RIGHT_TRIGGER, 0.7f);
 
-
 	RegisterActionName(ACTION_2, "action_2");
 	RegisterInputKeyAction(ACTION_2, KEY_K);
 	RegisterInputKeyAction(ACTION_2, KEY_Z);
 	RegisterGamePadButtonAction(ACTION_2, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT);
 
-
 	RegisterActionName(ACTION_3, "action_3");
 	RegisterInputKeyAction(ACTION_3, KEY_SPACE);
 	RegisterGamePadButtonAction(ACTION_3, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
-
 
 	RegisterActionName(OPEN_MENU, "open_menu");
 	RegisterInputKeyAction(OPEN_MENU, KEY_ESCAPE);
@@ -283,7 +268,7 @@ static_in void register_key_actions()
 // Only called from js on the web version
 void pause_game() 
 {
-	TraceLog(LOG_DEBUG, "Pause game called. \n");
+	//TraceLog(LOG_DEBUG, "Pause game called. \n");
 	PauseRequested = true;
 }
 

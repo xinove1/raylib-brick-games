@@ -4,6 +4,7 @@
 # define MAX_APPLES 10
 # define MAX_SNAKE_SIZE 20*20 // = Max board size
 # define BOARD_SIZE_COUNT 4
+
 global i32   BoardSizes[BOARD_SIZE_COUNT] = {8, 10, 15, 20};
 global byte *BoardSizesText[BOARD_SIZE_COUNT] = {"8x8", "10x10", "15x15", "20x20"};
 
@@ -25,6 +26,8 @@ struct SnakeData {
 	f32 scores[8];
 	f32 score_current;
 	b32 play_screen;
+	b32 scores_screen;
+	b32 options_screen;
 	b32 paused;
 	b32 game_over;
 	b32 easy_mode;
@@ -154,10 +157,6 @@ internal void update()
 		Snake->dir_new.y = 1;
 	}
 
-	local b32 debug_pressed = false;
-	if (IsKeyDown(KEY_U)) debug_pressed = true;
-	else debug_pressed = false;
-
 	Snake->tick_count += GetFrameTime();
 	Snake->apple_spawn_count += GetFrameTime();
 	if (Snake->tick_count >= Snake->tick_rate) {
@@ -196,8 +195,7 @@ internal void update()
 		}
 
 		if (collision == 2) {
-			// TODO  Change Score counting to separate var and on winning/losing see if its a new highscore and request saving scores
-			Snake->score_current += 50.27f;
+			Snake->score_current += 50.25f;
 			spawn_apple();
 		} else if (Snake->apple_spawn_count >= Snake->apple_spawn_rate) {
 			Snake->apple_spawn_count = 0;
@@ -222,8 +220,7 @@ internal void draw()
 		DrawTextEx(font, text, pos, 20, 2, Data->palette.black);
 	}
 
-	local b32 scores_screen = false;
-	if (Snake->play_screen && !scores_screen) {
+	if (Snake->play_screen && !Snake->scores_screen) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);
 		{
@@ -247,7 +244,7 @@ internal void draw()
 			}
 
 			if (UiTextButton(panel, "Scores")) { 
-				scores_screen = true;
+				Snake->scores_screen = true;
 			}
 
 			if (UiTextButton(panel, "Back")) { 
@@ -259,7 +256,7 @@ internal void draw()
 		if (IsActionPressed(ACTION_2)) {
 			Data->current_game = MAIN_MENU;
 		}
-	} else if (Snake->play_screen && scores_screen) {
+	} else if (Snake->play_screen && Snake->scores_screen) {
 		UiContainer *panel = &Snake->Container;
 
 		panel->config.alignment = UiAlignRight;
@@ -300,7 +297,7 @@ internal void draw()
 			UiText(panel, (byte *) TextFormat("%6.f", Snake->scores[7]), false);
 
 			if (UiTextButton(panel, "Back")) { 
-				scores_screen = false;
+				Snake->scores_screen = false;
 			}
 		}
 		UiEnd(panel);
@@ -308,7 +305,7 @@ internal void draw()
 		panel->pos = panel_pos;
 
 		if (IsActionPressed(ACTION_2)) {
-			scores_screen = false;
+			Snake->scores_screen = false;
 		}
 	}
 
@@ -350,8 +347,7 @@ internal void draw()
 		}
 	}
 
-	local bool options = false;
-	if (Snake->paused && options == false) {
+	if (Snake->paused && Snake->options_screen == false) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);
 		{
@@ -362,7 +358,7 @@ internal void draw()
 			} 
 
 			if (UiTextButton(panel, "Options")) { 
-				options = true;
+				Snake->options_screen = true;
 			}
 
 			if (UiTextButton(panel, "Exit To Main Menu")) { 
@@ -380,10 +376,10 @@ internal void draw()
 			Snake->paused = false;
 		}
 
-	} else if (Snake->paused && options) {
+	} else if (Snake->paused && Snake->options_screen) {
 		UiStates state = options_screen(Data);
 		if (state == BACK) {
-			options = false;
+			Snake->options_screen = false;
 		}
 	}
 }

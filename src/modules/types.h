@@ -5,9 +5,10 @@
 # include "stdint.h"
 # include "stddef.h"
 
-# define internal      static
-# define global        static
-# define local        static
+# define internal         static // Static func
+# define internal_inline  static inline // Static inline func // TODO  better name
+# define global           static // Static Variable global to tranlation unit
+# define local            static // Static Variable local to func
 
 #if defined(__clang__)
 # define COMPILER_CLANG 1

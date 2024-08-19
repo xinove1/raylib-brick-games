@@ -207,7 +207,7 @@ void title_screen(GameData *data)
 
 	UiBegin(panel);
 	{
-		UiText(panel, "Raylib Brick Games", true);
+		UiText(panel, "Brick Games", true);
 
 		if (UiTextButton(panel, "Play")) {
 			CurrentScreen = PLAY_MENU;
