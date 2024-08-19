@@ -5,6 +5,35 @@
 # include "stdint.h"
 # include "stddef.h"
 
+# define internal      static
+# define global        static
+# define local        static
+
+#if defined(__clang__)
+# define COMPILER_CLANG 1
+#elif defined(_MSC_VER)
+# define COMPILER_MSVC 1
+#elif defined(__GNUC__) || defined(__GNUG__)
+# define COMPILER_GCC 1
+#else
+# error Compiler not supported.
+#endif
+
+#if COMPILER_CLANG || COMPILER_GCC
+# define Trap() __builtin_trap()
+#elif COMPILER_MSVC
+# define Trap() __debugbreak()
+#else
+# error Unknown trap intrinsic for this compiler.
+#endif
+
+#define AssertAlways(x) do{if(!(x)) {Trap();}}while(0)
+#if BUILD_DEBUG
+# define Assert(x) AssertAlways(x)
+#else
+# define Assert(x) (void)(x)
+#endif
+
 // Utilities
 # define MAX(a, b) ((a)>(b)? (a) : (b))
 # define MIN(a, b) ((a)<(b)? (a) : (b))
@@ -18,7 +47,7 @@
 # define Million(n)    ((n)*1000000)
 # define Billion(n)    ((n)*1000000000)
 
-// Alias for raylib types
+// Alias for raylib types // TODO  rename file to base somthing, put raylib alias types and helpers (maybe raymath_short also) on another helper
 typedef Vector2 V2;
 typedef Rectangle Rect;
 
