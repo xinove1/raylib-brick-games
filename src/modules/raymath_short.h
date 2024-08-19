@@ -32,6 +32,27 @@
 #else
 # define RMSAPI inline
 #endif
+
+// Creator helpers
+
+// Crate Rectangle from to Vectors
+RMSAPI Rect RectV2(V2 pos, V2 size) {
+	return ((Rect) {.x = pos.x, .y = pos.y, .width = size.x, .height = size.y});
+}
+
+RMSAPI V2 V2RectPos(Rect rect) {
+	return ((V2) {rect.x, rect.y});
+}
+
+RMSAPI V2 V2RectSize(Rect rect) {
+	return ((V2) {rect.width, rect.height});
+}
+
+RMSAPI V2 V2F32(f32 value) {
+	return ((V2) {value, value});
+}
+
+
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Utils math
 //----------------------------------------------------------------------------------

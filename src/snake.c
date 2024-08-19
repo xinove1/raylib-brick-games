@@ -4,8 +4,8 @@
 # define MAX_APPLES 10
 # define MAX_SNAKE_SIZE 20*20 // = Max board size
 # define BOARD_SIZE_COUNT 4
-static i32 BoardSizes[BOARD_SIZE_COUNT] = {8, 10, 15, 20};
-static byte *BoardSizesText[BOARD_SIZE_COUNT] = {"8x8", "10x10", "15x15", "20x20"};
+global i32   BoardSizes[BOARD_SIZE_COUNT] = {8, 10, 15, 20};
+global byte *BoardSizesText[BOARD_SIZE_COUNT] = {"8x8", "10x10", "15x15", "20x20"};
 
 struct SnakeData {
 	V2 board_size;
@@ -23,7 +23,7 @@ struct SnakeData {
 	f32 apple_spawn_rate; // in seconds
 	f32 apple_spawn_count;
 	f32 scores[8];
-	f32 score_count;
+	f32 score_current;
 	b32 play_screen;
 	b32 paused;
 	b32 game_over;
@@ -33,14 +33,14 @@ struct SnakeData {
 };
 
 
-static void start();
-static void update();
-static void draw();
-static void draw_game();
-static void de_init();
-static void move_snake_body(V2 new_head_pos, i32 add_body);
-static void spawn_apple();
-static i32  check_collision(V2 pos);
+internal void start();
+internal void update();
+internal void draw();
+internal void draw_game();
+internal void de_init();
+internal void move_snake_body(V2 new_head_pos, i32 add_body);
+internal void spawn_apple();
+internal i32  check_collision(V2 pos);
 
 GameData *Data = 0;
 SnakeData *Snake = 0;
@@ -68,7 +68,7 @@ GameFunctions snake_game_init(GameData *data)
 		.apple_spawn_rate = 5, // in seconds
 		.apple_spawn_count = 0,
 		.scores = 0,
-		.score_count = 0,
+		.score_current = 0,
 		.play_screen = true,
 		.paused = false,
 		.game_over = false,
@@ -96,7 +96,7 @@ void de_init() {
 	memcpy(&Data->scores.snake, &Snake->scores, sizeof(Snake->scores));
 }
 
-static void start()
+internal void start()
 {
 	assert(Snake);
 	// TODO  Remove start call from main.c, each game already has a main menu and can manully call it's own prep func
@@ -113,16 +113,16 @@ static void start()
 
 }
 
-static void update()
+internal void update()
 {
 	assert(Snake);
 
 	// Check for HighScore
-	if ((Snake->won || Snake->game_over) && Snake->score_count != 0) {
+	if ((Snake->won || Snake->game_over) && Snake->score_current != 0) {
 		i32 score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
 		assert(score_index <= sizeof(Snake->scores));
-		if (Snake->scores[score_index] < Snake->score_count) {
-			Snake->scores[score_index] = Snake->score_count;
+		if (Snake->scores[score_index] < Snake->score_current) {
+			Snake->scores[score_index] = Snake->score_current;
 			printf("New HighScore!!! \n");
 			
 			//data->scores.snake = Snake->scores;
@@ -130,7 +130,7 @@ static void update()
 			
 			SaveScores(SCORES_SAVE_LOCATION, Data->scores);
 		}
-		Snake->score_count = 0;
+		Snake->score_current = 0;
 	}
 
 	if (!ShouldGameRun(&Snake->play_screen, &Snake->paused, &Snake->game_over) || Snake->won) {
@@ -154,7 +154,7 @@ static void update()
 		Snake->dir_new.y = 1;
 	}
 
-	static b32 debug_pressed = false;
+	local b32 debug_pressed = false;
 	if (IsKeyDown(KEY_U)) debug_pressed = true;
 	else debug_pressed = false;
 
@@ -197,7 +197,7 @@ static void update()
 
 		if (collision == 2) {
 			// TODO  Change Score counting to separate var and on winning/losing see if its a new highscore and request saving scores
-			Snake->score_count += 50.27f;
+			Snake->score_current += 50.27f;
 			spawn_apple();
 		} else if (Snake->apple_spawn_count >= Snake->apple_spawn_rate) {
 			Snake->apple_spawn_count = 0;
@@ -206,12 +206,23 @@ static void update()
 	}
 }
 
-static void draw() 
+internal void draw() 
 {
 	ClearBackground(RAYWHITE);
 	draw_game();
 
-	static b32 scores_screen = false;
+	{
+		Font font = GetFontDefault();
+		f32 font_size = 20;
+		f32 font_spacing = 2;
+		const cstr *text = TextFormat("Score: %.2f", Snake->score_current);
+		V2 text_size = MeasureTextEx(font, text, font_size, font_spacing);
+		V2 pos = V2Subtract(V2Add(Snake->board_offset, V2F32(Snake->tile_size)), (V2){0, text_size.y});
+
+		DrawTextEx(font, text, pos, 20, 2, Data->palette.black);
+	}
+
+	local b32 scores_screen = false;
 	if (Snake->play_screen && !scores_screen) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);
@@ -339,7 +350,7 @@ static void draw()
 		}
 	}
 
-	static bool options = false;
+	local bool options = false;
 	if (Snake->paused && options == false) {
 		UiContainer *panel = &Snake->Container;
 		UiBegin(panel);
@@ -377,7 +388,7 @@ static void draw()
 	}
 }
 
-static void move_snake_body(V2 new_head_pos, i32 add_body)
+internal void move_snake_body(V2 new_head_pos, i32 add_body)
 {
 	i32 i;
 	V2  tmp = Snake->snake[0];
@@ -396,7 +407,7 @@ static void move_snake_body(V2 new_head_pos, i32 add_body)
 	Snake->snake[0] = new_head_pos;
 }
 
-static void spawn_apple()
+internal void spawn_apple()
 {
 	V2 *apple = NULL;
 	for (i32 i = 0; i < Snake->apples_max; i++) {
@@ -414,7 +425,7 @@ static void spawn_apple()
 	*apple = pos;
 }
 
-static i32 check_collision(V2 pos)
+internal i32 check_collision(V2 pos)
 {
 	// Check collision with game board
 	if (!Snake->easy_mode && (pos.x == 0 || pos.x == Snake->board_size.x || pos.y == 0 || pos.y == Snake->board_size.y)) {
@@ -438,7 +449,7 @@ static i32 check_collision(V2 pos)
 	return (0);
 }
 
-static void draw_game()
+internal void draw_game()
 {
 	ColorPalette palette = Data->palette;
 

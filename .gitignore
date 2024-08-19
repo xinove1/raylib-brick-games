@@ -6,8 +6,8 @@
 *.dll
 *.so
 
-game
-game.js
-game.data
-game.exe
-game.wasm
+brick_games
+brick_games.js
+brick_games.data
+brick_games.exe
+brick_games.wasm

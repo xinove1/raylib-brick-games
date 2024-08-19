@@ -12,23 +12,12 @@
 	extern void load_data(cstr *where, void *ptr, i32 size);
 #endif
 
+// TODO  move to somewhere else, raymath_short?
 V2 ExpDecayV2(V2 a, V2 b, f32 decay) 
 {
 	V2 d = V2Subtract(a, b);
 	d = V2Scale(d, expf(-decay * GetFrameTime()));
 	return V2Add(b, d);
-}
-
-// Crate Rectangle from to Vectors
-inline Rect RectV2(V2 pos, V2 size) {
-	return ((Rect) {.x = pos.x, .y = pos.y, .width = size.x, .height = size.y});
-}
-
-inline V2 V2RectPos(Rect rect) {
-	return ((V2) {rect.x, rect.y});
-}
-inline V2 V2RectSize(Rect rect) {
-	return ((V2) {rect.width, rect.height});
 }
 
 void draw_grid(V2 position, V2 grid_size, i32 tile_size)
