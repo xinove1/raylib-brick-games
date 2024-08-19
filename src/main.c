@@ -4,7 +4,7 @@
 	#include <emscripten/emscripten.h>
 #endif
 
-#define static_in static inline // TODO better name and put on a reader
+#define static_in static inline // TODO better name and put on a header
 
 static_in void load_assets(GameData *data);
 static_in void unload_assets(GameData *data);
