@@ -69,7 +69,7 @@ static void start()
 
 		printf("qty_line * lines: %d\n", collumns * lines);
 		printf("brick_size: %f, %f\n", brick_size.x, brick_size.y);
-		assert(collumns * lines < MAX_BRICKS);
+		Assert(collumns * lines < MAX_BRICKS);
 
 		float at_y = padding_sides;
 		for (i32 row = 0; row < lines; row++) {

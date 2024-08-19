@@ -3,8 +3,6 @@
 
 # include <stdio.h>
 # include <stdlib.h>
-# include <assert.h>
-# include <string.h>
 # include "raylib.h"
 # include "raymath_short.h"
 # include "ui.h"

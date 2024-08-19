@@ -84,7 +84,7 @@ GameFunctions snake_game_init(GameData *data)
 
 	//Snake->scores = data->scores.snake;
 	memcpy(&Snake->scores, &data->scores.snake, sizeof(Snake->scores));
-
+	
 	return (GameFunctions) { 
 		.name = "snake Game",
 		.update = &update,
@@ -101,7 +101,7 @@ void de_init() {
 
 internal void start()
 {
-	assert(Snake);
+	Assert(Snake);
 	// TODO  Remove start call from main.c, each game already has a main menu and can manully call it's own prep func
 
 	Snake->board_size = (V2) {BoardSizes[Snake->selected_board_size] + 1, BoardSizes[Snake->selected_board_size] + 1};
@@ -118,12 +118,12 @@ internal void start()
 
 internal void update()
 {
-	assert(Snake);
+	Assert(Snake);
 
 	// Check for HighScore
 	if ((Snake->won || Snake->game_over) && Snake->score_current != 0) {
 		i32 score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
-		assert(score_index <= sizeof(Snake->scores));
+		Assert(score_index <= sizeof(Snake->scores));
 		if (Snake->scores[score_index] < Snake->score_current) {
 			Snake->scores[score_index] = Snake->score_current;
 			printf("New HighScore!!! \n");
@@ -206,6 +206,8 @@ internal void update()
 
 internal void draw() 
 {
+	Assert(Snake);
+
 	ClearBackground(RAYWHITE);
 	draw_game();
 
@@ -394,7 +396,7 @@ internal void move_snake_body(V2 new_head_pos, i32 add_body)
 		Snake->snake[i] = tmp;
 		tmp = tmp2;
 	}
-	assert(i != Snake->snake_size);
+	Assert(i != Snake->snake_size);
 	if (add_body) {
 		//Vector2	_dir = Vector2Subtract(snake[i - 1], snake[i - 2]);
 		//printf("dir: %f,%f\n", _dir.x, _dir.y);

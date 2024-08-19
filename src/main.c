@@ -84,6 +84,10 @@ i32 main()
 	Gamesfuncs[BREAKOUT] = breakout_init(&Data);
 	Gamesfuncs[TEST] = test_game_init(&Data);
 
+	#ifdef BUILD_DEBUG
+	printf("build_debug\n");
+	#endif
+
 	#ifdef PLATFORM_WEB
 		emscripten_set_main_loop(update_and_draw, 0, 1);
 	#else

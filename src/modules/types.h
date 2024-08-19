@@ -21,12 +21,18 @@
 #endif
 
 #if COMPILER_CLANG || COMPILER_GCC
-# define Trap() __builtin_trap()
+# ifdef BUILD_DEBUG
+#  define Trap() __builtin_unreachable()
+# else
+#  define Trap() __builtin_trap()
+# endif
 #elif COMPILER_MSVC
 # define Trap() __debugbreak()
 #else
 # error Unknown trap intrinsic for this compiler.
 #endif
+
+//#define Trap() 
 
 #define AssertAlways(x) do{if(!(x)) {Trap();}}while(0)
 #if BUILD_DEBUG
