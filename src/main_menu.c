@@ -44,6 +44,12 @@ static void update()
 	BeginTextureMode(TextTexture);
 	ClearBackground((Color){0, 0, 0, 0});
 
+	if (IsKeyDown(KEY_U)) {
+		Container.config.alignment = UiAlignRight;
+	} else {
+		Container.config.alignment = UiAlignCentralized;
+	}
+
 	static UiStates screen = TITLE_SCREEN;
 	if (CurrentScreen != screen) {
 		screen = CurrentScreen;
@@ -124,8 +130,9 @@ GameFunctions main_menu_init(GameData *data)
 	TextConfigHeading.tint = data->palette.black;
 	TextConfigHeading.tint_hover = data->palette.blue;
 
-	V2	center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	V2 center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
 	Container = UiCreateContainer(center_screen, 0, data->ui_config);
+	Container.height = 15;
 
 	CurrentScreen = TITLE_SCREEN;
 

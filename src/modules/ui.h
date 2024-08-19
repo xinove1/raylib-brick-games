@@ -47,7 +47,7 @@ typedef struct
 	// Position after last lement added
 	f32	 at_x;
 	f32	 at_y;
-	i32	 id_count; 
+	i32	 id_count; // TODO  Make help func to substitute funcs needing to get id and increment it
 	i32	 id_current;
 	i32	 column_count; // Used for adding elements on same "line", aka when non 0, don't update at_y but at_x  TODO better name
 	UiConfig config;
@@ -63,6 +63,7 @@ void SetSelectorTextureTint(Color tint);
 
 // TODO  Change Ex functions to not accept font, as it can be easely passed in config 
 // TODO  Change draw_bounds flag in funcs to be an option in config?
+// TODO  Inline Helper funcs, aka not Ex
 
 UiContainer UiCreateContainer(V2 pos, f32 width, UiConfig config);
 UiConfig    UiGetDefaultConfig(); 
@@ -85,18 +86,18 @@ b32         UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *va
 
 // NOLINTBEGIN(misc-definitions-in-headers)
 
-static void _draw_selector(V2 offset, V2 target_bounds);
-static void _take_input(UiContainer *container);
-static void _play_clicked_sound();
-static void _update_at_pos(UiContainer *container, UiConfig config, V2 element_pos, V2 element_size); // TODO better name
-static V2 _get_next_pos(UiContainer *container, UiConfig config);
-static byte *_strjoin(const byte *s1, const byte *s2);
+internal void _draw_selector(V2 offset, V2 target_bounds);
+internal void _take_input(UiContainer *container);
+internal void _play_clicked_sound();
+internal void _update_at_pos(UiContainer *container, UiConfig config, V2 element_pos, V2 element_size); // TODO better name
+internal V2   _get_next_pos(UiContainer *container, UiConfig config);
+internal byte*_strjoin(const byte *s1, const byte *s2);
 
-static Texture2D *SelectorTexture = NULL; 
-static Color     SelectorTint = RAYWHITE;
-static Sound     *ClickedSound = NULL;
-static b32       CheckMouse = false;
-static UiConfig  DefaultConfig = {}; // TODO  Fill with defaults
+global Texture2D *SelectorTexture = NULL; 
+global Color     SelectorTint = RAYWHITE;
+global Sound     *ClickedSound = NULL;
+global b32       CheckMouse = false;
+global UiConfig  DefaultConfig = {}; // TODO  Fill with defaults
 
 void SetSelectorTexture(Texture2D *texture)
 {
@@ -386,7 +387,6 @@ b32        UiTextOptionsEx(UiContainer *container, UiConfig config, b32 draw_bou
 
 b32 UiSlider(UiContainer *container, f32 *value, f32 min, f32 max)
 {
-	if (container->hide == true) { return(false); }
 	V2 size = {container->width * 0.8f, container->height};
 	return (UiSliderEx(container, container->config, size, value, min, max));
 }
@@ -394,26 +394,26 @@ b32 UiSlider(UiContainer *container, f32 *value, f32 min, f32 max)
 b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32 min, f32 max)
 {
 	if (container->hide == true) { return(false); }
+	if (size.y <= 0) { TraceLog(LOG_WARNING, "UiSliderEx: size.y is 0, won't be able to draw.");};
 	b32  pressed = false;
 	b32  mouse_inside = false;
-	V2   pos = _get_next_pos(container, config);
-	Rect rect = {pos.x, pos.y, size.x, size.y};
-	i32  id = container->id_count; 
+	i32  id = container->id_count; container->id_count++;
 	f32  step = 0.1f;
-	container->id_count++;
 
+	V2   pos = _get_next_pos(container, config);
 	if (config.alignment == UiAlignCentralized) {
 		pos.x -= size.x * 0.5f;
-		rect.x = pos.x;
 	}
+	Rect rec1 = {pos.x, pos.y, size.x, size.y};
 
-	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rect)) {
+	if (CheckMouse && CheckCollisionPointRec(GetMousePosition(), rec1)) {
 		container->id_current = id;
 		mouse_inside = true;
 	}
 	if (container->id_current == id) {
 		if (config.draw_selector) _draw_selector(pos, size);
 		
+		local b32 mouse_pressed = false;
 		if (mouse_inside) {
 			f32 wheel = GetMouseWheelMove();
 			if (wheel == 1.0f || wheel == -1.0f) {
@@ -421,18 +421,22 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 				pressed = true;
 			}
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-				V2	pos = V2Subtract(GetMousePosition(), (V2){rect.x, rect.y});
-				*value = f32Remap(pos.x, 0, rect.width, 0, 1);
-				pressed = true;
+				V2 mouse_pos = V2Subtract(GetMousePosition(), (V2){rec1.x, rec1.y});
+				*value = f32Remap(mouse_pos.x, 0, rec1.width, 0, 1);
+				mouse_pressed = true;
 			}
+		}
+		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+			mouse_pressed = false;
+			pressed = true;
 		}
 
 		if (IsActionPressed(RIGHT)) {
-			*value += step;	
+			*value += step;
 			pressed = true;
 		}
 		if (IsActionPressed(LEFT)) {
-			*value -= step;	
+			*value -= step;
 			pressed = true;
 		}
 	}
@@ -440,17 +444,17 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 	if (*value > max) *value = max;
 	if (*value < min) *value = min;
 
-	Rect rect2 = {rect.x, rect.y, rect.width * (*value), rect.height};
+	Rect rec2 = {rec1.x, rec1.y, rec1.width * (*value), rec1.height};
 
-	DrawRectanglePro(rect, (V2){0,0}, 0, container->config.color_font);
-	DrawRectanglePro(rect2, (V2){0,0}, 0, container->config.color_borders);
+	DrawRectangleRec(rec1, container->config.color_font);
+	DrawRectanglePro(rec2, V2Zero(), 0, container->config.color_borders);
 
 	_update_at_pos(container, config, pos, size);
 	if (pressed && config.play_sound) _play_clicked_sound();
 	return (pressed);
 }
 
-static void _draw_selector(V2 offset, V2 target_bounds)
+internal void _draw_selector(V2 offset, V2 target_bounds)
 {
 	if (SelectorTexture == NULL) { 
 		TraceLog(LOG_WARNING, "Ui: draw_selector requested but no texture set.");
@@ -465,7 +469,7 @@ static void _draw_selector(V2 offset, V2 target_bounds)
 	SelectorTint);
 }
 
-static void _play_clicked_sound()
+internal void _play_clicked_sound()
 {
 	if (ClickedSound == NULL) {
 		TraceLog(LOG_WARNING, "Ui: play_sound requested but no sound set.");
@@ -474,7 +478,7 @@ static void _play_clicked_sound()
 	PlaySound(*ClickedSound);
 }
 
-static void _take_input(UiContainer *container)
+internal void _take_input(UiContainer *container)
 {
 	i32 *current = &container->id_current;
 	i32 *count = &container->id_count;
@@ -492,7 +496,7 @@ static void _take_input(UiContainer *container)
 	}
 }
 
-static void _update_at_pos(UiContainer *container, UiConfig config, V2 element_pos, V2 element_size)
+internal void _update_at_pos(UiContainer *container, UiConfig config, V2 element_pos, V2 element_size)
 {
 	if (container->column_count > 0) {
 		container->at_x += element_size.x;
@@ -528,7 +532,7 @@ static void _update_at_pos(UiContainer *container, UiConfig config, V2 element_p
 	}
 }
 
-static V2 _get_next_pos(UiContainer *container, UiConfig config) 
+internal V2 _get_next_pos(UiContainer *container, UiConfig config) 
 {
 	V2 pos = {0, 0};
 
@@ -538,7 +542,7 @@ static V2 _get_next_pos(UiContainer *container, UiConfig config)
 }
 
 // TODO  Change when a i write proper string lib
-static byte *_strjoin(const byte *s1, const byte *s2)
+internal byte *_strjoin(const byte *s1, const byte *s2)
 {
 	byte *join;
 	i32  s1_lenght = strlen(s1);
