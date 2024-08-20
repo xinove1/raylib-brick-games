@@ -1,356 +1,156 @@
 #include "game.h"
 #include "raylib.h"
 
+# define BOARD_MAX_SIZE  (20 * 20)
+global V2 BoardSize = {12, 18};
+
 typedef struct {
 	Music music;
 	Sound made_line;
 	Sound game_over;
 } TetrisSounds;
 
-static const V2 board_size = {12, 18};
-static GameData *data = 0;
-static V2 window_size;
-static byte *pieces[7] = {0};
-static byte *board = NULL;
-static i32 made_lines[18] = {0}; // NOTE hard coded
-static b32 is_made_lines = false;
-static b32 paused = false;
-static b32 game_over = false;
-static b32 play_screen = false;
-static TetrisSounds game_sounds;
 
-// Drawing related
-static V2          board_offset = {0, 0};
-static i32         tileSize = TILE_SIZE;
-static Color       piece_colors[9];
-static FontConfig  font;
-static UiContainer Container;
+global GameData *Data = 0;
+global TetrisData *Tetris = 0;
 
-// Game
-static V2  pos = {board_size.x / 2 - 2, 0};
-static i32 piece = 0;
-static i32 next_piece = 0;
-static i32 stored_piece = -1;
-static b32 stored_piece_flag = false; // Flag to track if there already being a swap of current piece
-static i32 rotation = 0;
+struct TetrisData {
+	byte *pieces[7];
+	byte board[BOARD_MAX_SIZE];
+	i32 made_lines[18]; // NOTE hard coded
+	b32 is_made_lines;
+	b32 paused;
+	b32 game_over;
+	b32 play_screen;
+	b32 options_screen;
+	TetrisSounds game_sounds;
+	// Drawing related
+	V2          board_offset;
+	i32         tileSize;
+	Color       piece_colors[9];
+	FontConfig  font;
+	UiContainer Container;
+	// Game
+	V2  pos; //{BoardSize.x / 2 - 2, 0};
+	i32 piece;
+	i32 next_piece;
+	i32 stored_piece;
+	b32 stored_piece_flag; // Flag to track if there already being a swap of current piece
+	i32 rotation;
+	i32 score;
+	i32 high_score; //  TODO  Save and restore highscore
+	//  FIXME  Better name for speed variables
+	f32 tick_time_count; // counting time
+	f32 tick_time; // How much time until a game tick in seconds
+	i32 speed; // How many game ticks until force drowdown
+	i32 speed_count; // counting game ticks
+	i32 speed_limit; // How low the speed can get
+	i32 speed_increase_rate; // How many Pieces until a speed increase
+	i32 rotate_count;
+	i32 rotate_rate; // Rate in ticks to rotate when holding down rotate button
+	i32 piece_count; 
+};
 
-
-static i32 score = 0;
-static i32 high_score = 0; //  TODO  Save and restore highscore
-
-//  FIXME  Better name for speed variables
-static f32 tick_time_count = 0; // counting time
-static f32 tick_time = 0.100; // How much time until a game tick in seconds
-static i32 speed = 10; // How many game ticks until force drowdown
-static i32 speed_count = 0; // counting game ticks
-static i32 speed_limit = 2; // How low the speed can get
-static i32 speed_increase_rate = 5; // How many Pieces until a speed increase
-static i32 rotate_count = 0;
-static i32 rotate_rate = 2; // Rate in ticks to rotate when holding down rotate button
-static i32 piece_count = 0; 
-
-static i32  rotate(V2 pos, i32 r);
-static i32  check_piece_collision(i32 piece, V2 pos, i32 rotation);
-static void draw();
-static void draw_piece(i32 piece, V2 pos, i32 rotation, i32 scale, V2 offset);
-static void draw_board();
-static i32  check_line_made(V2 pos);
-static void cleanup_made_lines();
-static void force_piece_down();
-static void clean_board();
-
-static void start()
-{
-	clean_board();
-	paused = false;
-	game_over = false;
-	play_screen = true;
-	piece = rand() % 7;
-	next_piece = rand() % 7;
-	stored_piece = -1;
-	PlayMusicStream(game_sounds.music);
-}
-
-static void update()
-{
-	UpdateMusicStream(game_sounds.music);
-
-	if (!ShouldGameRun(&play_screen, &paused, &game_over)) {
-		return ;
-	}
-
-	if (IsActionPressed(ACTION_3)) {
-		V2 new_pos = pos;
-		while (!check_piece_collision(piece, new_pos, rotation)) {
-			new_pos.y += 1;
-		}
-		pos.y = new_pos.y - 1;
-		force_piece_down();
-		tick_time_count = 0;
-	}
-
-	if (tick_time_count < tick_time) {
-		tick_time_count += GetFrameTime();
-	} else {
-		tick_time_count = 0;
-		speed_count++;
-
-		if (speed_count == speed || IsActionDown(DOWN)) 
-			force_piece_down();
-
-		if (IsActionDown(LEFT) && !check_piece_collision(piece, (V2){pos.x - 1, pos.y}, rotation)) 
-			pos = (V2) {pos.x - 1, pos.y};
-		if (IsActionDown(RIGHT)  && !check_piece_collision(piece, (V2){pos.x + 1, pos.y}, rotation)) 
-			pos = (V2) {pos.x + 1, pos.y};
-
-		if (IsActionDown(ACTION_2)) {
-			if (stored_piece == -1) {
-				stored_piece = piece;
-				piece = next_piece;
-				next_piece = rand() % 7;
-				stored_piece_flag = true;
-			} else if (!stored_piece_flag) {
-				stored_piece_flag = true;
-				i32 tmp = piece;
-				piece = stored_piece;
-				stored_piece = tmp;
-			}
-		}
-		if (IsActionDown(ACTION_1) || IsActionDown(UP)) {
-			i32	new_rotation = rotation;
-			if (IsActionDown(ACTION_1)) {
-				new_rotation += -1;
-			}
-			if (IsActionDown(UP)) {
-				new_rotation += 1;
-			}
-			if (piece == 0 && new_rotation == 2) {
-				new_rotation = 0;
-			}
-			if (new_rotation == 4) {
-				new_rotation = 0;
-			}
-			if (new_rotation == -1) {
-				new_rotation = 3;
-			}
-
-			if (rotate_count % rotate_rate == 0 && !check_piece_collision(piece, pos, new_rotation)) {
-				rotation = new_rotation;
-			}
-			rotate_count++;
-		} else {
-			rotate_count = 0;
-		}
-
-		//  NOTE  Remove. for debug only
-		if (IsKeyDown(KEY_C)) {
-			piece += 1;
-			if (piece == 7)
-				piece = 0;
-		}
-	}
-}
-
-static void draw() {
-	draw_grid(board_offset, (V2){board_size.x -1, board_size.y -1}, tileSize); 
-	draw_board();
-	draw_piece(piece, pos, rotation, tileSize, board_offset);
-
-	{
-		const byte *text = TextFormat("Score: %d", score);
-		V2 text_size = MeasureTextEx(font.font, text, font.size, font.spacing);
-		V2 offset = {board_offset.x - tileSize * 5, board_offset.y};
-		
-		
-		V2 text_pos = {offset.x, offset.y - text_size.y};
-		draw_grid(offset, (V2){4, 4}, tileSize);
-		DrawRectangle(offset.x, offset.y, tileSize, tileSize, ColorAlpha(RED, 0.2));
-		DrawTextEx(font.font, text, text_pos, font.size, font.spacing, data->palette.green);
-		if (stored_piece != -1)  {
-			draw_piece(stored_piece, (V2){1,1}, 0, tileSize, offset);
-		}
-	}
-
-	{
-		const byte *text = "Coming up:";
-		V2 text_size = MeasureTextEx(font.font, text, font.size, font.spacing);
-		V2 offset = {board_offset.x + board_size.x * tileSize, board_offset.y};
-		
-		
-		V2 text_pos = {offset.x, offset.y - text_size.y};
-		draw_grid(offset, (V2){4, 4}, tileSize);
-		DrawTextEx(font.font, text, text_pos, font.size, font.spacing, data->palette.green);
-		if (next_piece != -1)  {
-			draw_piece(next_piece , (V2){1,1}, 0, tileSize, offset);
-		}
-	}
-
-	if (play_screen) {
-		UiContainer *panel = &Container;
-
-		UiBegin(panel);
-		{
-			UiText(panel, "Tetris", true);
-
-			if (UiTextButton(panel, "Play")) { 
-				play_screen = false;
-			}
-
-			// BUG  speed is modified on game loop so when playing again this will not work
-			byte *mode = "should not be this";
-			printf("speed: %d\n", speed);
-			if (speed == 10) {
-				mode = "Mode: Easy";
-			}
-			if (speed == 5) {
-				mode = "Mode: Normal";
-			}
-			if (speed == 2) {
-				mode = "Mode: Hard";
-			}
-			if (UiTextButton(panel, mode)) { 
-				if (speed == 10) {
-					speed = 5;
-				} else if (speed == 5) {
-					speed = 2;
-				} else if (speed == 2) {
-					speed = 10;
-				}
-			}
-
-			if (UiTextButton(panel, "Back")) { 
-				data->current_game = MAIN_MENU;
-			}
-		}
-		UiEnd(panel);
-
-		if (IsActionPressed(ACTION_2)) {
-			data->current_game = MAIN_MENU;
-		}
-	}
-
-	if (game_over) {
-		ui_trasition_from((V2){1, 0});
-		UiStates state = game_over_screen(data);
-		if (state == NONE) {
-			game_over = false;
-			start();
-		} else if (state == TITLE_SCREEN) {
-			// SAVE?
-			data->current_game = MAIN_MENU;
-			game_over = false;
-		}
-		 
-		// TODO Display score & high_score
-		if (score > high_score) {
-			high_score = score;
-			//  TODO  Custom text for new highScore
-		}
-	}
-
-	static b32 options = false;
-	if (paused && options == false) {
-		UiContainer *panel = &Container;
-
-		UiBegin(panel);
-		{
-			UiText(panel, "Game Paused", true);
-
-			if (UiTextButton(panel, "Back to Game")) { 
-				paused = false;
-			} 
-
-			if (UiTextButton(panel, "Options")) { 
-				options = true;
-			}
-
-			if (UiTextButton(panel, "Exit To Main Menu")) { 
-				data->current_game = MAIN_MENU;
-			}
-
-			if (UiTextButton(panel, "Exit To Desktop")) { 
-				data->quit = true;
-			}
-		}
-		UiEnd(panel);
-		if (IsActionPressed(ACTION_2)) {
-			paused = false;
-		}
-
-	} else if (paused && options) {
-		UiStates state = options_screen(data);
-		if (state == BACK) {
-			options = false;
-		}
-	}
-}
-
-static void de_init() 
-{
-	free(board);
-}
+internal i32  rotate(V2 pos, i32 r);
+internal i32  check_piece_collision(i32 piece, V2 pos, i32 rotation);
+internal void draw();
+internal void draw_piece(i32 piece, V2 pos, i32 rotation, i32 scale, V2 offset);
+internal void draw_board();
+internal i32  check_line_made(V2 pos);
+internal void cleanup_made_lines();
+internal void force_piece_down();
+internal void clean_board();
+internal void start();
+internal void update();
+internal void draw();
+internal void de_init();
 
 GameFunctions tetris_init(GameData *game_data)
 {
-	pieces[0] =		"..X."
+	Data = game_data;
+	game_data->tetris_data = calloc(1, sizeof(TetrisData));
+	Tetris = game_data->tetris_data;
+	*Tetris = (TetrisData) {
+		.is_made_lines = false,
+		.paused = false,
+		.game_over = false,
+		.play_screen = false,
+		.options_screen = false,
+		.tileSize = TILE_SIZE,
+		.pos = {BoardSize.x / 2 - 2, 0},
+		.piece = 0,
+		.next_piece = 0,
+		.stored_piece = -1,
+		.stored_piece_flag = false,
+		.rotation = 0,
+		.score = 0,
+		.high_score = 0, 
+		.tick_time_count = 0,
+		.tick_time = 0.100,
+		.speed = 10, 
+		.speed_count = 0,
+		.speed_limit = 2,
+		.speed_increase_rate = 5,
+		.rotate_count = 0,
+		.rotate_rate = 2, 
+		.piece_count = 0, 
+	};
+
+	Tetris->pieces[0] =	"..X."
 				"..X."
 				"..X."
 				"..X.";
 
-	pieces[1] =		"...."
+	Tetris->pieces[1] =	"...."
 				".XX."
 				".XX."
 				"....";
 
-	pieces[2] =		"..X."
+	Tetris->pieces[2] =	"..X."
 				".XX."
 				".X.."
 				"....";
 
-	pieces[3] =		".X.."
+	Tetris->pieces[3] =	".X.."
 				".XX."
 				"..X."
 				"....";
 
-	pieces[4] =		".X.."
+	Tetris->pieces[4] =	".X.."
 				".X.."
 				".XX."
 				"....";
 
-	pieces[5] =		"..X."
+	Tetris->pieces[5] =	"..X."
 				"..X."
 				".XX."
 				"....";
 
-	pieces[6] =		"..X."
+	Tetris->pieces[6] =	"..X."
 				"..XX"
 				"..X."
 				"....";
-
-	data = game_data;
 	
-	board = malloc(board_size.x * board_size.y);
+	V2 window_size = game_data->window_size;
+	Tetris->board_offset = (V2){window_size.x/2 - (BoardSize.x * Tetris->tileSize)/2, window_size.y/2 - (BoardSize.y * Tetris->tileSize)/2},
+	Tetris->font = Data->assets.fonts[0];
 
-	window_size = data->window_size;
-	board_offset = (V2){window_size.x/2 - (board_size.x * tileSize)/2, window_size.y/2 - (board_size.y * tileSize)/2};
-	font = data->assets.fonts[0];
+	Tetris->piece_colors[0] = Data->palette.blue;
+	Tetris->piece_colors[1] = Data->palette.yellow;
+	Tetris->piece_colors[2] = Data->palette.red;
+	Tetris->piece_colors[3] = Data->palette.green;
+	Tetris->piece_colors[4] = Data->palette.orange;
+	Tetris->piece_colors[5] = Data->palette.pink;
+	Tetris->piece_colors[6] = Data->palette.purple;
+	Tetris->piece_colors[7] = Data->palette.black;
+	Tetris->piece_colors[8] = Data->palette.white;
 
-	piece_colors[0] = data->palette.blue;
-	piece_colors[1] = data->palette.yellow;
-	piece_colors[2] = data->palette.red;
-	piece_colors[3] = data->palette.green;
-	piece_colors[4] = data->palette.orange;
-	piece_colors[5] = data->palette.pink;
-	piece_colors[6] = data->palette.purple;
-	piece_colors[7] = data->palette.black;
-	piece_colors[8] = data->palette.white;
+	Tetris->game_sounds.music = Data->assets.music[0];
+	Tetris->game_sounds.made_line = Data->assets.sounds[0];
+	Tetris->game_sounds.game_over = Data->assets.sounds[1];
 
-	game_sounds.music = data->assets.music[0];
-	game_sounds.made_line = data->assets.sounds[0];
-	game_sounds.game_over = data->assets.sounds[1];
-
-	V2 center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
-	Container = UiCreateContainer(center_screen, 0, data->ui_config);
+	V2 center_screen = {window_size.x * 0.5f, window_size.y * 0.25f}; // Center offset to where to start drawing text
+	Tetris->Container = UiCreateContainer(center_screen, 0, Data->ui_config);
 	
 	return (GameFunctions) { 
 		.name = "Tetris",
@@ -361,75 +161,305 @@ GameFunctions tetris_init(GameData *game_data)
 	};
 }
 
-static void force_piece_down() {
-	speed_count = 0;
+internal void de_init() 
+{
+	free(Data->tetris_data);
+}
 
-	if (!check_piece_collision(piece, (V2){pos.x, pos.y + 1}, rotation)) {
-		pos.y += 1;
+internal void start()
+{
+	clean_board();
+	Tetris->paused = false;
+	Tetris->game_over = false;
+	Tetris->play_screen = true;
+	Tetris->piece = rand() % 7;
+	Tetris->next_piece = rand() % 7;
+	Tetris->stored_piece = -1;
+	PlayMusicStream(Tetris->game_sounds.music);
+}
+
+internal void update()
+{
+	UpdateMusicStream(Tetris->game_sounds.music);
+
+	if (!ShouldGameRun(&Tetris->play_screen, &Tetris->paused, &Tetris->game_over)) {
+		return ;
+	}
+
+	if (IsActionPressed(ACTION_3)) {
+		V2 new_pos = Tetris->pos;
+		while (!check_piece_collision(Tetris->piece, new_pos, Tetris->rotation)) {
+			new_pos.y += 1;
+		}
+		Tetris->pos.y = new_pos.y - 1;
+		force_piece_down();
+		Tetris->tick_time_count = 0;
+	}
+
+	if (Tetris->tick_time_count < Tetris->tick_time) {
+		Tetris->tick_time_count += GetFrameTime();
+	} else {
+		Tetris->tick_time_count = 0;
+		Tetris->speed_count++;
+
+		if (Tetris->speed_count == Tetris->speed || IsActionDown(DOWN)) 
+			force_piece_down();
+
+		if (IsActionDown(LEFT) && !check_piece_collision(Tetris->piece, (V2){Tetris->pos.x - 1, Tetris->pos.y}, Tetris->rotation)) 
+			Tetris->pos = (V2) {Tetris->pos.x - 1, Tetris->pos.y};
+		if (IsActionDown(RIGHT)  && !check_piece_collision(Tetris->piece, (V2){Tetris->pos.x + 1, Tetris->pos.y}, Tetris->rotation)) 
+			Tetris->pos = (V2) {Tetris->pos.x + 1, Tetris->pos.y};
+
+		if (IsActionDown(ACTION_2)) {
+			if (Tetris->stored_piece == -1) {
+				Tetris->stored_piece = Tetris->piece;
+				Tetris->piece = Tetris->next_piece;
+				Tetris->next_piece = rand() % 7;
+				Tetris->stored_piece_flag = true;
+			} else if (!Tetris->stored_piece_flag) {
+				Tetris->stored_piece_flag = true;
+				i32 tmp = Tetris->piece;
+				Tetris->piece = Tetris->stored_piece;
+				Tetris->stored_piece = tmp;
+			}
+		}
+		if (IsActionDown(ACTION_1) || IsActionDown(UP)) {
+			i32	new_rotation = Tetris->rotation;
+			if (IsActionDown(ACTION_1)) {
+				new_rotation += -1;
+			}
+			if (IsActionDown(UP)) {
+				new_rotation += 1;
+			}
+			if (Tetris->piece == 0 && new_rotation == 2) {
+				new_rotation = 0;
+			}
+			if (new_rotation == 4) {
+				new_rotation = 0;
+			}
+			if (new_rotation == -1) {
+				new_rotation = 3;
+			}
+
+			if (Tetris->rotate_count % Tetris->rotate_rate == 0 && !check_piece_collision(Tetris->piece, Tetris->pos, new_rotation)) {
+				Tetris->rotation = new_rotation;
+			}
+			Tetris->rotate_count++;
+		} else {
+			Tetris->rotate_count = 0;
+		}
+
+		//  NOTE  Remove. for debug only
+		if (IsKeyDown(KEY_C)) {
+			Tetris->piece += 1;
+			if (Tetris->piece == 7)
+				Tetris->piece = 0;
+		}
+	}
+}
+
+internal void draw() {
+	draw_grid(Tetris->board_offset, (V2){BoardSize.x -1, BoardSize.y -1}, Tetris->tileSize); 
+	draw_board();
+	draw_piece(Tetris->piece, Tetris->pos, Tetris->rotation, Tetris->tileSize, Tetris->board_offset);
+
+	{
+		const byte *text = TextFormat("Score: %d", Tetris->score);
+		V2 text_size = MeasureTextEx(Tetris->font.font, text, Tetris->font.size, Tetris->font.spacing);
+		V2 offset = {Tetris->board_offset.x - Tetris->tileSize * 5, Tetris->board_offset.y};
+		
+		
+		V2 text_pos = {offset.x, offset.y - text_size.y};
+		draw_grid(offset, (V2){4, 4}, Tetris->tileSize);
+		DrawRectangle(offset.x, offset.y, Tetris->tileSize, Tetris->tileSize, ColorAlpha(RED, 0.2));
+		DrawTextEx(Tetris->font.font, text, text_pos, Tetris->font.size, Tetris->font.spacing, Data->palette.green);
+		if (Tetris->stored_piece != -1)  {
+			draw_piece(Tetris->stored_piece, (V2){1,1}, 0, Tetris->tileSize, offset);
+		}
+	}
+
+	{
+		const byte *text = "Coming up:";
+		V2 text_size = MeasureTextEx(Tetris->font.font, text, Tetris->font.size, Tetris->font.spacing);
+		V2 offset = {Tetris->board_offset.x + BoardSize.x * Tetris->tileSize, Tetris->board_offset.y};
+		
+		
+		V2 text_pos = {offset.x, offset.y - text_size.y};
+		draw_grid(offset, (V2){4, 4}, Tetris->tileSize);
+		DrawTextEx(Tetris->font.font, text, text_pos, Tetris->font.size, Tetris->font.spacing, Data->palette.green);
+		if (Tetris->next_piece != -1)  {
+			draw_piece(Tetris->next_piece , (V2){1,1}, 0, Tetris->tileSize, offset);
+		}
+	}
+
+	if (Tetris->play_screen) {
+		UiContainer *panel = &Tetris->Container;
+
+		UiBegin(panel);
+		{
+			UiText(panel, "Tetris", true);
+
+			if (UiTextButton(panel, "Play")) { 
+				Tetris->play_screen = false;
+			}
+
+			// BUG  speed is modified on game loop so when playing again this will not work
+			byte *mode = "should not be this";
+			printf("speed: %d\n", Tetris->speed);
+			if (Tetris->speed == 10) {
+				mode = "Mode: Easy";
+			}
+			if (Tetris->speed == 5) {
+				mode = "Mode: Normal";
+			}
+			if (Tetris->speed == 2) {
+				mode = "Mode: Hard";
+			}
+			if (UiTextButton(panel, mode)) { 
+				if (Tetris->speed == 10) {
+					Tetris->speed = 5;
+				} else if (Tetris->speed == 5) {
+					Tetris->speed = 2;
+				} else if (Tetris->speed == 2) {
+					Tetris->speed = 10;
+				}
+			}
+
+			if (UiTextButton(panel, "Back")) { 
+				Data->current_game = MAIN_MENU;
+			}
+		}
+		UiEnd(panel);
+
+		if (IsActionPressed(ACTION_2)) {
+			Data->current_game = MAIN_MENU;
+		}
+	}
+
+	if (Tetris->game_over) {
+		ui_trasition_from((V2){1, 0});
+		UiStates state = game_over_screen(Data);
+		if (state == NONE) {
+			Tetris->game_over = false;
+			start();
+		} else if (state == TITLE_SCREEN) {
+			// SAVE?
+			Data->current_game = MAIN_MENU;
+			Tetris->game_over = false;
+		}
+		 
+		// TODO Display score & high_score
+		if (Tetris->score > Tetris->high_score) {
+			Tetris->high_score = Tetris->score;
+			//  TODO  Custom text for new highScore
+		}
+	}
+
+	if (Tetris->paused && Tetris->options_screen == false) {
+		UiContainer *panel = &Tetris->Container;
+
+		UiBegin(panel);
+		{
+			UiText(panel, "Game Paused", true);
+
+			if (UiTextButton(panel, "Back to Game")) { 
+				Tetris->paused = false;
+			} 
+
+			if (UiTextButton(panel, "Options")) { 
+				Tetris->options_screen = true;
+			}
+
+			if (UiTextButton(panel, "Exit To Main Menu")) { 
+				Data->current_game = MAIN_MENU;
+			}
+
+			if (UiTextButton(panel, "Exit To Desktop")) { 
+				Data->quit = true;
+			}
+		}
+		UiEnd(panel);
+		if (IsActionPressed(ACTION_2)) {
+			Tetris->paused = false;
+		}
+
+	} else if (Tetris->paused && Tetris->options_screen) {
+		UiStates state = options_screen(Data);
+		if (state == BACK) {
+			Tetris->options_screen = false;
+		}
+	}
+}
+
+internal void force_piece_down() {
+	Tetris->speed_count = 0;
+
+	if (!check_piece_collision(Tetris->piece, (V2){Tetris->pos.x, Tetris->pos.y + 1}, Tetris->rotation)) {
+		Tetris->pos.y += 1;
 	} else {
 		// NOTE Writing piece to board
 		for (i32 y = 0; y < 4; y++) {
 			for (i32 x = 0; x < 4; x++) {
-				V2 bpos = {pos.x + x, pos.y + y};
-				if (pieces[piece][rotate((V2){x,y}, rotation)] == 'X')
-					board[(i32)(bpos.y * board_size.x + bpos.x)] = piece+1;
+				V2 bpos = {Tetris->pos.x + x, Tetris->pos.y + y};
+				if (Tetris->pieces[Tetris->piece][rotate((V2){x,y}, Tetris->rotation)] == 'X')
+					Tetris->board[(i32)(bpos.y * BoardSize.x + bpos.x)] = Tetris->piece+1;
 			}
 		}
 
 		// Score counting
-		i32 lines_made_count = check_line_made(pos);
-		score += 25;
-		score += (1 << lines_made_count) * 100;
+		i32 lines_made_count = check_line_made(Tetris->pos);
+		Tetris->score += 25;
+		Tetris->score += (1 << lines_made_count) * 100;
 
 		// Initting new piece
-		pos.x = board_size.x/2 - 2;
-		pos.y = 0;
-		rotation = 0;
-		piece = next_piece;
-		next_piece = rand() % 7;
-		stored_piece_flag = false;
+		Tetris->pos.x = BoardSize.x/2 - 2;
+		Tetris->pos.y = 0;
+		Tetris->rotation = 0;
+		Tetris->piece = Tetris->next_piece;
+		Tetris->next_piece = rand() % 7;
+		Tetris->stored_piece_flag = false;
 
-		piece_count++;
-		if (piece_count % speed_increase_rate == 0 && speed >= speed_limit) {
-			speed--;
+		Tetris->piece_count++;
+		if (Tetris->piece_count % Tetris->speed_increase_rate == 0 && Tetris->speed >= Tetris->speed_limit) {
+			Tetris->speed--;
 		}
 
-		game_over = check_piece_collision(piece, (V2){pos.x, pos.y}, rotation);
-		if (game_over) {
-			PlaySound(game_sounds.game_over);
+		Tetris->game_over = check_piece_collision(Tetris->piece, (V2){Tetris->pos.x, Tetris->pos.y}, Tetris->rotation);
+		if (Tetris->game_over) {
+			PlaySound(Tetris->game_sounds.game_over);
 		}
 	}
-	if (is_made_lines) {
-		PlaySound(game_sounds.made_line);
+	if (Tetris->is_made_lines) {
+		PlaySound(Tetris->game_sounds.made_line);
 		WaitTime(0.1);
 		cleanup_made_lines();
 	}
 }
 
-static void clean_board()
+internal void clean_board()
 {
-	for (i32 y = 0; y < board_size.y; y++) {
-		for (i32 x = 0; x < board_size.x; x++) {
-			board[y * (i32)board_size.x + x] = (x == 0 || x == board_size.x - 1 || y == board_size.y -1) ? 8 : 0;
+	for (i32 y = 0; y < BoardSize.y; y++) {
+		for (i32 x = 0; x < BoardSize.x; x++) {
+			Tetris->board[y * (i32)BoardSize.x + x] = (x == 0 || x == BoardSize.x - 1 || y == BoardSize.y -1) ? 8 : 0;
 		}
 	}
 }
 
-static void draw_board()
+internal void draw_board()
 {
-	for (i32 y = 0; y < board_size.y; y++) {
-		for (i32 x = 0; x < board_size.x; x++) {
-			V2 draw_pos = V2Scale((V2){x, y}, tileSize); // Add Position in the board + position inside the 4x4 of the piece
-			draw_pos = V2Add(draw_pos, board_offset);
-			i32 piece = board[y * (i32)board_size.x + x];
+	for (i32 y = 0; y < BoardSize.y; y++) {
+		for (i32 x = 0; x < BoardSize.x; x++) {
+			V2 draw_pos = V2Scale((V2){x, y}, Tetris->tileSize); // Add Position in the board + position inside the 4x4 of the piece
+			draw_pos = V2Add(draw_pos, Tetris->board_offset);
+			i32 piece = Tetris->board[y * (i32)BoardSize.x + x];
 			if (piece != 0) {
-				DrawRectangle(draw_pos.x, draw_pos.y, tileSize, tileSize, piece_colors[piece - 1]);
+				DrawRectangle(draw_pos.x, draw_pos.y, Tetris->tileSize, Tetris->tileSize, Tetris->piece_colors[piece - 1]);
 			}
 		}
 	}
 }
 
-static void draw_piece(i32 piece, V2 pos, i32 rotation, i32 scale, V2 offset)
+internal void draw_piece(i32 piece, V2 pos, i32 rotation, i32 scale, V2 offset)
 {
 	if (piece < 0 || piece > 6) {
 		TraceLog(LOG_INFO, "draw_piece_ex: invalid piece value: %d \n", piece);
@@ -437,33 +467,33 @@ static void draw_piece(i32 piece, V2 pos, i32 rotation, i32 scale, V2 offset)
 	}
 	for (i32 y = 0; y < 4; y++) {
 		for (i32 x = 0; x < 4; x++) {
-			if (pieces[piece][rotate((V2){x,y}, rotation)] != 'X')
+			if (Tetris->pieces[piece][rotate((V2){x,y}, rotation)] != 'X')
 				continue;
 			V2 draw_pos = V2Add(pos,  (V2){x, y}); // Add Position in the board + position inside the 4x4 of the piece
 			draw_pos = V2Scale(draw_pos, scale);
 			draw_pos = V2Add(draw_pos, offset);
-			DrawRectangle(draw_pos.x, draw_pos.y, tileSize, tileSize, piece_colors[piece]);
+			DrawRectangle(draw_pos.x, draw_pos.y, Tetris->tileSize, Tetris->tileSize, Tetris->piece_colors[piece]);
 			//DrawRectangleLines(draw_pos.x, draw_pos.y, tile_size, tile_size, BLACK);
 		}
 	}
 }
 
-static i32 check_line_made(V2 pos)
+internal i32 check_line_made(V2 pos)
 {
 	i32 lines_made = 0;
 	for (i32 y = 0; y < 4; y++) {
 		b32 line_made = true;
-		if (!(pos.y + y < board_size.y - 1))//NOTE
+		if (!(pos.y + y < BoardSize.y - 1))//NOTE
 			continue;
-		for (i32 x = 1; x < board_size.x - 1; x++) {
-			if (board[(i32)((pos.y + y) * board_size.x + x)] == 0)
+		for (i32 x = 1; x < BoardSize.x - 1; x++) {
+			if (Tetris->board[(i32)((pos.y + y) * BoardSize.x + x)] == 0)
 				line_made = false;
 		}
 		if (line_made) {
-			made_lines[(i32)pos.y + y] = 1;
-			is_made_lines = 1;
-			for (i32 x = 1; x < board_size.x - 1; x++) {
-				board[(i32)((pos.y + y) * board_size.x + x)] = 9;
+			Tetris->made_lines[(i32)pos.y + y] = 1;
+			Tetris->is_made_lines = 1;
+			for (i32 x = 1; x < BoardSize.x - 1; x++) {
+				Tetris->board[(i32)((pos.y + y) * BoardSize.x + x)] = 9;
 			}
 		}
 		lines_made += line_made;
@@ -471,23 +501,23 @@ static i32 check_line_made(V2 pos)
 	return (lines_made);
 }
 
-static void cleanup_made_lines()
+internal void cleanup_made_lines()
 {
-	for (i32 line = 0; line < board_size.y; line++) {
-		if (made_lines[line] != 1) continue;
+	for (i32 line = 0; line < BoardSize.y; line++) {
+		if (Tetris->made_lines[line] != 1) continue;
 
-		for (i32 x = 1; x < board_size.x - 1; x++) {
-			board[line * (i32)board_size.x + x] = 0;
+		for (i32 x = 1; x < BoardSize.x - 1; x++) {
+			Tetris->board[line * (i32)BoardSize.x + x] = 0;
 			for (i32 y = line; y > 0; y--) {
-				board[y * (i32)board_size.x + x] = board[(y - 1) * (i32)board_size.x + x];
+				Tetris->board[y * (i32)BoardSize.x + x] = Tetris->board[(y - 1) * (i32)BoardSize.x + x];
 			}
 		}
-		made_lines[line] = -1;
+		Tetris->made_lines[line] = -1;
 	}
-	is_made_lines = false;
+	Tetris->is_made_lines = false;
 }
 
-static i32 check_piece_collision(i32 piece, V2 pos, i32 rotation)
+internal i32 check_piece_collision(i32 piece, V2 pos, i32 rotation)
 {
 	if (piece < 0 || piece > 6) { 
 		TraceLog(LOG_WARNING, "piece id passed to check_piece_collision is not valid\n");
@@ -496,11 +526,11 @@ static i32 check_piece_collision(i32 piece, V2 pos, i32 rotation)
 
 	for (i32 y = 0; y < 4; y++) {
 		for (i32 x = 0; x < 4; x++) {
-			if (pieces[piece][rotate((V2){x,y}, rotation)] != 'X') continue;
+			if (Tetris->pieces[piece][rotate((V2){x,y}, rotation)] != 'X') continue;
 
 			V2 check = V2Add(pos, (V2){x, y});
-			if (!(check.x < 0 || check.x > board_size.x || check.y < 0 || check.y > board_size.y)) {
-				if (board[(i32)(check.y * board_size.x + check.x)] != 0)
+			if (!(check.x < 0 || check.x > BoardSize.x || check.y < 0 || check.y > BoardSize.y)) {
+				if (Tetris->board[(i32)(check.y * BoardSize.x + check.x)] != 0)
 					return (1);
 			}
 		}
@@ -508,7 +538,7 @@ static i32 check_piece_collision(i32 piece, V2 pos, i32 rotation)
 	return (0);
 }
 
-static i32 rotate(V2 pos, i32 r)
+internal i32 rotate(V2 pos, i32 r)
 {
 	//r = r % 4;
 	if (r == 0) return (pos.y * 4 + pos.x);

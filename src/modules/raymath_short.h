@@ -122,12 +122,13 @@ RMSAPI b32 V2Compare(V2 v1, V2 v2)
 }
 
 // Vector with components value 0.0f
-RMSAPI V2 V2Zero(void)
-{
-    V2 result = { 0.0f, 0.0f };
+# define V2Zero() (V2){0, 0}
+// RMSAPI V2 V2Zero(void)
+// {
+//     V2 result = { 0.0f, 0.0f };
 
-    return result;
-}
+//     return result;
+// }
 
 // Vector with components value 1.0f
 RMSAPI V2 V2One(void)

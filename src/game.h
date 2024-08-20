@@ -51,6 +51,7 @@ typedef struct Assets {
 } Assets;
 
 typedef struct SnakeData SnakeData;
+typedef struct TetrisData TetrisData;
 
 typedef struct 
 {
@@ -68,6 +69,7 @@ typedef struct {
 	HighScores   scores;
 	UiConfig     ui_config;
 	SnakeData    *snake_data;
+	TetrisData   *tetris_data;
 } GameData;
 
 typedef struct GameFunctions

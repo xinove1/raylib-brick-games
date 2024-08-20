@@ -58,7 +58,6 @@ GameFunctions snake_game_init(GameData *data)
 	*Snake = (SnakeData) {
 		.board_size = (V2) {BoardSizes[0], BoardSizes[0]},
 		.board_offset =  (V2) {.x = Data->window_size.x * 0.5f, .y = Data->window_size.y * 0.5f },
-		.snake = 0,
 		.dir = (V2) {1, 0},
 		.dir_new = (V2){1, 0},
 		.apples = {{0}},
@@ -97,6 +96,7 @@ GameFunctions snake_game_init(GameData *data)
 void de_init() {
 	//data->scores.snake = Snake->scores;
 	memcpy(&Data->scores.snake, &Snake->scores, sizeof(Snake->scores));
+	free(Data->snake_data);
 }
 
 internal void start()
