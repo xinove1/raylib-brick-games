@@ -80,6 +80,7 @@ static void draw()
 	f32 speed = 50;
 	V2 point, normal  = { 0 };
 	V2 origin = {0, 0};
+	(void) origin;
 	static Rect p = {50, 50, 10, 15};
 	static Rect e = {50, 100, 50, 15};
 	static V2 vel = {0, 0};

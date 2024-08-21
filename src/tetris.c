@@ -127,7 +127,7 @@ GameFunctions tetris_init(GameData *game_data)
 				"....";
 
 	Tetris->pieces[6] =	"..X."
-				"..XX"
+				".XX."
 				"..X."
 				"....";
 	

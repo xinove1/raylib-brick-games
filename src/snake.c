@@ -122,7 +122,7 @@ internal void update()
 
 	// Check for HighScore
 	if ((Snake->won || Snake->game_over) && Snake->score_current != 0) {
-		i32 score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
+		size score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
 		Assert(score_index <= sizeof(Snake->scores));
 		if (Snake->scores[score_index] < Snake->score_current) {
 			Snake->scores[score_index] = Snake->score_current;
