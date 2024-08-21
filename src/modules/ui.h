@@ -416,8 +416,13 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 		local b32 mouse_pressed = false;
 		if (mouse_inside) {
 			f32 wheel = GetMouseWheelMove();
+			local b32 wheel_pressed = false;
 			if (wheel == 1.0f || wheel == -1.0f) {
 				*value += step * wheel;
+				wheel_pressed  = true;
+			}
+			if (wheel == 0 && wheel_pressed) {
+				wheel_pressed  = false;
 				pressed = true;
 			}
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
