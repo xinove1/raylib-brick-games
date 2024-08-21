@@ -69,7 +69,6 @@ GameFunctions snake_game_init(GameData *data)
 		.apples_max = 5,
 		.apple_spawn_rate = 5, // in seconds
 		.apple_spawn_count = 0,
-		.scores = 0,
 		.score_current = 0,
 		.play_screen = true,
 		.paused = false,

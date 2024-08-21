@@ -417,7 +417,7 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 		if (mouse_inside) {
 			f32 wheel = GetMouseWheelMove();
 			if (wheel == 1.0f || wheel == -1.0f) {
-				*value += step * wheel;	
+				*value += step * wheel;
 				pressed = true;
 			}
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -426,7 +426,7 @@ b32 UiSliderEx(UiContainer *container, UiConfig config, V2 size, f32 *value, f32
 				mouse_pressed = true;
 			}
 		}
-		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+		if (mouse_pressed && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
 			mouse_pressed = false;
 			pressed = true;
 		}

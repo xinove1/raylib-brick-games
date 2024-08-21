@@ -166,7 +166,7 @@ internal void update_and_draw(void)
 		 (V2){ 0, 0 },
 		 0.0f,
 		 WHITE);
-		FontConfig font = Data.assets.fonts[1];
+		//FontConfig font = Data.assets.fonts[1];
 		//DrawTextEx(font.font, TextFormat("%d", GetFPS()), (V2){30, 30}, font.size, font.spacing, font.tint);
 	}
 	EndDrawing();
@@ -189,9 +189,9 @@ internal_inline void load_assets(GameData *data) {
 	data->assets.textures[0] = LoadTexture("./assets/arrow_e.png");
 
 	data->assets.fonts[0] = (FontConfig) {
-		.font = LoadFontEx("./assets/kenney_future_square.ttf", 20, NULL, 0),
-		.size = 20,
-		.spacing = 2,
+		.font = LoadFontEx("./assets/PixeloidMono.ttf", 22, NULL, 0),
+		.size = 22,
+		.spacing = 1,
 		.tint = data->palette.red,
 		.tint_hover = data->palette.black,
 		};
