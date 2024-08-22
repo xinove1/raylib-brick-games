@@ -56,6 +56,7 @@ typedef struct TetrisData TetrisData;
 typedef struct 
 {
 	f32 snake[8];
+	f32 tetris[3];
 } HighScores;
 
 typedef struct {

@@ -22,7 +22,7 @@ V2 ExpDecayV2(V2 a, V2 b, f32 decay)
 
 void draw_grid(V2 position, V2 grid_size, i32 tile_size)
 {
-	draw_grid_ex(position, grid_size, tile_size, 1, ColorAlpha(BLACK, 0.1));
+	draw_grid_ex(position, grid_size, tile_size, 2, ColorAlpha(BLACK, 0.07));
 }
 
 void draw_grid_ex(V2 position, V2 grid_size, i32 tile_size, f32 line_thickness, Color color) 

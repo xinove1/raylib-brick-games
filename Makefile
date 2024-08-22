@@ -60,12 +60,12 @@ WEBFLAGS = $(WEB_EXPORTED_FUNCTIONS) $(WEB_HTML_TEMPLATE) $(WEB_DATA_DIR) --js-l
 
 web: $(DEPENDACIES)
 	make -C $(RAYLIB) PLATFORM=PLATFORM_WEB -B EMSDK_PATH=/home/xinove/stuff/emsdk  PYTHON_PATH=/usr/bin/python NODE_PATH=/home/xinove/stuff/emsdk/node/16.20.0_64bit/bin
-	emcc $(WEB_CFLAGS) -c $(SRC)
-	emcc $(OBJ) $(RAYLIB)/libraylib.a $(WEB_CFLAGS) $(RFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
+	emcc $(WEB_CFLAGS) $(WEBFLAGS) -c $(SRC)
+	emcc $(OBJ) $(RAYLIB)/libraylib.a $(WEB_CFLAGS) $(WEBFLAGS) $(RFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
 
 web_re:
-	emcc $(WEB_CFLAGS) -c $(SRC)
-	emcc $(OBJ) $(RAYLIB)/libraylib.a $(WEB_CFLAGS) $(RFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
+	emcc $(WEB_CFLAGS) $(WEBFLAGS) -c $(SRC)
+	emcc $(OBJ) $(RAYLIB)/libraylib.a $(WEB_CFLAGS) $(WEBFLAGS) $(RFLAGS) -o $(NAME)$(WEB_OUTPUT_EXT)
 
 web_run: $(web)
 	emrun ./$(NAME).html

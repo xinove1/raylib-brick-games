@@ -119,7 +119,7 @@ internal void update()
 {
 	Assert(Snake);
 
-	// Check for HighScore
+	//  TODO  Display that a New highScore was achieved
 	if ((Snake->won || Snake->game_over) && Snake->score_current != 0) {
 		size score_index = (Snake->selected_board_size * 2) + Snake->easy_mode;
 		Assert(score_index <= sizeof(Snake->scores));
