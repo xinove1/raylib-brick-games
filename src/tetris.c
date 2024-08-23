@@ -152,9 +152,9 @@ GameFunctions tetris_init(GameData *game_data)
 	Tetris->piece_colors[7] = Data->palette.black;
 	Tetris->piece_colors[8] = Data->palette.white;
 
-	Tetris->game_sounds.music = Data->assets.music[0];
-	Tetris->game_sounds.made_line = Data->assets.sounds[0];
-	Tetris->game_sounds.game_over = Data->assets.sounds[1];
+	Tetris->game_sounds.music = Data->assets.music[MusicRetroComedy];
+	Tetris->game_sounds.made_line = Data->assets.sounds[SoundUpgrade4];
+	Tetris->game_sounds.game_over = Data->assets.sounds[SoundGameOver3];
 
 	V2 center_screen = {window_size.x * 0.5f, window_size.y * 0.25f}; // Center offset to where to start drawing text
 	Tetris->Container = UiCreateContainer(center_screen, 0, Data->ui_config);

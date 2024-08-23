@@ -181,10 +181,13 @@ void update_volume(GameData *data)
 }
 
 internal_inline void load_assets(GameData *data) {
-	data->assets.music[0] = LoadMusicStream("./assets/retro_comedy.ogg");
-	data->assets.sounds[0] = LoadSound("./assets/upgrade4.ogg");
-	data->assets.sounds[1] = LoadSound("./assets/gameover3.ogg");
-	data->assets.sounds[2] = LoadSound("./assets/select_007.ogg");
+	data->assets.music[MusicRetroComedy] = LoadMusicStream("./assets/retro_comedy.ogg");
+
+	data->assets.sounds[SoundUpgrade4] = LoadSound("./assets/upgrade4.ogg");
+	data->assets.sounds[SoundGameOver3] = LoadSound("./assets/gameover3.ogg");
+	data->assets.sounds[SoundSelect007] = LoadSound("./assets/select_007.ogg");
+	data->assets.sounds[SoundToggle002] = LoadSound("./assets/toggle_002.ogg");
+	data->assets.sounds[SoundImpactGlass] = LoadSound("./assets/impactGlass.ogg");
 
 	data->assets.textures[0] = LoadTexture("./assets/arrow_e.png");
 

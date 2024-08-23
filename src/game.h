@@ -50,6 +50,10 @@ typedef struct Assets {
 	Texture2D  textures[MAX_ASSET];
 } Assets;
 
+// better name needed
+typedef enum {MusicRetroComedy} MusicAssets ;
+typedef enum {SoundUpgrade4, SoundGameOver3, SoundSelect007, SoundImpactGlass, SoundToggle002} SoundsAssets ;
+
 typedef struct SnakeData SnakeData;
 typedef struct TetrisData TetrisData;
 
