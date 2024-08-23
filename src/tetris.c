@@ -196,7 +196,7 @@ internal void update()
 	//  TODO  Display that a New highScore was achieved
 	if (Tetris->game_over && Tetris->score_current > Tetris->scores[Tetris->difficulty]) { 
 		Tetris->scores[Tetris->difficulty] = Tetris->score_current;
-		printf("New HighScore!!! \n");
+		//printf("New HighScore!!! \n");
 		memcpy(&Data->scores.tetris, &Tetris->scores, sizeof(Tetris->scores));
 		SaveScores(SCORES_SAVE_LOCATION, Data->scores);
 
@@ -333,10 +333,9 @@ internal void draw() {
 				Tetris->play_screen = false;
 			}
 
-			cstr *mode = DifficultysText[Tetris->difficulty];
 			if (UiTextOptionsEx(panel, panel->config, true, "Difficulty: ", DifficultysText, DIFFICULTYS_COUNT, &Tetris->difficulty)) {
 				Tetris->tick_time = Difficultys[Tetris->difficulty];
-				printf("tick_time: %f \n", Tetris->tick_time);
+				//printf("tick_time: %f \n", Tetris->tick_time);
 			}
 
 			if (UiTextButton(panel, "Scores")) {
@@ -469,6 +468,7 @@ internal void force_piece_down() {
 		Tetris->piece_count++;
 		if (Tetris->piece_count % Tetris->speed_increase_rate == 0 && Tetris->speed >= Tetris->speed_limit) {
 			Tetris->speed--;
+			//printf("speed-- \n");
 		}
 
 		Tetris->game_over = check_piece_collision(Tetris->piece, (V2){Tetris->pos.x, Tetris->pos.y}, Tetris->rotation);
