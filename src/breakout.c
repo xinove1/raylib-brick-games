@@ -19,53 +19,92 @@ typedef struct {
 	CollResolution_e collision;
 } Object;
 
-static GameData *Data = NULL;
-static b32 GameOver = false;
-static b32 GamePaused = false;
-static b32 PlayScreen = true;
 
-static V2 BoardSize = { 100, 200 };
-static V2 BoardOffset = { 0, 0};
-static Object Bricks[MAX_BRICKS] = {};
-static Object Paddle = {};
-static Object Ball = {};
-static UiContainer Container;
+struct BreakoutData {
+	b32 game_over;
+	b32 game_paused;
+	b32 play_screen;
+	V2 board_size;
+	V2 board_offset;
+	Object bricks[MAX_BRICKS];
+	Object paddle;
+	Object ball;
+	UiContainer container;
+};
 
-static void draw_game();
-static b32 CollideBallWithRect(Rect rect);
+internal void draw_game();
+internal b32 CollideBallWithRect(Rect rect);
+internal void de_init();
+internal void start();
+internal void update();
+internal void draw();
 
-static void start()
+global GameData *Data = NULL;
+global BreakoutData *Break = NULL;
+
+GameFunctions breakout_init(GameData *data)
 {
-	GameOver = false;
-	GamePaused = false;
-	PlayScreen = true;
+	Data = data;
 
-	BoardOffset = (V2){ Data->window_size.x * 0.5f - BoardSize.x * 0.5f,  Data->window_size.y * 0.5f - BoardSize.y * 0.5f };
+	data->breakout_data = calloc(1, sizeof(BreakoutData));
+	Break = data->breakout_data;
 	
-	Paddle = (Object) {
-		.pos  = (V2) { BoardSize.x * 0.5f, BoardSize.y - 10 },
+	*Break = (BreakoutData) {
+		.game_over = false,
+		.game_paused = false,
+		.play_screen = true,
+		.board_size = { 100, 200 },
+	};
+
+	V2 center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
+	Break->container = UiCreateContainer(center_screen, 0, data->ui_config);
+
+	return (GameFunctions) { 
+		.name = "BreakOut",
+		.update = &update,
+		.draw = &draw,
+		.start = &start,
+		.de_init = &de_init,
+	};
+}
+
+internal void de_init()
+{
+}
+
+internal void start()
+{
+	Break->game_over = false;
+	Break->game_paused = false;
+	Break->play_screen = true;
+
+	Break->board_offset = (V2){ Data->window_size.x * 0.5f - Break->board_size.x * 0.5f,  Data->window_size.y * 0.5f - Break->board_size.y * 0.5f };
+	
+	Break->paddle = (Object) {
+		.pos  = (V2) { Break->board_size.x * 0.5f, Break->board_size.y - 10 },
 		.size = (V2) { 25, 5 },
 		.dir  = (V2) { 0, 0 },
 		.speed = 80,
 		.color = Data->palette.red,
 	};
 
-	Ball = (Object) {
-		.pos  = (V2) { Paddle.pos.x, Paddle.pos.y - 10},
+	Break->ball = (Object) {
+		.pos  = (V2) { Break->paddle.pos.x, Break->paddle.pos.y - 10},
 		.size = (V2) { 5, 5 },
 		.dir  = (V2) { 1, 1 },
 		.speed = 100,
 		.color = Data->palette.blue,
 	};
 
-	memset(Bricks, -1, sizeof(Bricks));
+	memset(Break->bricks, -1, sizeof(Break->bricks));
+
 	{
 		f32 padding = 2; // Padding between bricks
 		f32 padding_sides = padding * 2; // Padding between bricks an corner of the board
 		i32 collumns = 5; // How Many bricks per line do we want
 		
-		V2 brick_size = {((BoardSize.x - (padding_sides * 2)) / collumns) - padding, 5};
-		i32 lines = (BoardSize.y * 0.3f) / (brick_size.y + padding * 2);
+		V2 brick_size = {((Break->board_size.x - (padding_sides * 2)) / collumns) - padding, 5};
+		i32 lines = (Break->board_size.y * 0.3f) / (brick_size.y + padding * 2);
 
 		printf("qty_line * lines: %d\n", collumns * lines);
 		printf("brick_size: %f, %f\n", brick_size.x, brick_size.y);
@@ -75,7 +114,7 @@ static void start()
 		for (i32 row = 0; row < lines; row++) {
 			float at_x = padding_sides;
 			for (i32 col = 0; col < collumns; col++) {
-				Object *brick = &Bricks[(row * collumns) + col];
+				Object *brick = &Break->bricks[(row * collumns) + col];
 				*brick = (Object) {
 					.pos = (V2) {at_x, at_y},
 					.size = brick_size,
@@ -91,43 +130,42 @@ static void start()
 	}
 }
 
-static void de_init()
+internal void update()
 {
-}
-
-static void update()
-{
-	if (!ShouldGameRun(&PlayScreen , &GamePaused, &PlayScreen)) {
+	if (!ShouldGameRun(&Break->play_screen , &Break->game_paused, &Break->play_screen)) {
 		return ;
 	}
 
+	Object *paddle = &Break->paddle;
+	Object *ball = &Break->ball;
+
 	if (IsActionDown(RIGHT)) {
-		Paddle.dir = (V2) {1, 0};
+		paddle->dir = (V2) {1, 0};
 	} else if (IsActionDown(LEFT)) {
-		Paddle.dir = (V2) {-1, 0};
+		paddle->dir = (V2) {-1, 0};
 	} else {
-		Paddle.dir = (V2) {0, 0};
+		paddle->dir = (V2) {0, 0};
 	}
 
 	{
-		Paddle.pos = V2Add(Paddle.pos, V2Scale(Paddle.dir, Paddle.speed * GetFrameTime()));
+		paddle->pos = V2Add(paddle->pos, V2Scale(paddle->dir, paddle->speed * GetFrameTime()));
 
-		if (Paddle.pos.x <= 0) {
-			Paddle.pos.x = 0;
-		} else if ((Paddle.pos.x + Paddle.size.x) >= BoardSize.x) {
-			Paddle.pos.x = BoardSize.x - Paddle.size.x;
+		if (paddle->pos.x <= 0) {
+			paddle->pos.x = 0;
+		} else if ((paddle->pos.x + paddle->size.x) >= Break->board_size.x) {
+			paddle->pos.x = Break->board_size.x - paddle->size.x;
 		}
 	}
 	
 	{
-		Ball.pos = V2Add(Ball.pos, V2Scale(Ball.dir, Ball.speed * GetFrameTime()));
+		ball->pos = V2Add(ball->pos, V2Scale(ball->dir, ball->speed * GetFrameTime()));
 
-		Rect ball = RectV2(Ball.pos, Ball.size);
-		Rect paddle = RectV2(Paddle.pos, Paddle.size);
+		Rect ball_rec = RectV2(ball->pos, ball->size);
+		Rect paddle_rec = RectV2(paddle->pos, paddle->size);
 
 		// Check ball collision with bricks
 		for (i32 i = 0; i < MAX_BRICKS; i++) {
-			Object *brick = &Bricks[i];
+			Object *brick = &Break->bricks[i];
 			if (brick->size.x == -1 && brick->size.y == -1) break ;
 			if (brick->size.x == 0 && brick->size.y == 0) continue ;
 			if (CollideBallWithRect(RectV2(brick->pos, brick->size))) {
@@ -136,37 +174,37 @@ static void update()
 		}
 
 		// Check ball Collision with paddle
-		if (CollideBallWithRect(paddle)) {
-			Ball.dir.y = -Ball.dir.y;
-			if (Paddle.dir.x != 0) {
-				Ball.dir.x = Paddle.dir.x;
+		if (CollideBallWithRect(paddle_rec)) {
+			ball->dir.y = -ball->dir.y;
+			if (paddle->dir.x != 0) {
+				ball->dir.x = paddle->dir.x;
 			}
 		} // Check ball Collision with board border
-		else if (ball.x <= 0 || (ball.x + ball.width) >= BoardSize.x) {
-			Ball.dir.x = -Ball.dir.x;
-		} else if (ball.y <= 0) {
-			Ball.dir.x = -Ball.dir.x;
-			Ball.dir.y = -Ball.dir.y;
-		} else if ((ball.y + ball.height) >= BoardSize.y){
+		else if (ball_rec.x <= 0 || (ball_rec.x + ball_rec.width) >= Break->board_size.x) {
+			ball->dir.x = -ball->dir.x;
+		} else if (ball_rec.y <= 0) {
+			ball->dir.x = -ball->dir.x;
+			ball->dir.y = -ball->dir.y;
+		} else if ((ball_rec.y + ball_rec.height) >= Break->board_size.y){
 			printf("death \n");
 			start();
 		}
 	}
 }
 
-static void draw()
+internal void draw()
 {
 	draw_game();
 	// Ui Screens
-	if (PlayScreen) {
-		UiContainer *panel = &Container;
+	if (Break->play_screen) {
+		UiContainer *panel = &Break->container;
 
 		UiBegin(panel);
 		{
 			UiText(panel, "BreakOut", true);
 
 			if (UiTextButton(panel, "Play")) { 
-				PlayScreen = false;
+				Break->play_screen = false;
 			}
 
 			// char	*mode = easy_mode ? "Mode: Easy" : "Mode: Normal";
@@ -184,65 +222,49 @@ static void draw()
 			Data->current_game = MAIN_MENU;
 		}
 	}
-	if (GameOver) {
+	if (Break->game_over) {
 		UiStates state = game_over_screen(Data);
 		if (state == NONE) {
-			GameOver = false;
+			Break->game_over = false;
 			start();
 		} else if (state == TITLE_SCREEN) {
 			Data->current_game = MAIN_MENU;
-			GameOver = false;
+			Break->game_over = false;
 		}
 	}
 }
 
-GameFunctions breakout_init(GameData *data)
+internal void draw_game()
 {
-	Data = data;
-
-	V2 center_screen = {data->window_size.x * 0.5f, data->window_size.y * 0.25f}; // Center offset to where to start drawing text
-	Container = UiCreateContainer(center_screen, 0, data->ui_config);
-
-	return (GameFunctions) { 
-		.name = "BreakOut",
-		.update = &update,
-		.draw = &draw,
-		.start = &start,
-		.de_init = &de_init,
-	};
-}
-
-static void draw_game()
-{
-	DrawRectangleV(BoardOffset, BoardSize, Data->palette.black);
-	DrawRectangleV(V2Add(Ball.pos, BoardOffset), Ball.size, Ball.color);
-	DrawRectangleV(V2Add(Paddle.pos, BoardOffset), Paddle.size, Paddle.color);
-	//DrawRectangleLinesEx(RectV2(BoardOffset, BoardSize), 1, Data->palette.green);
+	DrawRectangleV(Break->board_offset, Break->board_size, Data->palette.black);
+	DrawRectangleV(V2Add(Break->ball.pos, Break->board_offset), Break->ball.size, Break->ball.color);
+	DrawRectangleV(V2Add(Break->paddle.pos, Break->board_offset), Break->paddle.size, Break->paddle.color);
+	//DrawRectangleLinesEx(RectV2(board_offset, board_size), 1, Data->palette.green);
 
 	for (i32 i = 0; i < MAX_BRICKS; i++) {
-		Object brick = Bricks[i];
+		Object brick = Break->bricks[i];
 		if (brick.size.x == -1 && brick.size.y == -1) break ;
 		if (brick.size.x == 0 && brick.size.y == 0) continue ;
-		DrawRectangleV(V2Add(brick.pos, BoardOffset), brick.size, brick.color);
+		DrawRectangleV(V2Add(brick.pos, Break->board_offset), brick.size, brick.color);
 	}
 }
 
-static b32 CollideBallWithRect(Rect rec) 
+internal b32 CollideBallWithRect(Rect rec) 
 {
 	b32 collided = false;
 
-	if (CheckCollisionRecs(RectV2(Ball.pos, Ball.size), rec)) {
+	if (CheckCollisionRecs(RectV2(Break->ball.pos, Break->ball.size), rec)) {
 		collided = true;
 
 		V2 rect_center = {rec.x * 0.5f, rec.y * 0.5f};
-		V2 collision_normal = V2Normalize(V2Subtract(Ball.pos, rect_center));
-		Ball.dir = (V2) {collision_normal.x, collision_normal.y};
+		V2 collision_normal = V2Normalize(V2Subtract(Break->ball.pos, rect_center));
+		Break->ball.dir = (V2) {collision_normal.x, collision_normal.y};
 	}
 
 	return (collided);
 }
 
-static b32 CollideObjectObject(Object a, Object b) 
+internal b32 CollideObjectObject(Object a, Object b) 
 {
 	b32 collided = false;
 
