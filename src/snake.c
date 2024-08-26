@@ -32,7 +32,7 @@ struct SnakeData {
 	b32 game_over;
 	b32 easy_mode;
 	b32 won;
-	UiContainer Container;
+	UiContainer container;
 };
 
 
@@ -78,7 +78,7 @@ GameFunctions snake_game_init(GameData *data)
 	};
 
 	V2 center_screen = {Data->window_size.x * 0.5f, Data->window_size.y * 0.25f};
-	Snake->Container = UiCreateContainer(center_screen, 0, Data->ui_config);
+	Snake->container = UiCreateContainer(center_screen, 0, Data->ui_config);
 
 	//Snake->scores = data->scores.snake;
 	memcpy(&Snake->scores, &data->scores.snake, sizeof(Snake->scores));
@@ -222,7 +222,7 @@ internal void draw()
 	}
 
 	if (Snake->play_screen && !Snake->scores_screen) {
-		UiContainer *panel = &Snake->Container;
+		UiContainer *panel = &Snake->container;
 		UiBegin(panel);
 		{
 			// Workaround for now
@@ -258,7 +258,7 @@ internal void draw()
 			Data->current_game = MAIN_MENU;
 		}
 	} else if (Snake->play_screen && Snake->scores_screen) {
-		UiContainer *panel = &Snake->Container;
+		UiContainer *panel = &Snake->container;
 
 		panel->config.alignment = UiAlignRight;
 		V2 panel_pos = panel->pos;
@@ -311,7 +311,7 @@ internal void draw()
 	}
 
 	if (Snake->won) {
-		UiContainer *panel = &Snake->Container;
+		UiContainer *panel = &Snake->container;
 		UiBegin(panel);
 		{
 			UiText(panel, "You Won!!!", true);
@@ -349,7 +349,7 @@ internal void draw()
 	}
 
 	if (Snake->paused && Snake->options_screen == false) {
-		UiContainer *panel = &Snake->Container;
+		UiContainer *panel = &Snake->container;
 		UiBegin(panel);
 		{
 			UiText(panel, "Game Paused", true);
