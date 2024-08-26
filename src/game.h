@@ -57,6 +57,7 @@ typedef enum {SoundUpgrade4, SoundGameOver3, SoundSelect007, SoundToggle002, Sou
 typedef struct SnakeData SnakeData;
 typedef struct TetrisData TetrisData;
 typedef struct BreakoutData BreakoutData;
+typedef struct PongData PongData;
 
 typedef struct 
 {
@@ -77,6 +78,7 @@ typedef struct {
 	SnakeData    *snake_data;
 	TetrisData   *tetris_data;
 	BreakoutData *breakout_data;
+	PongData     *pong_data;
 } GameData;
 
 typedef struct GameFunctions
