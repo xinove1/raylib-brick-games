@@ -125,17 +125,21 @@ internal void update_and_draw(void)
 		return ;
 	}
 
-	f32 screen_scale = MIN((f32)GetScreenWidth()/Data.window_size.x, (f32)GetScreenHeight() / Data.window_size.y);
+	i32 screen_scale = MIN(GetScreenWidth() / Data.window_size.x, GetScreenHeight() / Data.window_size.y);
+	if (screen_scale <= 0) screen_scale = 1;
+	V2 window_size_scaled = V2Scale(Data.window_size, screen_scale);
+	//printf("screen_scale: %d \n", screen_scale);
+	
 	// Update virtual mouse (clamped mouse value behind game screen)
-	V2 mouse = GetMousePosition();
-	V2 virtualMouse = { 0 };
-	virtualMouse.x = (mouse.x - (GetScreenWidth() - (Data.window_size.x *screen_scale))*0.5f)/screen_scale;
-	virtualMouse.y = (mouse.y - (GetScreenHeight() - (Data.window_size.y *screen_scale))*0.5f)/screen_scale;
-	virtualMouse = V2Clamp(virtualMouse, (V2){ 0, 0 }, (V2){ (f32)Data.window_size.x, (f32)Data.window_size.y});
+	// V2 mouse = GetMousePosition();
+	// V2 mouse_virtual = { 0 };
+	// mouse_virtual.x = (mouse.x - (GetScreenWidth() - window_size_scaled.x) * 0.5f) / screen_scale;
+	// mouse_virtual.y = (mouse.y - (GetScreenHeight() - window_size_scaled.y) * 0.5f) / screen_scale;
+	// mouse_virtual = V2Clamp(mouse_virtual, V2Zero(), Data.window_size);
 
-	//Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
-	SetMouseOffset(-(GetScreenWidth() - (Data.window_size.x*screen_scale))*0.5f, -(GetScreenHeight() - (Data.window_size.y*screen_scale))*0.5f);
-	SetMouseScale(1 / screen_scale, 1 / screen_scale);
+	// Apply the same transformation as the virtual mouse to the real mouse (i.e. to work with raygui)
+	SetMouseOffset(-(GetScreenWidth() - window_size_scaled.x) * 0.5f, -(GetScreenHeight() - window_size_scaled.y) * 0.5f);
+	SetMouseScale(1 / (f32)screen_scale, 1 / (f32)screen_scale);
 
 
 	if (Data.current_game < 0 || Data.current_game >= GAME_COUNT) {
@@ -159,11 +163,13 @@ internal void update_and_draw(void)
 	{
 		ClearBackground(BLACK);
 		// Draw render texture to screen, properly scaled
+
 		DrawTexturePro(ScreenTexture.texture,
-		 (Rect){0.0f, 0.0f, (f32) ScreenTexture.texture.width, (f32) -ScreenTexture.texture.height},
-		 (Rect){(GetScreenWidth() - ((f32) Data.window_size.x*screen_scale)) * 0.5f, (GetScreenHeight() - ((f32) Data.window_size.y*screen_scale)) * 0.5f,
-		 (f32)Data.window_size.x * screen_scale, (f32)Data.window_size.y * screen_scale },
-		 (V2){ 0, 0 },
+		 (Rect){0, 0, ScreenTexture.texture.width, -ScreenTexture.texture.height}, // Source
+		 (Rect){.x = (i32) ((GetScreenWidth() - window_size_scaled.x) * 0.5f), 
+			.y = (i32) ((GetScreenHeight() - window_size_scaled.y) * 0.5f),
+			.width = window_size_scaled.x, .height = window_size_scaled.y }, // Dest
+		 V2Zero(),
 		 0.0f,
 		 WHITE);
 		//FontConfig font = Data.assets.fonts[1];
