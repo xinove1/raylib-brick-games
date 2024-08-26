@@ -72,7 +72,7 @@ i32 main()
 
 	SetSelectorTexture(&Data.assets.textures[0]);
 	SetSelectorTextureTint(WHITE);
-	SetClickedSound(&Data.assets.sounds[2]);
+	SetClickedSound(&Data.assets.sounds[SoundToggle002]);
 
 	Gamesfuncs[MAIN_MENU] = main_menu_init(&Data);
 
@@ -188,6 +188,8 @@ internal_inline void load_assets(GameData *data) {
 	data->assets.sounds[SoundSelect007] = LoadSound("./assets/select_007.ogg");
 	data->assets.sounds[SoundToggle002] = LoadSound("./assets/toggle_002.ogg");
 	data->assets.sounds[SoundImpactGlass] = LoadSound("./assets/impactGlass.ogg");
+	data->assets.sounds[SoundImpactMetal] = LoadSound("./assets/impactMetal.ogg");
+	data->assets.sounds[SoundIceBreak] = LoadSound("./assets/icebreak.ogg");
 
 	data->assets.textures[0] = LoadTexture("./assets/arrow_e.png");
 

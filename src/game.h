@@ -41,7 +41,7 @@ typedef struct ColorPalette {
 	Color background;
 } ColorPalette;
 
-#define MAX_ASSET 5
+#define MAX_ASSET 7
 
 typedef struct Assets {
 	FontConfig fonts[MAX_ASSET];
@@ -52,7 +52,7 @@ typedef struct Assets {
 
 // better name needed
 typedef enum {MusicRetroComedy} MusicAssets ;
-typedef enum {SoundUpgrade4, SoundGameOver3, SoundSelect007, SoundImpactGlass, SoundToggle002} SoundsAssets ;
+typedef enum {SoundUpgrade4, SoundGameOver3, SoundSelect007, SoundToggle002, SoundImpactGlass, SoundImpactMetal, SoundIceBreak} SoundsAssets ;
 
 typedef struct SnakeData SnakeData;
 typedef struct TetrisData TetrisData;
