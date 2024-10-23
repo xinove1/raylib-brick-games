@@ -216,9 +216,14 @@ void title_screen(GameData *data)
 		if (UiTextButton(panel, "Options")) {
 			CurrentScreen = OPTIONS_MENU;
 		}
-		if (UiTextButton(panel, "Quit") || IsActionPressed(ACTION_2)) {
+		if (UiTextButton(panel, "Quit")) {
 			data->quit = true;
 		}
+		#ifndef PLATAFORM_WEB
+		if (IsActionPressed(ACTION_2)) {
+			data->quit = true;
+		}
+		#endif
 	}
 	UiEnd(panel);
 }
